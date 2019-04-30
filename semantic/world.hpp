@@ -32,6 +32,7 @@
 
 #include <boost/variant.hpp>
 
+#include "utility/enum-io.hpp"
 #include "math/geometry_core.hpp"
 #include "geo/srsdef.hpp"
 
@@ -40,13 +41,13 @@ namespace semantic {
 namespace roof {
 
 struct Rectangular {
-    math::Size size;
+    math::Size2f size;
     math::Point2d skew;
     double azimuth = 0.0;
     std::array<double, 4> curb = {};
     double ridgeHeight = 0.0;
     double curbHeight = 0.0;
-    std::array<double, 4> eaveHeight = {}
+    std::array<double, 4> eaveHeight = {};
 };
 
 struct Circular {
@@ -85,6 +86,11 @@ struct World {
 
     Building::list buildings;
 };
+
+UTILITY_GENERATE_ENUM_IO(Roof::Type,
+                      ((rectangular))
+                      ((circular))
+                      )
 
 } // namespace semantic
 

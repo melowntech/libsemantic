@@ -1,7 +1,8 @@
 # bump version here
 set(semantic_VERSION 0.0)
 
-define_module(LIBRARY semantic=${dbglog_VERSION}
+define_module(LIBRARY semantic=${semantic_VERSION}
+  DEPENDS
   geo jsoncpp
   )
 

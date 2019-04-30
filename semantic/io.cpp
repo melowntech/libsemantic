@@ -30,8 +30,8 @@
 
 #include "dbglog/dbglog.hpp"
 
-#includ "jsoncpp/io.hpp"
-#includ "jsoncpp/as.hpp"
+#include "jsoncpp/io.hpp"
+#include "jsoncpp/as.hpp"
 
 #include "io.hpp"
 
@@ -41,15 +41,113 @@ namespace semantic {
 
 namespace {
 
+void parse(math::Size2f &size, const Json::Value &value)
+{
+    Json::unpack(value, "Size2f", size.width, size.height);
+}
+
+void parse(math::Point2 &point, const Json::Value &value)
+{
+    Json::unpack(value, "Point3", point(0), point(1));
+}
+
+void parse(math::Point3 &point, const Json::Value &value)
+{
+    Json::unpack(value, "Point3", point(0), point(1), point(2));
+}
+
+void parse(roof::Rectangular &r, const Json::Value &value)
+{
+    parse(r.size, Json::check(value, "size", Json::arrayValue));
+    parse(r.skew, Json::check(value, "skew", Json::arrayValue));
+    Json::get(r.azimuth, value, "azimuth");
+    Json::get(r.curb, value, "curb");
+
+    const auto &height(Json::check(value, "height", Json::objectValue
+                                   , "height"));
+    Json::get(r.ridgeHeight, height, "ridge");
+    Json::get(r.curbHeight, height, "curb");
+    Json::get(r.eaveHeight, height, "eave");
+}
+
+void parse(roof::Circular &r, const Json::Value &value)
+{
+    Json::get(r.radius, value, "radius");
+    Json::get(r.curb, value, "curb");
+
+    const auto &height(Json::check(value, "height", Json::objectValue
+                                   , "height"));
+    Json::get(r.ridgeHeight, height, "ridge");
+    Json::get(r.curbHeight, height, "curb");
+    Json::get(r.eaveHeight, height, "eave");
+}
+
+void parse(roof::Type &r, const Json::Value &value)
+{
+    struct Visitor : public boost::static_visitor<void> {
+        const Json::Value &value;
+        Visitor(const Json::Value &value) : value(value) {}
+
+        void operator()(roof::Rectangular &r) {
+            parse(r, value);
+        }
+
+        void operator()(roof::Circular &r) {
+            parse(r, value);
+        }
+    } v(value);
+    boost::apply_visitor(v, r);
+}
+
+void parse(Roof &r, const Json::Value &value)
+{
+    Json::get(r.type, value, "type");
+    parse(r.center, Json::check(value, "center", Json::arrayValue));
+
+    switch (r.type) {
+    case Roof::Type::rectangular: r.instance = roof::Rectangular(); break;
+    case Roof::Type::circular: r.instance = roof::Circular(); break;
+    }
+
+    parse(r.instance, value);
+}
+
+void parse(Roof::list &roofs, const Json::Value &value)
+{
+    roofs.reserve(value.size());
+    for (const auto &item : value) {
+        roofs.emplace_back();
+        parse(roofs.back(), item);
+    }
+}
+
+void parse(Building &building, const Json::Value &value)
+{
+    parse(building.origin, Json::check(value, "origin", Json::arrayValue));
+    parse(building.roofs, Json::check(value, "roofs", Json::arrayValue));
+}
+
+void parse(Building::list &buildings, const Json::Value &value)
+{
+    buildings.reserve(value.size());
+    for (const auto &item : value) {
+        buildings.emplace_back();
+        parse(buildings.back(), item);
+    }
+}
+
 void parse(World &world, const Json::Value &value)
 {
     {
         std::string srs;
         Json::get(srs, value, "srs");
-        world.srs = geo::SrsDegfinition::fromString(srs);
+        world.srs = geo::SrsDefinition::fromString(srs);
     }
     world.adjustVertical = false;
     Json::getOpt(world.adjustVertical, value, "adjustVertical");
+    parse(world.origin, Json::check(value, "origin", Json::arrayValue));
+
+    parse(world.buildings, Json::check(value, "buildings", Json::arrayValue));
 }
 
 void build(Json::Value &value, const World &world)
@@ -67,11 +165,12 @@ World load(std::istream &is, const fs::path &path)
     return world;
 }
 
-void save(const World &world, std::ostream &is, const fs::path &path)
+void save(const World &world, std::ostream &os, const fs::path &path)
 {
     Json::Value value;
     build(value, world);
     Json::write(os, value, true); // TODO: make configurable
+    (void) path;
 }
 
 } // namespace
