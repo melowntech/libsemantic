@@ -91,14 +91,8 @@ void parse(roof::Type &r, const Json::Value &value)
     struct Visitor : public boost::static_visitor<void> {
         const Json::Value &value;
         Visitor(const Json::Value &value) : value(value) {}
-
-        void operator()(roof::Rectangular &r) {
-            parse(r, value);
-        }
-
-        void operator()(roof::Circular &r) {
-            parse(r, value);
-        }
+        void operator()(roof::Rectangular &r) const { parse(r, value); }
+        void operator()(roof::Circular &r) const { parse(r, value); }
     } v(value);
     boost::apply_visitor(v, r);
 }
@@ -220,14 +214,8 @@ void build(Json::Value &value, const Roof &r)
     struct Visitor : public boost::static_visitor<void> {
         Json::Value &value;
         Visitor(Json::Value &value) : value(value) {}
-
-        void operator()(const roof::Rectangular &r) {
-            build(value, r);
-        }
-
-        void operator()(const roof::Circular &r) {
-            build(value, r);
-        }
+        void operator()(const roof::Rectangular &r) { build(value, r); }
+        void operator()(const roof::Circular &r) { build(value, r); }
     } v(value);
     boost::apply_visitor(v, r.instance);
 
