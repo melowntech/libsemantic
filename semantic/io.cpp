@@ -41,6 +41,10 @@ namespace semantic {
 
 namespace {
 
+/* ------------------------------------------------------------------------ */
+/* ---- Parsing ----------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+
 void parse(math::Size2f &size, const Json::Value &value)
 {
     Json::unpack(value, "Size2f", size.width, size.height);
@@ -101,10 +105,11 @@ void parse(roof::Type &r, const Json::Value &value)
 
 void parse(Roof &r, const Json::Value &value)
 {
-    Json::get(r.type, value, "type");
+    Roof::Type type;
+    Json::get(type, value, "type");
     parse(r.center, Json::check(value, "center", Json::arrayValue));
 
-    switch (r.type) {
+    switch (type) {
     case Roof::Type::rectangular: r.instance = roof::Rectangular(); break;
     case Roof::Type::circular: r.instance = roof::Circular(); break;
     }
@@ -150,11 +155,121 @@ void parse(World &world, const Json::Value &value)
     parse(world.buildings, Json::check(value, "buildings", Json::arrayValue));
 }
 
+/* ------------------------------------------------------------------------ */
+/* ---- Building ---------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+
+void build(Json::Value &value, const math::Size2f &size)
+{
+    value = Json::arrayValue;
+    value.append(size.width);
+    value.append(size.height);
+}
+
+void build(Json::Value &value, const math::Point2 &point)
+{
+    value = Json::arrayValue;
+    value.append(point(0));
+    value.append(point(1));
+}
+
+void build(Json::Value &value, const math::Point3 &point)
+{
+    value = Json::arrayValue;
+    value.append(point(0));
+    value.append(point(1));
+    value.append(point(2));
+}
+
+template <std::size_t N>
+void build(Json::Value &value, const std::array<double, N> &array)
+{
+    value = Json::arrayValue;
+    for (const auto &item : array) { value.append(item); }
+}
+
+void build(Json::Value &value, const roof::Rectangular &r)
+{
+    value = Json::objectValue;
+    build(value["size"], r.size);
+    build(value["skew"], r.skew);
+    value["azimuth"] = r.azimuth;
+    build(value["curb"], r.curb);
+
+    auto &height(value["height"] = Json::objectValue);
+    height["ridge"] = r.ridgeHeight;
+    height["curb"] = r.curbHeight;
+    build(height["eave"], r.eaveHeight);
+}
+
+void build(Json::Value &value, const roof::Circular &r)
+{
+    value = Json::objectValue;
+    value["radius"] = r.radius;
+    value["curb"] = r.curb;
+
+    auto &height(value["height"] = Json::objectValue);
+    height["ridge"] = r.ridgeHeight;
+    height["curb"] = r.curbHeight;
+    height["eave"] = r.eaveHeight;
+}
+
+void build(Json::Value &value, const Roof &r)
+{
+    // build instance
+    struct Visitor : public boost::static_visitor<void> {
+        Json::Value &value;
+        Visitor(Json::Value &value) : value(value) {}
+
+        void operator()(const roof::Rectangular &r) {
+            build(value, r);
+        }
+
+        void operator()(const roof::Circular &r) {
+            build(value, r);
+        }
+    } v(value);
+    boost::apply_visitor(v, r.instance);
+
+    // add common stuff
+    value["type"] = boost::lexical_cast<std::string>(r.type());
+    build(value["center"], r.center);
+}
+
+void build(Json::Value &value, const Roof::list &roofs)
+{
+    value = Json::arrayValue;
+    for (const auto &roof : roofs) {
+        auto &item(value.append(Json::objectValue));
+        build(item, roof);
+    }
+}
+
+void build(Json::Value &value, const Building &building)
+{
+    value = Json::objectValue;
+    build(value["origin"], building.origin);
+    build(value["roofs"], building.roofs);
+}
+
+void build(Json::Value &value, const Building::list &buildings)
+{
+    value = Json::arrayValue;
+    for (const auto &building : buildings) {
+        auto &item(value.append(Json::objectValue));
+        build(item, building);
+    }
+}
+
 void build(Json::Value &value, const World &world)
 {
-    // TODO: implement me
-    (void) world;
-    (void) value;
+    value = Json::objectValue;
+
+    value["srs"] = world.srs.as(geo::SrsDefinition::Type::proj4).toString();
+    if (world.adjustVertical) { value["adjustVertical"] = true; }
+
+    build(value["origin"], world.origin);
+    build(value["buildings"], world.buildings);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -170,7 +285,7 @@ void save(const World &world, std::ostream &os, const fs::path &path)
     Json::Value value;
     build(value, world);
     Json::write(os, value, true); // TODO: make configurable
-    (void) path;
+    (void) path; // unused
 }
 
 } // namespace

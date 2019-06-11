@@ -64,11 +64,12 @@ typedef boost::variant<Rectangular, Circular> Type;
 
 struct Roof {
     typedef std::vector<Roof> list;
-    enum class Type { rectangular, circular };
+    enum class Type { rectangular = 0, circular };
 
-    Type type = Type::rectangular;
     math::Point3 center;
     roof::Type instance;
+
+    Type type() const { return static_cast<Type>(instance.which()); }
 };
 
 struct Building {
