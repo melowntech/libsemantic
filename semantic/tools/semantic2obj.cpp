@@ -9,7 +9,10 @@
 
 #include "service/cmdline.hpp"
 
+#include "geometry/meshop.hpp"
+
 #include "semantic/io.hpp"
+#include "semantic/mesh.hpp"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -76,8 +79,10 @@ usage
 
 int Semantic2Obj::run()
 {
-    auto world(semantic::load(input_));
-    (void) world;
+    const auto world(semantic::load(input_));
+    const auto mesh(semantic::mesh(world));
+
+    geometry::saveAsObj(mesh, output_, {});
 
     return EXIT_SUCCESS;
 }
