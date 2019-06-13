@@ -74,38 +74,70 @@ geometry::Mesh lod2roof(const roof::Circular &roof)
 {
     geometry::Mesh mesh;
 
-    /** TODO: compute from radius size
+    /** TODO: derive from radius size
      */
     const Index arcPoints(16);
 
     // roof center
     mesh.vertices.emplace_back(0.0, 0.0, roof.ridgeHeight);
 
-    const auto arcVertices(arcPoints * 3);
+    const auto &colinear([&]() -> bool
+    {
+        /** Interpolate expected height on line from ridge to eave
+         */
+        const auto expected((1 - roof.curb) * roof.eaveHeight
+                            + roof.curb * roof.ridgeHeight);
+        return (std::abs(expected - roof.curbHeight) < 1e-5);
+    });
 
-    for (Index i(0); i < arcPoints; ++i) {
-        const double angle((2 * M_PI * i) / arcPoints);
+    if (colinear()) {
+        const auto arcVertices(arcPoints * 2);
 
-        // curb point
-        mesh.vertices.push_back
-            (rotate(0, roof.radius * roof.curb, roof.curbHeight, angle));
+        for (Index i(0); i < arcPoints; ++i) {
+            const double angle((2 * M_PI * i) / arcPoints);
 
-        const auto end(rotate(0, roof.radius, roof.eaveHeight, angle));
-        // eave point
-        mesh.vertices.push_back(end);
-        // ground point
-        mesh.vertices.emplace_back(end(0), end(1), 0.0);
+            const auto end(rotate(0, roof.radius, roof.eaveHeight, angle));
+            // eave point
+            mesh.vertices.push_back(end);
+            // ground point
+            mesh.vertices.emplace_back(end(0), end(1), 0.0);
 
-        auto v([&](Index index) -> Index
-        {
-            return 1 + ((index + 3 * i) % arcVertices);
-        });
+            const auto &v([&](Index index) -> Index
+            {
+                return 1 + ((index + 2 * i) % arcVertices);
+            });
 
-        mesh.faces.emplace_back(0, v(0), v(3));
-        mesh.faces.emplace_back(v(0), v(1), v(4));
-        mesh.faces.emplace_back(v(0), v(4), v(3));
-        mesh.faces.emplace_back(v(1), v(2), v(5));
-        mesh.faces.emplace_back(v(1), v(5), v(4));
+            mesh.faces.emplace_back(0, v(0), v(2));
+            mesh.faces.emplace_back(v(0), v(3), v(2));
+            mesh.faces.emplace_back(v(0), v(1), v(3));
+        }
+    } else {
+        const auto arcVertices(arcPoints * 3);
+
+        for (Index i(0); i < arcPoints; ++i) {
+            const double angle((2 * M_PI * i) / arcPoints);
+
+            // curb point
+            mesh.vertices.push_back
+                (rotate(0, roof.radius * roof.curb, roof.curbHeight, angle));
+
+            const auto end(rotate(0, roof.radius, roof.eaveHeight, angle));
+            // eave point
+            mesh.vertices.push_back(end);
+            // ground point
+            mesh.vertices.emplace_back(end(0), end(1), 0.0);
+
+            const auto &v([&](Index index) -> Index
+            {
+                return 1 + ((index + 3 * i) % arcVertices);
+            });
+
+            mesh.faces.emplace_back(0, v(0), v(3));
+            mesh.faces.emplace_back(v(0), v(1), v(4));
+            mesh.faces.emplace_back(v(0), v(4), v(3));
+            mesh.faces.emplace_back(v(1), v(2), v(5));
+            mesh.faces.emplace_back(v(1), v(5), v(4));
+        }
     }
 
     return mesh;
