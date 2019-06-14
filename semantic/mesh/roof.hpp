@@ -24,20 +24,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef semantic_mesh_roof_hpp_included_
+#define semantic_mesh_roof_hpp_included_
+
 #include "geometry/mesh.hpp"
 
-#include "../world.hpp"
+#include "../mesh.hpp"
 
 namespace semantic {
 
 namespace lod2 {
 
-geometry::Mesh mesh(const Roof &roof);
+geometry::Mesh mesh(const Roof &roof, const MeshConfig &config);
 
-geometry::Mesh mesh(const roof::Rectangular &roof);
+geometry::Mesh mesh(const roof::Rectangular &roof, const MeshConfig &config);
 
-geometry::Mesh mesh(const roof::Circular &roof);
+geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config);
 
 } // namespace lod2
 
 } // namespace semantic
+
+#endif // semantic_mesh_roof_hpp_included_

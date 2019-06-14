@@ -36,33 +36,36 @@ namespace lod2 {
 
 using detail::append;
 
-geometry::Mesh mesh(const Roof &roof)
+geometry::Mesh mesh(const Roof &roof
+                    , const MeshConfig &config)
 {
     struct Visitor : public boost::static_visitor<geometry::Mesh> {
+        const MeshConfig &config;
+        Visitor(const MeshConfig &config) : config(config) {}
         geometry::Mesh operator()(const roof::Rectangular &r) const {
-            return mesh(r);
+            return mesh(r, config);
         }
         geometry::Mesh operator()(const roof::Circular &r) const {
-            return mesh(r);
+            return mesh(r, config);
         }
-    } v;
+    } v(config);
     return boost::apply_visitor(v, roof.instance);
 }
 
-geometry::Mesh mesh(const Building &building)
+geometry::Mesh mesh(const Building &building, const MeshConfig &config)
 {
     geometry::Mesh m;
     for (const auto &roof : building.roofs) {
-        append(m, mesh(roof), building.origin + roof.center);
+        append(m, mesh(roof, config), building.origin + roof.center);
     }
     return m;
 }
 
-geometry::Mesh mesh(const World &world)
+geometry::Mesh mesh(const World &world, const MeshConfig &config)
 {
     geometry::Mesh m;
     for (const auto &building : world.buildings) {
-        append(m, mesh(building), world.origin);
+        append(m, mesh(building, config), world.origin);
     }
     return m;
 }
@@ -71,10 +74,10 @@ geometry::Mesh mesh(const World &world)
 
 /** Generate mesh in given LOD.
  */
-geometry::Mesh mesh(const World &world, int lod)
+geometry::Mesh mesh(const World &world, const MeshConfig &config, int lod)
 {
     switch (lod) {
-    case 2: return lod2::mesh(world);
+    case 2: return lod2::mesh(world, config);
 
     case 0:
     case 1:

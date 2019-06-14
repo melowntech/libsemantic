@@ -35,7 +35,7 @@ namespace lod2 {
 
 using detail::Index;
 
-geometry::Mesh mesh(const roof::Circular &roof)
+geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config)
 {
     geometry::Mesh mesh;
 
@@ -102,6 +102,8 @@ geometry::Mesh mesh(const roof::Circular &roof)
     }
 
     return mesh;
+
+    (void) config;
 }
 
 } // namespace lod2

@@ -48,6 +48,8 @@ struct Rectangular {
     double ridgeHeight = 0.0;
     double curbHeight = 0.0;
     std::array<double, 4> eaveHeight = {};
+
+    struct Key { enum : int { top = 0, bottom = 1, left = 2, right = 3 }; };
 };
 
 struct Circular {

@@ -33,9 +33,13 @@
 
 namespace semantic {
 
+struct MeshConfig {
+};
+
 /** Generate mesh in given LOD.
  */
-geometry::Mesh mesh(const World &world, int lod = 2);
+geometry::Mesh mesh(const World &world, const MeshConfig &config
+                    , int lod = 2);
 
 } // namespace semantic
 

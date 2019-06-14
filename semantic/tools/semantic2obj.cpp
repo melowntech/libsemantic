@@ -40,6 +40,7 @@ private:
 
     virtual int run() override;
 
+    semantic::MeshConfig meshConfig_;
     fs::path input_;
     fs::path output_;
 };
@@ -80,7 +81,7 @@ usage
 int Semantic2Obj::run()
 {
     const auto world(semantic::load(input_));
-    const auto mesh(semantic::mesh(world));
+    const auto mesh(semantic::mesh(world, meshConfig_));
 
     geometry::saveAsObj(mesh, output_, {});
 

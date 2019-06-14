@@ -24,18 +24,369 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cmath>
+#include <map>
+
 #include "dbglog/dbglog.hpp"
 
 #include "../roof.hpp"
+#include "../detail.hpp"
 
 namespace semantic {
 
 namespace lod2 {
 
-geometry::Mesh mesh(const roof::Rectangular &roof)
+using detail::Index;
+
+class Composer {
+public:
+    Composer(geometry::Mesh &mesh)
+        : mesh_(mesh), last_(nullptr)
+    {}
+
+    /** Returns index to p.
+     *
+     *  Updates last point to point to the retuned point.
+     */
+    Index point(const math::Point3 &p) {
+        auto fcache(cache_.find(p));
+        if (fcache == cache_.end()) {
+            fcache = cache_.emplace(p, mesh_.vertices.size()).first;
+            mesh_.vertices.push_back(p);
+        }
+        last_ = &fcache->first;
+        return fcache->second;
+    }
+
+    /** Returns index to (last point + p).
+     *
+     *  Updates last point to point to the retuned point.
+     *
+     *  NB: last point must be defined!
+     */
+    Index updated(const math::Point3 &p) {
+        return point(*last_ + p);
+    }
+
+    /** Same as point(Point3(x, y, z))
+     */
+    Index point(double x = .0, double y = .0, double z = .0) {
+        return point({x, y, z});
+    }
+
+    /** Same as updated(Point3(x, y, z))
+     */
+    Index updated(double x = .0, double y = .0, double z = .0) {
+        return updated({x, y, z});
+    }
+
+    /** Adds new face if triangle is not degenerate
+     */
+    void face(Index a, Index b, Index c) {
+        if ((a != b) && (b != c) && (c != a)) {
+            mesh_.faces.emplace_back(a, b, c);
+        }
+    }
+
+    /** Adds face with indirect vertex indices.
+     */
+    template <typename Mapping>
+    void face(const Mapping &mapping, Index a, Index b, Index c)
+    {
+        face(mapping[a], mapping[b], mapping[c]);
+    }
+
+    /** Apply final scale and rotation
+     */
+    void scaleAndRotate(const roof::Rectangular &roof) {
+        const auto sa(std::sin(roof.azimuth));
+        const auto ca(std::cos(roof.azimuth));
+        const math::Size2f hsize
+            (roof.size.width / 2.0, roof.size.height / 2.0);
+        for (auto &v : mesh_.vertices) {
+            const auto x(v(0) * hsize.width);
+            const auto y(v(1) * hsize.height);
+            v(0) = ca * x + sa * y;
+            v(1) = -sa * x + ca * y ;
+        }
+    }
+
+private:
+    geometry::Mesh &mesh_;
+
+    typedef std::map<math::Point3, Index> PointCache;
+    PointCache cache_;
+    const math::Point3 *last_;
+};
+
+/** Helper for constructing indirect faces whose vertices are not born yet.
+ */
+class DeferredFaces {
+public:
+    /** Add face.
+     */
+    void face(Index a, Index b, Index c) {
+        faces_.emplace_back(a, b, c);
+    }
+
+    /** Map indirect vertices to real vertices and add faces to mech composer.
+     */
+    template <typename Mapping>
+    void expand(Composer &c, const Mapping &mapping)
+    {
+        for (const auto &face : faces_) {
+            c.face(mapping, face(0), face(1), face(2));
+        }
+    }
+
+private:
+    std::vector<math::Point3_<Index>> faces_;
+};
+
+geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
 {
-    (void) roof;
-    return {};
+    using Key = roof::Rectangular::Key;
+    geometry::Mesh m;
+
+    Composer c(m);
+
+    auto curbLeft(r.curb[Key::left]);
+    auto curbRight(r.curb[Key::right]);
+
+    auto curbTop(r.curb[Key::top]);
+    auto curbBottom(r.curb[Key::bottom]);
+
+    const auto curbMiddle((curbLeft - curbRight) / 2.0);
+
+    const auto &eaveHeightTop(r.eaveHeight[Key::top]);
+    const auto &eaveHeightBottom(r.eaveHeight[Key::bottom]);
+    const auto &eaveHeightLeft(r.eaveHeight[Key::left]);
+    const auto &eaveHeightRight(r.eaveHeight[Key::right]);
+
+    /** Skew tangens scaled to 1:1 space
+     */
+    const auto skewTopTan(std::tan(r.skew[Key::top])
+                          * r.size.width / r.size.height
+                          );
+    const auto skewBottomTan(std::tan(r.skew[Key::bottom])
+                             * r.size.width / r.size.height
+                             );
+
+    std::vector<Index> v(18);
+
+    // *** Facade **
+    // top-left
+    v[0] = c.point(-1.0, 1.0 - skewTopTan * (1.0 - curbMiddle), 0.0);
+    v[4] = c.updated(0.0, 0.0, std::min(eaveHeightLeft, eaveHeightTop));
+
+    // top-right
+    v[1] = c.point(1.0, 1.0 + skewTopTan * (1.0 + curbMiddle), 0.0);
+    v[5] = c.updated(0.0, 0.0, std::min(eaveHeightRight, eaveHeightTop));
+
+    // bottom-left
+    v[2] = c.point(-1.0, -1.0 - skewBottomTan * (1.0 - curbMiddle), 0.0);
+    v[6] = c.updated(0.0, 0.0, std::min(eaveHeightLeft, eaveHeightBottom));
+
+    // bottom-right
+    v[3] = c.point(1.0 , -1.0 + skewBottomTan * (1.0 + curbMiddle), 0.0);
+    v[7] = c.updated(0.0, 0.0, std::min(eaveHeightRight, eaveHeightBottom));
+
+    c.face(v, 0, 2, 4);
+    c.face(v, 4, 2, 6);
+    c.face(v, 1, 0, 5);
+    c.face(v, 5, 0, 4);
+    c.face(v, 3, 1, 7);
+    c.face(v, 7, 1, 5);
+    c.face(v, 2, 3, 6);
+    c.face(v, 6, 3, 7);
+
+    DeferredFaces deferred;
+
+    // roof
+    {
+        const auto eaveHeight(std::max(eaveHeightLeft, eaveHeightTop));
+
+        auto useCurbTop(curbTop);
+        auto useCurbLeft(curbLeft);
+
+        if (r.curbHeight <= eaveHeightLeft) {
+            useCurbLeft = 1.0;
+        } else if (r.curbHeight <= eaveHeightTop) {
+            useCurbTop = 1.0;
+        } else {
+            useCurbLeft = std::min((eaveHeightTop - eaveHeightLeft) /
+                                   (r.curbHeight - eaveHeightLeft)
+                                   * (curbLeft - 1.0) + 1.0
+                                   , 1.0);
+
+            useCurbTop = std::min((eaveHeightLeft - eaveHeightTop) /
+                               (r.curbHeight - eaveHeightTop)
+                               * (curbTop - 1.0) + 1.0
+                               , 1.0);
+        }
+
+        v[8] = c.point(-useCurbLeft
+                       , useCurbTop - skewTopTan * (useCurbLeft - curbMiddle)
+                       , eaveHeight);
+
+        if (useCurbTop == 1.0) {
+            deferred.face(5, 8, 9);
+            deferred.face(5, 4, 8);
+        } else {
+            deferred.face(5, 4, 9);
+            deferred.face(9, 4, 8);
+        }
+    }
+
+    {
+        const auto eaveHeight(std::max(eaveHeightRight, eaveHeightTop));
+
+        auto useCurbTop(curbTop);
+        auto useCurbRight(curbRight);
+
+        if (r.curbHeight <= eaveHeightRight) {
+            useCurbRight = 1.0;
+        } else if (r.curbHeight <= eaveHeightTop) {
+            useCurbTop = 1.0;
+        } else {
+            useCurbRight = std::min((eaveHeightTop - eaveHeightRight) /
+                                    (r.curbHeight - eaveHeightRight)
+                                    * (curbRight - 1.0) + 1.0
+                                    , 1.0);
+
+            useCurbTop = std::min((eaveHeightRight - eaveHeightTop) /
+                                  (r.curbHeight - eaveHeightTop)
+                                  * (curbTop - 1.0) + 1.0
+                                  , 1.0);
+        }
+
+        v[9] = c.point(useCurbRight
+                       , useCurbTop + skewTopTan * (useCurbRight + curbMiddle)
+                       , eaveHeight);
+
+        if (useCurbRight == 1.0) {
+            deferred.face(7, 9, 11);
+            deferred.face(7, 5, 9);
+        } else {
+            deferred.face(7, 5, 11);
+            deferred.face(11, 5, 9);
+        }
+    }
+
+    {
+        const auto eaveHeight(std::max(eaveHeightLeft, eaveHeightBottom));
+
+        auto useCurbBottom(curbBottom);
+        auto useCurbLeft(curbLeft);
+
+        if (r.curbHeight <= eaveHeightLeft) {
+            useCurbLeft = 1.0;
+        } else if (r.curbHeight <= eaveHeightBottom) {
+            useCurbBottom = 1.0;
+        } else {
+            useCurbLeft = std::min((eaveHeightBottom - eaveHeightLeft) /
+                                   (r.curbHeight - eaveHeightLeft)
+                                   * (curbLeft - 1.0) + 1.0
+                                   , 1.0);
+
+            useCurbBottom = std::min((eaveHeightLeft - eaveHeightBottom) /
+                               (r.curbHeight - eaveHeightBottom)
+                               * (curbBottom - 1.0) + 1.0
+                               , 1.0);
+        }
+
+        v[10] = c.point
+            (-useCurbLeft
+             , -useCurbBottom - skewBottomTan * (useCurbLeft - curbMiddle)
+             , eaveHeight);
+
+        if (useCurbBottom == 1.0) {
+            deferred.face(4, 10, 8);
+            deferred.face(4, 6, 10);
+        } else {
+            deferred.face(4, 6, 8);
+            deferred.face(8, 6, 10);
+        }
+    }
+
+    {
+        const auto eaveHeight(std::max(eaveHeightRight, eaveHeightBottom));
+
+        auto useCurbBottom(curbBottom);
+        auto useCurbRight(curbRight);
+
+        if (r.curbHeight <= eaveHeightRight) {
+            useCurbRight = 1.0;
+        } else if (r.curbHeight <= eaveHeightBottom) {
+            useCurbBottom = 1.0;
+        } else {
+            useCurbRight = std::min((eaveHeightBottom - eaveHeightRight) /
+                                    (r.curbHeight - eaveHeightRight)
+                                    * (curbRight - 1.0) + 1.0
+                                    , 1.0);
+
+            useCurbBottom = std::min((eaveHeightRight - eaveHeightBottom) /
+                                  (r.curbHeight - eaveHeightBottom)
+                                  * (curbBottom - 1.0) + 1.0
+                                  , 1.0);
+        }
+
+         v[11] = c.point
+            (useCurbRight
+             , -useCurbBottom + skewBottomTan * (useCurbRight + curbMiddle)
+             , eaveHeight);
+
+        if (useCurbRight == 1.0) {
+            deferred.face(6, 11, 10);
+            deferred.face(6, 7, 11);
+        } else {
+            deferred.face(6, 7, 10);
+            deferred.face(10, 7, 11);
+        }
+    }
+
+    deferred.expand(c, v);
+
+    v[12] = c.point(-curbLeft
+                    , curbTop - skewTopTan * (curbLeft - curbMiddle)
+                    , r.curbHeight);
+
+    v[13] = c.point(curbRight
+                    , curbTop + skewTopTan * (curbRight + curbMiddle)
+                    , r.curbHeight);
+
+    v[14] = c.point(-curbMiddle, curbTop, r.ridgeHeight);
+
+    v[15] = c.point(-curbLeft
+                    , -curbBottom - skewBottomTan * (curbLeft - curbMiddle)
+                    , r.curbHeight);
+
+    v[16] = c.point(curbRight
+                    , -curbBottom + skewBottomTan * (curbRight + curbMiddle)
+                    , r.curbHeight);
+
+    v[17] = c.point(-curbMiddle, -curbBottom, r.ridgeHeight);
+
+    c.face(v, 8, 10, 12);
+    c.face(v, 12, 10, 15);
+    c.face(v, 9, 8, 13);
+    c.face(v, 13, 8, 12);
+    c.face(v, 11, 9, 16);
+    c.face(v, 16, 9, 13);
+    c.face(v, 10, 11, 15);
+    c.face(v, 15, 11, 16);
+    c.face(v, 12, 15, 14);
+    c.face(v, 14, 15, 17);
+    c.face(v, 14, 17, 13);
+    c.face(v, 13, 17, 16);
+    c.face(v, 12, 14, 13);
+    c.face(v, 15, 16, 17);
+
+    c.scaleAndRotate(r);
+
+    return m;
+
+    (void) config;
 }
 
 } // namespace lod2
