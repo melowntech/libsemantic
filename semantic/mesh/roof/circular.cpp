@@ -24,6 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cmath>
+
 #include "dbglog/dbglog.hpp"
 
 #include "../roof.hpp"
@@ -35,16 +37,29 @@ namespace lod2 {
 
 using detail::Index;
 
+namespace {
+
+Index computeArcPoints(const MeshConfig &config, double radius)
+{
+    return Index(std::ceil
+                 (M_PI / std::asin(config.maxCircleSegment / (2 * radius))));
+}
+
+} // namespace
+
 geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config)
 {
     geometry::Mesh mesh;
 
-    /** TODO: derive from radius size
-     */
-    const Index arcPoints(16);
+    const auto arcPoints(computeArcPoints(config, roof.radius));
 
     // roof center
     mesh.vertices.emplace_back(0.0, 0.0, roof.ridgeHeight);
+
+    const auto &face([&](Index a, Index b, Index c, Material m)
+    {
+        mesh.faces.emplace_back(a, b, c, 0, 0, 0, +m);
+    });
 
     if (detail::colinear(roof.ridgeHeight, roof.curbHeight, roof.eaveHeight
                          , roof.curb))
@@ -66,9 +81,9 @@ geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config)
                 return 1 + ((index + 2 * i) % arcVertices);
             });
 
-            mesh.faces.emplace_back(0, v(0), v(2));
-            mesh.faces.emplace_back(v(0), v(3), v(2));
-            mesh.faces.emplace_back(v(0), v(1), v(3));
+            face(0, v(0), v(2), Material::roof);
+            face(v(0), v(3), v(2), Material::facade);
+            face(v(0), v(1), v(3), Material::facade);
         }
     } else {
         const auto arcVertices(arcPoints * 3);
@@ -93,11 +108,11 @@ geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config)
                 return 1 + ((index + 3 * i) % arcVertices);
             });
 
-            mesh.faces.emplace_back(0, v(0), v(3));
-            mesh.faces.emplace_back(v(0), v(1), v(4));
-            mesh.faces.emplace_back(v(0), v(4), v(3));
-            mesh.faces.emplace_back(v(1), v(2), v(5));
-            mesh.faces.emplace_back(v(1), v(5), v(4));
+            face(0, v(0), v(3), Material::roof);
+            face(v(0), v(1), v(4), Material::roof);
+            face(v(0), v(4), v(3), Material::roof);
+            face(v(1), v(2), v(5), Material::facade);
+            face(v(1), v(5), v(4), Material::facade);
         }
     }
 

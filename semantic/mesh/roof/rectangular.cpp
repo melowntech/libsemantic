@@ -82,18 +82,19 @@ public:
 
     /** Adds new face if triangle is not degenerate
      */
-    void face(Index a, Index b, Index c) {
+    void face(Index a, Index b, Index c, Material material) {
         if ((a != b) && (b != c) && (c != a)) {
-            mesh_.faces.emplace_back(a, b, c);
+            mesh_.faces.emplace_back(a, b, c, 0, 0, 0, +material);
         }
     }
 
     /** Adds face with indirect vertex indices.
      */
     template <typename Mapping>
-    void face(const Mapping &mapping, Index a, Index b, Index c)
+    void face(const Mapping &mapping, Index a, Index b, Index c
+              , Material material)
     {
-        face(mapping[a], mapping[b], mapping[c]);
+        face(mapping[a], mapping[b], mapping[c], material);
     }
 
     /** Apply final scale and rotation
@@ -123,10 +124,22 @@ private:
  */
 class DeferredFaces {
 public:
+    struct Face {
+        Index a;
+        Index b;
+        Index c;
+        Material material;
+
+        Face(Index a, Index b, Index c, Material material)
+            : a(a), b(b), c(c), material(material)
+        {}
+        typedef std::vector<Face> list;
+    };
+
     /** Add face.
      */
-    void face(Index a, Index b, Index c) {
-        faces_.emplace_back(a, b, c);
+    void face(Index a, Index b, Index c, Material material) {
+        faces_.emplace_back(a, b, c, material);
     }
 
     /** Map indirect vertices to real vertices and add faces to mech composer.
@@ -135,12 +148,12 @@ public:
     void expand(Composer &c, const Mapping &mapping)
     {
         for (const auto &face : faces_) {
-            c.face(mapping, face(0), face(1), face(2));
+            c.face(mapping, face.a, face.b, face.c, face.material);
         }
     }
 
 private:
-    std::vector<math::Point3_<Index>> faces_;
+    Face::list faces_;
 };
 
 geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
@@ -150,25 +163,25 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
 
     Composer c(m);
 
-    auto curbLeft(r.curb[Key::left]);
-    auto curbRight(r.curb[Key::right]);
+    auto curbLeft(r.curb[+Key::left]);
+    auto curbRight(r.curb[+Key::right]);
 
-    auto curbTop(r.curb[Key::top]);
-    auto curbBottom(r.curb[Key::bottom]);
+    auto curbTop(r.curb[+Key::top]);
+    auto curbBottom(r.curb[+Key::bottom]);
 
     const auto curbMiddle((curbLeft - curbRight) / 2.0);
 
-    const auto &eaveHeightTop(r.eaveHeight[Key::top]);
-    const auto &eaveHeightBottom(r.eaveHeight[Key::bottom]);
-    const auto &eaveHeightLeft(r.eaveHeight[Key::left]);
-    const auto &eaveHeightRight(r.eaveHeight[Key::right]);
+    const auto &eaveHeightTop(r.eaveHeight[+Key::top]);
+    const auto &eaveHeightBottom(r.eaveHeight[+Key::bottom]);
+    const auto &eaveHeightLeft(r.eaveHeight[+Key::left]);
+    const auto &eaveHeightRight(r.eaveHeight[+Key::right]);
 
     /** Skew tangens scaled to 1:1 space
      */
-    const auto skewTopTan(std::tan(r.skew[Key::top])
+    const auto skewTopTan(std::tan(r.skew[+Key::top])
                           * r.size.width / r.size.height
                           );
-    const auto skewBottomTan(std::tan(r.skew[Key::bottom])
+    const auto skewBottomTan(std::tan(r.skew[+Key::bottom])
                              * r.size.width / r.size.height
                              );
 
@@ -191,14 +204,14 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
     v[3] = c.point(1.0 , -1.0 + skewBottomTan * (1.0 + curbMiddle), 0.0);
     v[7] = c.updated(0.0, 0.0, std::min(eaveHeightRight, eaveHeightBottom));
 
-    c.face(v, 0, 2, 4);
-    c.face(v, 4, 2, 6);
-    c.face(v, 1, 0, 5);
-    c.face(v, 5, 0, 4);
-    c.face(v, 3, 1, 7);
-    c.face(v, 7, 1, 5);
-    c.face(v, 2, 3, 6);
-    c.face(v, 6, 3, 7);
+    c.face(v, 0, 2, 4, Material::facade);
+    c.face(v, 4, 2, 6, Material::facade);
+    c.face(v, 1, 0, 5, Material::facade);
+    c.face(v, 5, 0, 4, Material::facade);
+    c.face(v, 3, 1, 7, Material::facade);
+    c.face(v, 7, 1, 5, Material::facade);
+    c.face(v, 2, 3, 6, Material::facade);
+    c.face(v, 6, 3, 7, Material::facade);
 
     DeferredFaces deferred;
 
@@ -230,11 +243,11 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
                        , eaveHeight);
 
         if (useCurbTop == 1.0) {
-            deferred.face(5, 8, 9);
-            deferred.face(5, 4, 8);
+            deferred.face(5, 8, 9, Material::roof);
+            deferred.face(5, 4, 8, Material::roof);
         } else {
-            deferred.face(5, 4, 9);
-            deferred.face(9, 4, 8);
+            deferred.face(5, 4, 9, Material::roof);
+            deferred.face(9, 4, 8, Material::roof);
         }
     }
 
@@ -265,11 +278,11 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
                        , eaveHeight);
 
         if (useCurbRight == 1.0) {
-            deferred.face(7, 9, 11);
-            deferred.face(7, 5, 9);
+            deferred.face(7, 9, 11, Material::roof);
+            deferred.face(7, 5, 9, Material::roof);
         } else {
-            deferred.face(7, 5, 11);
-            deferred.face(11, 5, 9);
+            deferred.face(7, 5, 11, Material::roof);
+            deferred.face(11, 5, 9, Material::roof);
         }
     }
 
@@ -301,11 +314,11 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
              , eaveHeight);
 
         if (useCurbBottom == 1.0) {
-            deferred.face(4, 10, 8);
-            deferred.face(4, 6, 10);
+            deferred.face(4, 10, 8, Material::roof);
+            deferred.face(4, 6, 10, Material::roof);
         } else {
-            deferred.face(4, 6, 8);
-            deferred.face(8, 6, 10);
+            deferred.face(4, 6, 8, Material::roof);
+            deferred.face(8, 6, 10, Material::roof);
         }
     }
 
@@ -337,11 +350,11 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
              , eaveHeight);
 
         if (useCurbRight == 1.0) {
-            deferred.face(6, 11, 10);
-            deferred.face(6, 7, 11);
+            deferred.face(6, 11, 10, Material::roof);
+            deferred.face(6, 7, 11, Material::roof);
         } else {
-            deferred.face(6, 7, 10);
-            deferred.face(10, 7, 11);
+            deferred.face(6, 7, 10, Material::roof);
+            deferred.face(10, 7, 11, Material::roof);
         }
     }
 
@@ -367,20 +380,20 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
 
     v[17] = c.point(-curbMiddle, -curbBottom, r.ridgeHeight);
 
-    c.face(v, 8, 10, 12);
-    c.face(v, 12, 10, 15);
-    c.face(v, 9, 8, 13);
-    c.face(v, 13, 8, 12);
-    c.face(v, 11, 9, 16);
-    c.face(v, 16, 9, 13);
-    c.face(v, 10, 11, 15);
-    c.face(v, 15, 11, 16);
-    c.face(v, 12, 15, 14);
-    c.face(v, 14, 15, 17);
-    c.face(v, 14, 17, 13);
-    c.face(v, 13, 17, 16);
-    c.face(v, 12, 14, 13);
-    c.face(v, 15, 16, 17);
+    c.face(v, 8, 10, 12, Material::roof);
+    c.face(v, 12, 10, 15, Material::roof);
+    c.face(v, 9, 8, 13, Material::roof);
+    c.face(v, 13, 8, 12, Material::roof);
+    c.face(v, 11, 9, 16, Material::roof);
+    c.face(v, 16, 9, 13, Material::roof);
+    c.face(v, 10, 11, 15, Material::roof);
+    c.face(v, 15, 11, 16, Material::roof);
+    c.face(v, 12, 15, 14, Material::roof);
+    c.face(v, 14, 15, 17, Material::roof);
+    c.face(v, 14, 17, 13, Material::roof);
+    c.face(v, 13, 17, 16, Material::roof);
+    c.face(v, 12, 14, 13, Material::roof);
+    c.face(v, 15, 16, 17, Material::roof);
 
     c.scaleAndRotate(r);
 

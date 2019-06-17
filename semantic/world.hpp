@@ -49,7 +49,7 @@ struct Rectangular {
     double curbHeight = 0.0;
     std::array<double, 4> eaveHeight = {};
 
-    struct Key { enum : int { top = 0, bottom = 1, left = 2, right = 3 }; };
+    enum class Key { top = 0, bottom = 1, left = 2, right = 3 };
 };
 
 struct Circular {
@@ -94,6 +94,10 @@ UTILITY_GENERATE_ENUM_IO(Roof::Type,
                       ((rectangular))
                       ((circular))
                       )
+
+inline int operator+(roof::Rectangular::Key key) {
+    return static_cast<int>(key);
+}
 
 } // namespace semantic
 

@@ -27,19 +27,49 @@
 #ifndef semantic_mesh_hpp_included_
 #define semantic_mesh_hpp_included_
 
+#include "utility/enum-io.hpp"
+
 #include "geometry/mesh.hpp"
 
 #include "world.hpp"
 
 namespace semantic {
 
+/** Material definition.
+ */
+enum class Material : int {
+    default_ = 0
+    , facade = 1
+    , roof = 2
+};
+
+/** Helper for material-enum--to-number converion.
+ */
+int operator+(Material m);
+
 struct MeshConfig {
+    /** Maximum circle segment length. Used for number of segments calculation.
+     */
+    double maxCircleSegment;
+
+    MeshConfig() : maxCircleSegment(1) {}
 };
 
 /** Generate mesh in given LOD.
  */
 geometry::Mesh mesh(const World &world, const MeshConfig &config
                     , int lod = 2);
+
+/** Inlines
+ */
+
+inline int operator+(Material m) { return static_cast<int>(m); }
+
+UTILITY_GENERATE_ENUM_IO(Material,
+                         ((default_)("default"))
+                         ((facade))
+                         ((roof))
+                         )
 
 } // namespace semantic
 

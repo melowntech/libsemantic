@@ -37,13 +37,19 @@ typedef geometry::Face::index_type Index;
 inline void append(geometry::Mesh &mesh, const geometry::Mesh &add
             , const math::Point3 &origin)
 {
-    Index offset(mesh.vertices.size());
+    Index vo(mesh.vertices.size());
     for (const auto &v : add.vertices) {
         mesh.vertices.push_back(v + origin);
     }
 
+    Index to(mesh.tCoords.size());
+    mesh.tCoords.insert(mesh.tCoords.end(), add.tCoords.begin()
+                       , add.tCoords.end());
+
     for (const auto &f : add.faces) {
-        mesh.faces.emplace_back(f.a + offset, f.b + offset, f.c + offset);
+        mesh.faces.emplace_back(f.a + vo, f.b + vo, f.c + vo
+                                , f.ta + to, f.tb + to, f.tc + to
+                                , f.imageId);
     }
 }
 
