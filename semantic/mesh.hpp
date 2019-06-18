@@ -50,15 +50,22 @@ int operator+(Material m);
 struct MeshConfig {
     /** Maximum circle segment length. Used for number of segments calculation.
      */
-    double maxCircleSegment;
+    double maxCircleSegment = 1.0;
 
-    MeshConfig() : maxCircleSegment(1) {}
+    /** Minimum number of circle segments.
+     */
+    unsigned int minSegmentCount = 16;
 };
 
 /** Generate mesh in given LOD.
  */
 geometry::Mesh mesh(const World &world, const MeshConfig &config
                     , int lod = 2);
+
+/** Generates list of materials. Position is equal to imageId in mesh generated
+ *  by mesh(...) function.
+ */
+std::vector<std::string> materials();
 
 /** Inlines
  */

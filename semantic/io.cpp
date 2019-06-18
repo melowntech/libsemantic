@@ -52,7 +52,7 @@ void parse(math::Size2f &size, const Json::Value &value)
 
 void parse(math::Point2 &point, const Json::Value &value)
 {
-    Json::unpack(value, "Point3", point(0), point(1));
+    Json::unpack(value, "Point2", point(0), point(1));
 }
 
 void parse(math::Point3 &point, const Json::Value &value)

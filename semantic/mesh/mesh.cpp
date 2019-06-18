@@ -24,6 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <boost/lexical_cast.hpp>
+
 #include "dbglog/dbglog.hpp"
 
 #include "../mesh.hpp"
@@ -93,6 +95,15 @@ geometry::Mesh mesh(const World &world, const MeshConfig &config, int lod)
         break;
     }
     throw;
+}
+
+std::vector<std::string> materials()
+{
+    std::vector<std::string> materials;
+    for (auto material : enumerationValues(semantic::Material())) {
+        materials.push_back(boost::lexical_cast<std::string>(material));
+    }
+    return materials;
 }
 
 } // namespace semantic

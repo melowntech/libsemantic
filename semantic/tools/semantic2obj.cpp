@@ -84,9 +84,7 @@ int Semantic2Obj::run()
     const auto mesh(semantic::mesh(world, meshConfig_));
 
     geometry::ObjMaterial mtl("semantic.mtl");
-    for (auto material : enumerationValues(semantic::Material())) {
-        mtl.names.push_back(boost::lexical_cast<std::string>(material));
-    }
+    mtl.names = semantic::materials();
 
     geometry::saveAsObj(mesh, output_, mtl);
 

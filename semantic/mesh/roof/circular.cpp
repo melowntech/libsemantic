@@ -41,8 +41,10 @@ namespace {
 
 Index computeArcPoints(const MeshConfig &config, double radius)
 {
-    return Index(std::ceil
-                 (M_PI / std::asin(config.maxCircleSegment / (2 * radius))));
+    return std::max(Index(config.minSegmentCount)
+                    , Index(std::ceil
+                            (M_PI / std::asin(config.maxCircleSegment
+                                              / (2 * radius)))));
 }
 
 } // namespace
