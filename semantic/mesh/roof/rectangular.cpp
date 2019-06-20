@@ -99,7 +99,10 @@ public:
 
     /** Apply final scale and rotation
      */
-    void scaleAndRotate(const roof::Rectangular &roof) {
+    void transform(const roof::Rectangular &roof
+                   , const math::Point3 &origin)
+    {
+        LOG(info4) << std::fixed << "origin: " << origin;
         const auto sa(std::sin(roof.azimuth));
         const auto ca(std::cos(roof.azimuth));
         const math::Size2f hsize
@@ -107,8 +110,9 @@ public:
         for (auto &v : mesh_.vertices) {
             const auto x(v(0) * hsize.width);
             const auto y(v(1) * hsize.height);
-            v(0) = ca * x + sa * y;
-            v(1) = -sa * x + ca * y ;
+            v(0) = ca * x + sa * y + origin(0);
+            v(1) = -sa * x + ca * y + origin(1);
+            v(2) += origin(2);
         }
     }
 
@@ -156,7 +160,8 @@ private:
     Face::list faces_;
 };
 
-geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
+geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
+                    , const math::Point3 &origin)
 {
     using Key = roof::Rectangular::Key;
     geometry::Mesh m;
@@ -395,7 +400,7 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config)
     c.face(v, 12, 14, 13, Material::roof);
     c.face(v, 15, 16, 17, Material::roof);
 
-    c.scaleAndRotate(r);
+    c.transform(r, origin);
 
     return m;
 

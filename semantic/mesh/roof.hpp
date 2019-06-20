@@ -35,11 +35,14 @@ namespace semantic {
 
 namespace lod2 {
 
-geometry::Mesh mesh(const Roof &roof, const MeshConfig &config);
+geometry::Mesh mesh(const roof::Roof &roof, const MeshConfig &config
+                    , const math::Point3 &origin);
 
-geometry::Mesh mesh(const roof::Rectangular &roof, const MeshConfig &config);
+geometry::Mesh mesh(const roof::Rectangular &roof, const MeshConfig &config
+                    , const math::Point3 &origin);
 
-geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config);
+geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config
+                    , const math::Point3 &origin);
 
 } // namespace lod2
 

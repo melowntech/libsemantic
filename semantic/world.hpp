@@ -60,25 +60,25 @@ struct Circular {
     double eaveHeight = 0.0;
 };
 
-typedef boost::variant<Rectangular, Circular> Type;
-
-} // namespace roof
+typedef boost::variant<Rectangular, Circular> Instance;
+enum class Type { rectangular = 0, circular };
 
 struct Roof {
     typedef std::vector<Roof> list;
-    enum class Type { rectangular = 0, circular };
 
     math::Point3 center;
-    roof::Type instance;
+    Instance instance;
 
     Type type() const { return static_cast<Type>(instance.which()); }
 };
+
+} // namespace roof
 
 struct Building {
     typedef std::vector<Building> list;
 
     math::Point3 origin;
-    Roof::list roofs;
+    roof::Roof::list roofs;
 };
 
 struct World {
@@ -90,14 +90,17 @@ struct World {
     Building::list buildings;
 };
 
-UTILITY_GENERATE_ENUM_IO(Roof::Type,
-                      ((rectangular))
-                      ((circular))
-                      )
+namespace roof {
+UTILITY_GENERATE_ENUM_IO(Type,
+                         ((rectangular))
+                         ((circular))
+                         )
 
-inline int operator+(roof::Rectangular::Key key) {
+inline int operator+(Rectangular::Key key) {
     return static_cast<int>(key);
 }
+
+} // namespace roof
 
 } // namespace semantic
 

@@ -27,6 +27,8 @@
 #ifndef semantic_mesh_hpp_included_
 #define semantic_mesh_hpp_included_
 
+#include <functional>
+
 #include "utility/enum-io.hpp"
 
 #include "geometry/mesh.hpp"
@@ -61,6 +63,12 @@ struct MeshConfig {
  */
 geometry::Mesh mesh(const World &world, const MeshConfig &config
                     , int lod = 2);
+
+typedef std::function<void(const std::string &id
+                           , const geometry::Mesh&)> MeshCallback;
+
+void mesh(const World &world, const MeshConfig &config
+          , const MeshCallback &meshCallback, int lod = 2);
 
 /** Generates list of materials. Position is equal to imageId in mesh generated
  *  by mesh(...) function.

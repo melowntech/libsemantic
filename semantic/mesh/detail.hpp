@@ -34,12 +34,11 @@ typedef geometry::Face::index_type Index;
 
 /** Append new mesh.
  */
-inline void append(geometry::Mesh &mesh, const geometry::Mesh &add
-            , const math::Point3 &origin)
+inline void append(geometry::Mesh &mesh, const geometry::Mesh &add)
 {
     Index vo(mesh.vertices.size());
     for (const auto &v : add.vertices) {
-        mesh.vertices.push_back(v + origin);
+        mesh.vertices.push_back(v);
     }
 
     Index to(mesh.tCoords.size());
@@ -52,7 +51,6 @@ inline void append(geometry::Mesh &mesh, const geometry::Mesh &add
                                 , f.imageId);
     }
 }
-
 
 inline math::Point3 rotate(double x, double y, double z, double angle)
 {

@@ -49,19 +49,32 @@ Index computeArcPoints(const MeshConfig &config, double radius)
 
 } // namespace
 
-geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config)
+geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config
+                    , const math::Point3 &origin)
 {
     geometry::Mesh mesh;
 
     const auto arcPoints(computeArcPoints(config, roof.radius));
 
-    // roof center
-    mesh.vertices.emplace_back(0.0, 0.0, roof.ridgeHeight);
+    const auto &vertex([&](double x, double y, double z)
+    {
+        mesh.vertices.emplace_back
+            (x + origin(0), y + origin(1), z + origin(2));
+    });
+
+    const auto &vertexPoint([&](const math::Point3 &p)
+    {
+        mesh.vertices.emplace_back
+            (p(0) + origin(0), p(1) + origin(1), p(2) + origin(2));
+    });
 
     const auto &face([&](Index a, Index b, Index c, Material m)
     {
         mesh.faces.emplace_back(a, b, c, 0, 0, 0, +m);
     });
+
+    // roof center
+    vertex(0.0, 0.0, roof.ridgeHeight);
 
     if (detail::colinear(roof.ridgeHeight, roof.curbHeight, roof.eaveHeight
                          , roof.curb))
@@ -74,9 +87,9 @@ geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config)
             const auto end
                 (detail::rotate(0, roof.radius, roof.eaveHeight, angle));
             // eave point
-            mesh.vertices.push_back(end);
+            vertexPoint(end);
             // ground point
-            mesh.vertices.emplace_back(end(0), end(1), 0.0);
+            vertex(end(0), end(1), 0.0);
 
             const auto &v([&](Index index) -> Index
             {
@@ -94,16 +107,16 @@ geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config)
             const double angle((2 * M_PI * i) / arcPoints);
 
             // curb point
-            mesh.vertices.push_back
+            vertexPoint
                 (detail::rotate
                  (0, roof.radius * roof.curb, roof.curbHeight, angle));
 
             const auto end
                 (detail::rotate(0, roof.radius, roof.eaveHeight, angle));
             // eave point
-            mesh.vertices.push_back(end);
+            vertexPoint(end);
             // ground point
-            mesh.vertices.emplace_back(end(0), end(1), 0.0);
+            vertex(end(0), end(1), 0.0);
 
             const auto &v([&](Index index) -> Index
             {

@@ -86,7 +86,7 @@ void parse(roof::Circular &r, const Json::Value &value)
     Json::get(r.eaveHeight, height, "eave");
 }
 
-void parse(roof::Type &r, const Json::Value &value)
+void parse(roof::Instance &r, const Json::Value &value)
 {
     struct Visitor : public boost::static_visitor<void> {
         const Json::Value &value;
@@ -97,21 +97,23 @@ void parse(roof::Type &r, const Json::Value &value)
     boost::apply_visitor(v, r);
 }
 
-void parse(Roof &r, const Json::Value &value)
+void parse(roof::Roof &r, const Json::Value &value)
 {
-    Roof::Type type;
+    roof::Type type;
     Json::get(type, value, "type");
     parse(r.center, Json::check(value, "center", Json::arrayValue));
 
     switch (type) {
-    case Roof::Type::rectangular: r.instance = roof::Rectangular(); break;
-    case Roof::Type::circular: r.instance = roof::Circular(); break;
+    case roof::Type::rectangular:
+        r.instance = roof::Rectangular(); break;
+    case roof::Type::circular:
+        r.instance = roof::Circular(); break;
     }
 
     parse(r.instance, value);
 }
 
-void parse(Roof::list &roofs, const Json::Value &value)
+void parse(roof::Roof::list &roofs, const Json::Value &value)
 {
     roofs.reserve(value.size());
     for (const auto &item : value) {
@@ -208,7 +210,7 @@ void build(Json::Value &value, const roof::Circular &r)
     height["eave"] = r.eaveHeight;
 }
 
-void build(Json::Value &value, const Roof &r)
+void build(Json::Value &value, const roof::Roof &r)
 {
     // build instance
     struct Visitor : public boost::static_visitor<void> {
@@ -224,7 +226,7 @@ void build(Json::Value &value, const Roof &r)
     build(value["center"], r.center);
 }
 
-void build(Json::Value &value, const Roof::list &roofs)
+void build(Json::Value &value, const roof::Roof::list &roofs)
 {
     value = Json::arrayValue;
     for (const auto &roof : roofs) {

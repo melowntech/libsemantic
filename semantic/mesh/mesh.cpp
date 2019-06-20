@@ -38,48 +38,55 @@ namespace lod2 {
 
 using detail::append;
 
-geometry::Mesh mesh(const Roof &roof
-                    , const MeshConfig &config)
+geometry::Mesh mesh(const roof::Roof &roof
+                    , const MeshConfig &config
+                    , const math::Point3 &origin)
 {
     struct Visitor : public boost::static_visitor<geometry::Mesh> {
         const MeshConfig &config;
-        Visitor(const MeshConfig &config) : config(config) {}
+        const math::Point3 &origin;
+        Visitor(const MeshConfig &config, const math::Point3 &origin)
+            : config(config), origin(origin)
+        {}
         geometry::Mesh operator()(const roof::Rectangular &r) const {
-            return mesh(r, config);
+            return mesh(r, config, origin);
         }
         geometry::Mesh operator()(const roof::Circular &r) const {
-            return mesh(r, config);
+            return mesh(r, config, origin);
         }
-    } v(config);
+    } v(config, origin);
     return boost::apply_visitor(v, roof.instance);
 }
 
-geometry::Mesh mesh(const Building &building, const MeshConfig &config)
+void mesh(const Building &building, const MeshConfig &config
+          , const math::Point3 &origin_
+          , const MeshCallback &meshCallback)
 {
-    geometry::Mesh m;
+    const auto origin(origin_ + building.origin);
+
     for (const auto &roof : building.roofs) {
-        append(m, mesh(roof, config), building.origin + roof.center);
+        meshCallback("TODO: use ID"
+                     , mesh(roof, config, origin + roof.center));
     }
-    return m;
 }
 
-geometry::Mesh mesh(const World &world, const MeshConfig &config)
+void mesh(const World &world, const MeshConfig &config
+          , const MeshCallback &meshCallback)
 {
-    geometry::Mesh m;
     for (const auto &building : world.buildings) {
-        append(m, mesh(building, config), world.origin);
+        mesh(building, config, world.origin, meshCallback);
     }
-    return m;
 }
 
 } // namespace lod2
 
 /** Generate mesh in given LOD.
  */
-geometry::Mesh mesh(const World &world, const MeshConfig &config, int lod)
+void mesh(const World &world, const MeshConfig &config
+          , const MeshCallback &meshCallback, int lod)
 {
     switch (lod) {
-    case 2: return lod2::mesh(world, config);
+    case 2: return lod2::mesh(world, config, meshCallback);
 
     case 0:
     case 1:
@@ -94,7 +101,18 @@ geometry::Mesh mesh(const World &world, const MeshConfig &config, int lod)
             << "Unknown LOD " << lod << ".";
         break;
     }
-    throw;
+}
+
+geometry::Mesh mesh(const World &world, const MeshConfig &config, int lod)
+{
+    geometry::Mesh m;
+    auto &&callback([&m](const std::string&, const geometry::Mesh &add)
+    {
+        detail::append(m, add);
+    });
+
+    mesh(world, config, MeshCallback(callback), lod);
+    return m;
 }
 
 std::vector<std::string> materials()
