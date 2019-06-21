@@ -24,8 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_world_hpp_included_
-#define semantic_world_hpp_included_
+#ifndef semantic_roof_hpp_included_
+#define semantic_roof_hpp_included_
 
 #include <vector>
 #include <array>
@@ -34,46 +34,56 @@
 
 #include "utility/enum-io.hpp"
 #include "math/geometry_core.hpp"
-#include "geo/srsdef.hpp"
 
-#include "roof.hpp"
+namespace semantic { namespace roof {
 
-namespace semantic {
+struct Rectangular {
+    math::Size2f size;
+    math::Point2d skew;
+    double azimuth = 0.0;
+    std::array<double, 4> curb = {};
+    double ridgeHeight = 0.0;
+    double curbHeight = 0.0;
+    std::array<double, 4> eaveHeight = {};
 
-UTILITY_GENERATE_ENUM(Class,
-                      ((building))
-                      )
-
-/** Base entity.
- */
-struct Entity {
-    std::string id;
-    math::Point3 origin;
+    enum class Key { top = 0, bottom = 1, left = 2, right = 3 };
 };
 
-/** Building. Only roofs so far, facades are implicit.
+/** Casts Key to integer.
  */
-struct Building : Entity {
-    static const constexpr Class cls = Class::building;
+int operator+(Rectangular::Key key);
 
-    typedef std::vector<Building> list;
-
-    /** List of roofs.
-     */
-    roof::Roof::list roofs;
+struct Circular {
+    double radius = 0.0;
+    double curb = 0.0;
+    double ridgeHeight = 0.0;
+    double curbHeight = 0.0;
+    double eaveHeight = 0.0;
 };
 
-/** Semantic world. Contains only a list of buildings, so far.
- */
-struct World {
-    geo::SrsDefinition srs;
-    bool adjustVertical = false;
+typedef boost::variant<Rectangular, Circular> Instance;
+enum class Type { rectangular = 0, circular };
 
-    math::Point3 origin;
+struct Roof {
+    typedef std::vector<Roof> list;
 
-    Building::list buildings;
+    math::Point3 center;
+    Instance instance;
+
+    Type type() const { return static_cast<Type>(instance.which()); }
 };
 
-} // namespace semantic
+// inline stuff
 
-#endif // semantic_world_hpp_included_
+UTILITY_GENERATE_ENUM_IO(Type,
+                         ((rectangular))
+                         ((circular))
+                         )
+
+inline int operator+(Rectangular::Key key) {
+    return static_cast<int>(key);
+}
+
+} } // namespace roof::semantic
+
+#endif // semantic_roof_hpp_included_

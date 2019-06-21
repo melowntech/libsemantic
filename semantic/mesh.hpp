@@ -64,8 +64,8 @@ struct MeshConfig {
 geometry::Mesh mesh(const World &world, const MeshConfig &config
                     , int lod = 2);
 
-typedef std::function<void(const std::string &id
-                           , const geometry::Mesh&)> MeshCallback;
+typedef std::function<void(Class cls, const std::string &id
+                           , const geometry::Mesh &mesh)> MeshCallback;
 
 void mesh(const World &world, const MeshConfig &config
           , const MeshCallback &meshCallback, int lod = 2);

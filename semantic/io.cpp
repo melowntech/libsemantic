@@ -122,9 +122,15 @@ void parse(roof::Roof::list &roofs, const Json::Value &value)
     }
 }
 
+void parse(Entity &entity, const Json::Value &value)
+{
+    Json::get(entity.id, value, "id");
+    parse(entity.origin, Json::check(value, "origin", Json::arrayValue));
+}
+
 void parse(Building &building, const Json::Value &value)
 {
-    parse(building.origin, Json::check(value, "origin", Json::arrayValue));
+    parse(static_cast<Entity&>(building), value);
     parse(building.roofs, Json::check(value, "roofs", Json::arrayValue));
 }
 
@@ -235,9 +241,16 @@ void build(Json::Value &value, const roof::Roof::list &roofs)
     }
 }
 
-void build(Json::Value &value, const Building &building)
+void build(Json::Value &value, const Entity &entity)
 {
     value = Json::objectValue;
+    value["id"] = entity.id;
+    build(value["origin"], entity.origin);
+}
+
+void build(Json::Value &value, const Building &building)
+{
+    build(value, static_cast<const Entity&>(building));
     build(value["origin"], building.origin);
     build(value["roofs"], building.roofs);
 }

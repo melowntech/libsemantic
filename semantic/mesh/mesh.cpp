@@ -65,7 +65,7 @@ void mesh(const Building &building, const MeshConfig &config
     const auto origin(origin_ + building.origin);
 
     for (const auto &roof : building.roofs) {
-        meshCallback("TODO: use ID"
+        meshCallback(Class::building, building.id
                      , mesh(roof, config, origin + roof.center));
     }
 }
@@ -106,7 +106,7 @@ void mesh(const World &world, const MeshConfig &config
 geometry::Mesh mesh(const World &world, const MeshConfig &config, int lod)
 {
     geometry::Mesh m;
-    auto &&callback([&m](const std::string&, const geometry::Mesh &add)
+    auto &&callback([&m](Class, const std::string&, const geometry::Mesh &add)
     {
         detail::append(m, add);
     });
