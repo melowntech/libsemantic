@@ -24,6 +24,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef semantic_mesh_detail_hpp_included_
+#define semantic_mesh_detail_hpp_included_
+
 #include <cmath>
 
 #include "math/geometry_core.hpp"
@@ -77,3 +80,5 @@ inline bool colinear(double a, double b, double c, double t)
 }
 
 } } // namespace semantic::detail
+
+#endif // semantic_mesh_detail_hpp_included_

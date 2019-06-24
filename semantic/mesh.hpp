@@ -27,8 +27,6 @@
 #ifndef semantic_mesh_hpp_included_
 #define semantic_mesh_hpp_included_
 
-#include <functional>
-
 #include "utility/enum-io.hpp"
 
 #include "geometry/mesh.hpp"
@@ -64,9 +62,11 @@ struct MeshConfig {
 geometry::Mesh mesh(const World &world, const MeshConfig &config
                     , int lod = 2);
 
-typedef std::function<void(Class cls, const std::string &id
-                           , const geometry::Mesh &mesh)> MeshCallback;
-
+/** Generate mesh in given LOD. Calls
+ *      meshCallback(Class, std::string, geometry::Mesh)
+ *  for every encountered entity.
+ */
+template <typename MeshCallback>
 void mesh(const World &world, const MeshConfig &config
           , const MeshCallback &meshCallback, int lod = 2);
 
@@ -88,4 +88,8 @@ UTILITY_GENERATE_ENUM_IO(Material,
 
 } // namespace semantic
 
-#endif // semantic_world_hpp_included_
+#define semantic_mesh_hpp_guard
+#include "mesh/mesh.incl.hpp"
+#undef semantic_mesh_hpp_guard
+
+#endif // semantic_mesh_hpp_included_

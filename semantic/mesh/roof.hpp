@@ -29,9 +29,11 @@
 
 #include "geometry/mesh.hpp"
 
-#include "../mesh.hpp"
+#include "../roof.hpp"
 
 namespace semantic {
+
+struct MeshConfig;
 
 namespace lod2 {
 

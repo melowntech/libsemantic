@@ -26,7 +26,7 @@
 
 #include "dbglog/dbglog.hpp"
 
-#include "mesh.hpp"
+#include "../mesh.hpp"
 
 namespace semantic {
 

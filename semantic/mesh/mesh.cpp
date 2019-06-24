@@ -28,15 +28,11 @@
 
 #include "dbglog/dbglog.hpp"
 
-#include "../mesh.hpp"
-#include "detail.hpp"
-#include "roof.hpp"
+ #include "../mesh.hpp"
 
 namespace semantic {
 
 namespace lod2 {
-
-using detail::append;
 
 geometry::Mesh mesh(const roof::Roof &roof
                     , const MeshConfig &config
@@ -58,60 +54,17 @@ geometry::Mesh mesh(const roof::Roof &roof
     return boost::apply_visitor(v, roof.instance);
 }
 
-void mesh(const Building &building, const MeshConfig &config
-          , const math::Point3 &origin_
-          , const MeshCallback &meshCallback)
-{
-    const auto origin(origin_ + building.origin);
-
-    for (const auto &roof : building.roofs) {
-        meshCallback(Class::building, building.id
-                     , mesh(roof, config, origin + roof.center));
-    }
-}
-
-void mesh(const World &world, const MeshConfig &config
-          , const MeshCallback &meshCallback)
-{
-    for (const auto &building : world.buildings) {
-        mesh(building, config, world.origin, meshCallback);
-    }
-}
-
 } // namespace lod2
-
-/** Generate mesh in given LOD.
- */
-void mesh(const World &world, const MeshConfig &config
-          , const MeshCallback &meshCallback, int lod)
-{
-    switch (lod) {
-    case 2: return lod2::mesh(world, config, meshCallback);
-
-    case 0:
-    case 1:
-    case 3:
-    case 4:
-        LOGTHROW(err3, std::runtime_error)
-            << "Generation of mesh in LOD " << lod << " not supported.";
-        break;
-
-    default:
-        LOGTHROW(err3, std::runtime_error)
-            << "Unknown LOD " << lod << ".";
-        break;
-    }
-}
 
 geometry::Mesh mesh(const World &world, const MeshConfig &config, int lod)
 {
     geometry::Mesh m;
-    auto &&callback([&m](Class, const std::string&, const geometry::Mesh &add)
-    {
-        detail::append(m, add);
-    });
-
-    mesh(world, config, MeshCallback(callback), lod);
+    mesh(world, config
+         ,[&m](Class, const std::string&, const geometry::Mesh &add)
+         {
+             detail::append(m, add);
+         }
+         , lod);
     return m;
 }
 

@@ -28,6 +28,7 @@
 
 #include "dbglog/dbglog.hpp"
 
+#include "../../mesh.hpp"
 #include "../roof.hpp"
 #include "../detail.hpp"
 
