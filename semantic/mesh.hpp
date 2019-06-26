@@ -63,7 +63,7 @@ geometry::Mesh mesh(const World &world, const MeshConfig &config
                     , int lod = 2);
 
 /** Generate mesh in given LOD. Calls
- *      meshCallback(Class, std::string, geometry::Mesh)
+ *      meshCallback(const auto &entity, geometry::Mesh)
  *  for every encountered entity.
  */
 template <typename MeshCallback>

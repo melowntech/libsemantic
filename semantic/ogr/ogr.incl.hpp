@@ -24,54 +24,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <boost/lexical_cast.hpp>
+#ifndef semantic_ogr_ogr_incl_hpp_included_
+#define semantic_ogr_ogr_incl_hpp_included_
 
-#include "../mesh.hpp"
+#ifndef semantic_ogr_hpp_guard
+#  error "This file must be included from ogr.hpp only."
+#endif
+
+#include "roof.hpp"
 
 namespace semantic {
 
-namespace lod2 {
-
-geometry::Mesh mesh(const roof::Roof &roof
-                    , const MeshConfig &config
-                    , const math::Point3 &origin)
+template <typename OgrCallback>
+void ogr(const Building &building, const math::Point3 &origin_
+          , const OgrCallback &ogrCallback)
 {
-    struct Visitor : public boost::static_visitor<geometry::Mesh> {
-        const MeshConfig &config;
-        const math::Point3 &origin;
-        Visitor(const MeshConfig &config, const math::Point3 &origin)
-            : config(config), origin(origin)
-        {}
-        geometry::Mesh operator()(const roof::Rectangular &r) const {
-            return mesh(r, config, origin);
-        }
-        geometry::Mesh operator()(const roof::Circular &r) const {
-            return mesh(r, config, origin);
-        }
-    } v(config, origin);
-    return boost::apply_visitor(v, roof.instance);
-}
+    const auto origin(origin_ + building.origin);
 
-} // namespace lod2
-
-geometry::Mesh mesh(const World &world, const MeshConfig &config, int lod)
-{
-    geometry::Mesh m;
-    mesh(world, config
-         ,[&m](const auto&, const geometry::Mesh &add) {
-             detail::append(m, add);
-         }
-         , lod);
-    return m;
-}
-
-std::vector<std::string> materials()
-{
-    std::vector<std::string> materials;
-    for (auto material : enumerationValues(semantic::Material())) {
-        materials.push_back(boost::lexical_cast<std::string>(material));
+    for (const auto &roof : building.roofs) {
+        ogrCallback(building, ogr(roof, origin + roof.center));
     }
-    return materials;
+}
+
+template <typename OgrCallback>
+void ogr(const World &world, const OgrCallback &ogrCallback)
+{
+    for (const auto &building : world.buildings) {
+        ogr(building, world.origin, ogrCallback);
+    }
+
 }
 
 } // namespace semantic
+
+#endif // semantic_ogr_ogr_incl_hpp_included_

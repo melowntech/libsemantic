@@ -48,8 +48,7 @@ void mesh(const Building &building, const MeshConfig &config
     const auto origin(origin_ + building.origin);
 
     for (const auto &roof : building.roofs) {
-        meshCallback(Class::building, building.id
-                     , mesh(roof, config, math::Point3(origin + roof.center)));
+        meshCallback(building, mesh(roof, config, origin + roof.center));
     }
 }
 

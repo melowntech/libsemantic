@@ -24,54 +24,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <boost/lexical_cast.hpp>
-
-#include "../mesh.hpp"
+#include "../ogr.hpp"
 
 namespace semantic {
 
-namespace lod2 {
-
-geometry::Mesh mesh(const roof::Roof &roof
-                    , const MeshConfig &config
-                    , const math::Point3 &origin)
+OgrGeometry ogr(const roof::Roof &roof, const math::Point3 &origin)
 {
-    struct Visitor : public boost::static_visitor<geometry::Mesh> {
-        const MeshConfig &config;
+    struct Visitor : public boost::static_visitor<OgrGeometry> {
         const math::Point3 &origin;
-        Visitor(const MeshConfig &config, const math::Point3 &origin)
-            : config(config), origin(origin)
+        Visitor(const math::Point3 &origin) : origin(origin)
         {}
-        geometry::Mesh operator()(const roof::Rectangular &r) const {
-            return mesh(r, config, origin);
+        OgrGeometry operator()(const roof::Rectangular &r) const {
+            return ogr(r, origin);
         }
-        geometry::Mesh operator()(const roof::Circular &r) const {
-            return mesh(r, config, origin);
+        OgrGeometry operator()(const roof::Circular &r) const {
+            return ogr(r, origin);
         }
-    } v(config, origin);
+    } v(origin);
     return boost::apply_visitor(v, roof.instance);
-}
-
-} // namespace lod2
-
-geometry::Mesh mesh(const World &world, const MeshConfig &config, int lod)
-{
-    geometry::Mesh m;
-    mesh(world, config
-         ,[&m](const auto&, const geometry::Mesh &add) {
-             detail::append(m, add);
-         }
-         , lod);
-    return m;
-}
-
-std::vector<std::string> materials()
-{
-    std::vector<std::string> materials;
-    for (auto material : enumerationValues(semantic::Material())) {
-        materials.push_back(boost::lexical_cast<std::string>(material));
-    }
-    return materials;
 }
 
 } // namespace semantic
