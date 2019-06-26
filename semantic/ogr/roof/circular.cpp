@@ -33,9 +33,15 @@ namespace semantic {
 
 OgrGeometry ogr(const roof::Circular &roof, const math::Point3 &origin)
 {
-    (void) roof;
-    (void) origin;
-    return {};
+    auto cs(std::make_unique< ::OGRCircularString>());
+
+    /** Closed circle between two arcs.
+     */
+    ls->addPoint(origin(0) - roof.radius, origin(1), origin(2));
+    ls->addPoint(origin(0) + roof.radius, origin(1), origin(2));
+    ls->addPoint(origin(0) - roof.radius, origin(1), origin(2));
+
+    return cs;
 }
 
 } // namespace semantic

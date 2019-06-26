@@ -50,23 +50,47 @@ OgrGeometry ogr(const roof::Rectangular &r, const math::Point3 &origin)
     const auto skewBottomTan(std::tan(r.skew[+Key::bottom])
                              * r.size.width / r.size.height
                              );
+    const auto sa(std::sin(r.azimuth));
+    const auto ca(std::cos(r.azimuth));
+    const math::Size2f hsize(r.size.width / 2.0, r.size.height / 2.0);
+
+    auto ls(std::make_unique< ::OGRLineString>());
+
+    const auto &vertex([&](double x, double y) -> math::Point3
+    {
+        const auto x_(x * hsize.width);
+        const auto y_(y * hsize.height);
+        return { ca * x_ + sa * y_ + origin(0)
+                , -sa * x_ + ca * y_ + origin(1)
+                , origin(2) };
+    });
+
+    const auto addVertex([&](const math::Point3 &v)
+    {
+        ls->addPoint(v(0), v(1), v(2));
+        return v;
+    });
+
+    const auto add([&](double x, double y)
+    {
+        return addVertex(vertex(x, y));
+    });
 
     // top-left
-    math::Point2(-1.0, 1.0 - skewTopTan * (1.0 - curbMiddle));
-
+    const auto start(add(-1.0, 1.0 - skewTopTan * (1.0 - curbMiddle)));
     // top-right
-    math::Point2(1.0, 1.0 + skewTopTan * (1.0 + curbMiddle));
+    add(1.0, 1.0 + skewTopTan * (1.0 + curbMiddle));
 
     // bottom-left
-    math::Point2(-1.0, -1.0 - skewBottomTan * (1.0 - curbMiddle));
+    add(-1.0, -1.0 - skewBottomTan * (1.0 - curbMiddle));
 
     // bottom-right
-    math::Point2(1.0 , -1.0 + skewBottomTan * (1.0 + curbMiddle));
+    add(1.0 , -1.0 + skewBottomTan * (1.0 + curbMiddle));
 
-    // TODO: scale, rotate and translate
-    (void) origin;
+    // close ring
+    addVertex(start);
 
-    return {};
+    return ls;
 }
 
 } // namespace semantic

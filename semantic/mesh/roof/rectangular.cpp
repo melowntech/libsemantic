@@ -103,7 +103,6 @@ public:
     void transform(const roof::Rectangular &roof
                    , const math::Point3 &origin)
     {
-        LOG(info4) << std::fixed << "origin: " << origin;
         const auto sa(std::sin(roof.azimuth));
         const auto ca(std::cos(roof.azimuth));
         const math::Size2f hsize
