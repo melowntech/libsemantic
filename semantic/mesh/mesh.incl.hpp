@@ -31,9 +31,7 @@
 #  error "This file must be included from mesh.hpp only."
 #endif
 
-#line 1 "shit-before"
 #include "roof.hpp"
-#line 1 "shit-after"
 #include "detail.hpp"
 
 namespace semantic {
