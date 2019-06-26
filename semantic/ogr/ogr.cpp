@@ -50,7 +50,7 @@ OgrGeometry ogr(const roof::Roof &roof, const math::Point3 &origin)
 
 OgrGeometry ogr(const Building &building, const math::Point3 &origin_)
 {
-    math::Point3 origin(origin_ + building.origin);
+    const auto origin(origin_ + building.origin);
 
     // optimization for single-roofed building
     if (building.roofs.size() == 1) {

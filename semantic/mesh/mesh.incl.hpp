@@ -31,8 +31,10 @@
 #  error "This file must be included from mesh.hpp only."
 #endif
 
-#include "roof.hpp"
 #include "detail.hpp"
+
+#include "roof.hpp"
+#include "building.hpp"
 
 namespace semantic {
 
@@ -42,14 +44,10 @@ using detail::append;
 
 template <typename MeshCallback>
 void mesh(const Building &building, const MeshConfig &config
-          , const math::Point3 &origin_
+          , const math::Point3 &origin
           , const MeshCallback &meshCallback)
 {
-    const auto origin(origin_ + building.origin);
-
-    for (const auto &roof : building.roofs) {
-        meshCallback(building, mesh(roof, config, origin + roof.center));
-    }
+    meshCallback(building, mesh(building, config, origin));
 }
 
 template <typename MeshCallback>
