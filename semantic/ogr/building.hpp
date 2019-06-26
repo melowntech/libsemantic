@@ -24,24 +24,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cmath>
+#ifndef semantic_ogr_building_hpp_included_
+#define semantic_ogr_building_hpp_included_
 
-#include "../../ogr.hpp"
-#include "../roof.hpp"
+#include "../world.hpp"
 
 namespace semantic {
 
-OgrGeometry ogr(const roof::Circular &roof, const math::Point3 &origin)
-{
-    auto cs(std::make_unique< ::OGRCircularString>());
-
-    /** Closed circle between two arcs.
-     */
-    cs->addPoint(origin(0) - roof.radius, origin(1), origin(2));
-    cs->addPoint(origin(0) + roof.radius, origin(1), origin(2));
-    cs->addPoint(origin(0) - roof.radius, origin(1), origin(2));
-
-    return cs;
-}
+OgrGeometry ogr(const Building &building, const math::Point3 &origin);
 
 } // namespace semantic
+
+#endif // semantic_ogr_building_hpp_included_

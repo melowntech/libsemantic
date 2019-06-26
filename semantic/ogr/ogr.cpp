@@ -24,7 +24,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "dbglog/dbglog.hpp"
+
 #include "../ogr.hpp"
+
+#include "building.hpp"
 
 namespace semantic {
 
@@ -42,6 +46,30 @@ OgrGeometry ogr(const roof::Roof &roof, const math::Point3 &origin)
         }
     } v(origin);
     return boost::apply_visitor(v, roof.instance);
+}
+
+OgrGeometry ogr(const Building &building, const math::Point3 &origin_)
+{
+    math::Point3 origin(origin_ + building.origin);
+
+    // optimization for single-roofed building
+    if (building.roofs.size() == 1) {
+        const auto &roof(building.roofs.front());
+        return ogr(roof, origin + roof.center);
+    }
+
+    // any other roof count: make a collection
+    auto collection(std::make_unique< ::OGRGeometryCollection>());
+    for (const auto &roof : building.roofs) {
+        if (OGRERR_NONE
+            != collection->addGeometry(ogr(roof, origin + roof.center).get()))
+        {
+            LOGTHROW(err1, std::runtime_error)
+                << "Unable to add geometry to OGRGeometryCollection.";
+        }
+    }
+    return collection;
+
 }
 
 } // namespace semantic

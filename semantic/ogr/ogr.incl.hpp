@@ -32,18 +32,15 @@
 #endif
 
 #include "roof.hpp"
+#include "building.hpp"
 
 namespace semantic {
 
 template <typename OgrCallback>
-void ogr(const Building &building, const math::Point3 &origin_
+void ogr(const Building &building, const math::Point3 &origin
           , const OgrCallback &ogrCallback)
 {
-    const auto origin(origin_ + building.origin);
-
-    for (const auto &roof : building.roofs) {
-        ogrCallback(building, ogr(roof, origin + roof.center));
-    }
+    ogrCallback(building, ogr(building, origin));
 }
 
 template <typename OgrCallback>
