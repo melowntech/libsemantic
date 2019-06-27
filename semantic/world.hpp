@@ -54,7 +54,7 @@ struct Entity {
 /** Building. Only roofs so far, facades are implicit.
  */
 struct Building : Entity {
-    static constexpr Class cls() { return Class::building; }
+    static const constexpr Class cls = Class::building;
 
     typedef std::vector<Building> list;
 

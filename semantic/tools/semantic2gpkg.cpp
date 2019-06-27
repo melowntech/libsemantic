@@ -148,7 +148,7 @@ int Semantic2Gpkg::run()
     semantic::ogr(world, [&](const auto &e, auto &&geometry)
     {
         LOG(info4) << "e: " << e.id;
-        auto &layer(layers(e.cls()));
+        auto &layer(layers(e.cls));
 
         // create feature
         auto feature(std::make_unique< ::OGRFeature>(layer.definition));
@@ -156,7 +156,7 @@ int Semantic2Gpkg::run()
         // set feature geometry
         if (OGRERR_NONE != feature->SetGeometryDirectly(geometry.release())) {
             LOGTHROW(err3, std::runtime_error)
-                << "Cannot add geometry of entity <" << e.cls() << ">.\""
+                << "Cannot add geometry of entity <" << e.cls << ">.\""
                 << e.id << "\".";
         }
 
@@ -169,7 +169,7 @@ int Semantic2Gpkg::run()
         // store feature in layer
         if (OGRERR_NONE != layer.layer->CreateFeature(feature.get())) {
             LOGTHROW(err3, std::runtime_error)
-                << "Cannot create feature for entity <" << e.cls() << ">.\""
+                << "Cannot create feature for entity <" << e.cls << ">.\""
                 << e.id << "\".";
         }
 
