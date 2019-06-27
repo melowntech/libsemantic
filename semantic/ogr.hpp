@@ -37,7 +37,7 @@ namespace semantic {
 
 typedef std::unique_ptr< ::OGRGeometry> OgrGeometry;
 
-/** Calls featureCallback(const auto &entity, const OGRGeometry&)
+/** Calls featureCallback(const auto &entity, OGRGeometry&&)
  */
 template <typename FeatureCallback>
 void ogr(const World &world, const FeatureCallback &featureCallback);

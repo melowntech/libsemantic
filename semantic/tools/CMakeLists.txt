@@ -19,3 +19,11 @@ set(semantic2semantic_SOURCES
 add_executable(semantic2semantic ${semantic2semantic_SOURCES})
 target_link_libraries(semantic2semantic ${MODULE_LIBRARIES})
 buildsys_binary(semantic2semantic)
+
+set(semantic2gpkg_SOURCES
+  semantic2gpkg.cpp
+  )
+
+add_executable(semantic2gpkg ${semantic2gpkg_SOURCES})
+target_link_libraries(semantic2gpkg ${MODULE_LIBRARIES})
+buildsys_binary(semantic2gpkg)

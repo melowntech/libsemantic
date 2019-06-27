@@ -3,11 +3,12 @@ set(semantic_VERSION 0.0)
 
 define_module(LIBRARY semantic=${semantic_VERSION}
   DEPENDS
+  BuildSystem>=1.4 C++>=14
   geo jsoncpp
   )
 
 set(semantic_SOURCES
-  world.hpp
+  world.hpp world.cpp
   io.hpp io.cpp
 
   mesh.hpp

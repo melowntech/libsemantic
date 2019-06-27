@@ -24,58 +24,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_world_hpp_included_
-#define semantic_world_hpp_included_
+#include <boost/lexical_cast.hpp>
 
-#include <vector>
-#include <array>
-
-#include <boost/variant.hpp>
-
-#include "utility/enum-io.hpp"
-#include "math/geometry_core.hpp"
-#include "geo/srsdef.hpp"
-
-#include "roof.hpp"
+#include "world.hpp"
 
 namespace semantic {
 
-UTILITY_GENERATE_ENUM(Class,
-                      ((building))
-                      )
-
-/** Base entity.
- */
-struct Entity {
-    std::string id;
-    math::Point3 origin;
-};
-
-/** Building. Only roofs so far, facades are implicit.
- */
-struct Building : Entity {
-    static constexpr Class cls() { return Class::building; }
-
-    typedef std::vector<Building> list;
-
-    /** List of roofs.
-     */
-    roof::Roof::list roofs;
-};
-
-/** Semantic world. Contains only a list of buildings, so far.
- */
-struct World {
-    geo::SrsDefinition srs;
-    bool adjustVertical = false;
-
-    math::Point3 origin;
-
-    Building::list buildings;
-};
-
-std::vector<std::string> classes();
+std::vector<std::string> classes()
+{
+    std::vector<std::string> materials;
+    for (auto material : enumerationValues(Class())) {
+        materials.push_back(boost::lexical_cast<std::string>(material));
+    }
+    return materials;
+}
 
 } // namespace semantic
-
-#endif // semantic_world_hpp_included_
