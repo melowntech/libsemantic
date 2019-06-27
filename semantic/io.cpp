@@ -241,26 +241,28 @@ void build(Json::Value &value, const roof::Roof::list &roofs)
     }
 }
 
-void build(Json::Value &value, const Entity &entity)
+void build(Json::Value &value, const Entity &entity
+           , const math::Point3 &shift)
 {
     value = Json::objectValue;
     value["id"] = entity.id;
-    build(value["origin"], entity.origin);
+    build(value["origin"], math::Point3(entity.origin + shift));
 }
 
-void build(Json::Value &value, const Building &building)
+void build(Json::Value &value, const Building &building
+           , const math::Point3 &shift)
 {
-    build(value, static_cast<const Entity&>(building));
-    build(value["origin"], building.origin);
+    build(value, static_cast<const Entity&>(building), shift);
     build(value["roofs"], building.roofs);
 }
 
-void build(Json::Value &value, const Building::list &buildings)
+void build(Json::Value &value, const Building::list &buildings
+           , const math::Point3 &shift = math::Point3())
 {
     value = Json::arrayValue;
     for (const auto &building : buildings) {
         auto &item(value.append(Json::objectValue));
-        build(item, building);
+        build(item, building, shift);
     }
 }
 
@@ -312,6 +314,14 @@ void save(const World &world, const fs::path &path)
     f.open(path.string(), (std::ios_base::out | std::ios_base::trunc));
     save(world, f, path);
     f.close();
+}
+
+void serialize(std::ostream &os, const Building &building
+               , const math::Point3 &shift)
+{
+    Json::Value value;
+    build(value, building, shift);
+    Json::write(os, value, false);
 }
 
 } // namespace semantic

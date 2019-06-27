@@ -163,8 +163,8 @@ int Semantic2Gpkg::run()
         // set id
         feature->SetField(0, e.id.c_str());
 
-        // TODO: serialize content
-        // TODO: set content
+        // set content
+        feature->SetField(1, semantic::serialize(e, world.origin).c_str());
 
         // store feature in layer
         if (OGRERR_NONE != layer.layer->CreateFeature(feature.get())) {
