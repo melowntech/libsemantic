@@ -46,10 +46,15 @@ void ogr(const Building &building, const math::Point3 &origin
 template <typename OgrCallback>
 void ogr(const World &world, const OgrCallback &ogrCallback)
 {
-    for (const auto &building : world.buildings) {
-        ogr(building, world.origin, ogrCallback);
+#define SEMANTIC_ENTITY_DISTRIBUTE(WHAT)                \
+    for (const auto &e : world.WHAT) {                  \
+        ogr(e, world.origin, ogrCallback);              \
     }
 
+    // ENTITY: update when adding a new entity
+    SEMANTIC_ENTITY_DISTRIBUTE(buildings);
+
+#undef SEMANTIC_ENTITY_DISTRIBUTE
 }
 
 } // namespace semantic

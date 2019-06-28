@@ -40,9 +40,13 @@
 
 namespace semantic {
 
+/** Entity classes.
+ */
 UTILITY_GENERATE_ENUM(Class,
                       ((building))
                       )
+
+typedef std::vector<Class> Classes;
 
 /** Base entity.
  */
@@ -54,6 +58,8 @@ struct Entity {
 /** Building. Only roofs so far, facades are implicit.
  */
 struct Building : Entity {
+    /** Entity class.
+     */
     static const constexpr Class cls = Class::building;
 
     typedef std::vector<Building> list;
@@ -63,18 +69,32 @@ struct Building : Entity {
     roof::Roof::list roofs;
 };
 
-/** Semantic world. Contains only a list of buildings, so far.
+/** Semantic world.
+ *
+ * NB: Contains only a list of buildings, so far.
  */
 struct World {
-    geo::SrsDefinition srs;
-    bool adjustVertical = false;
+    typedef std::vector<World> list;
 
+    /** Spatial reference. If SRS is a projection than vertical adjustment is
+     *  applied.
+     */
+    geo::SrsDefinition srs;
+
+    /** World origin. All entities are relative to this point.
+     */
     math::Point3 origin;
 
+    /** All buildings in the world.
+     */
     Building::list buildings;
 };
 
-std::vector<std::string> classes();
+/** Get list of entity classes used in given world.
+ */
+Classes classes(const World &world);
+
+Classes classes(const Classes &l, const Classes &r);
 
 } // namespace semantic
 

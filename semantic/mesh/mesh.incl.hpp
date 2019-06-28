@@ -47,16 +47,22 @@ void mesh(const Building &building, const MeshConfig &config
           , const math::Point3 &origin
           , const MeshCallback &meshCallback)
 {
-    meshCallback(building, mesh(building, config, origin));
+   meshCallback(building, mesh(building, config, origin));
 }
 
 template <typename MeshCallback>
 void mesh(const World &world, const MeshConfig &config
           , const MeshCallback &meshCallback)
 {
-    for (const auto &building : world.buildings) {
-        mesh(building, config, world.origin, meshCallback);
+#define SEMANTIC_ENTITY_DISTRIBUTE(WHAT)                \
+    for (const auto &e : world.WHAT) {                  \
+        mesh(e, config, world.origin, meshCallback);    \
     }
+
+    // ENTITY: update when adding a new entity
+    SEMANTIC_ENTITY_DISTRIBUTE(buildings);
+
+#undef SEMANTIC_ENTITY_DISTRIBUTE
 }
 
 } // namespace lod2

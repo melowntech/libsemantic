@@ -24,19 +24,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <boost/lexical_cast.hpp>
+#include <algorithm>
 
 #include "world.hpp"
 
 namespace semantic {
 
-std::vector<std::string> classes()
+Classes classes(const World &world)
 {
-    std::vector<std::string> materials;
-    for (auto material : enumerationValues(Class())) {
-        materials.push_back(boost::lexical_cast<std::string>(material));
-    }
-    return materials;
+    Classes classes;
+
+    // ENTITY: update when adding a new entity
+    if (!world.buildings.empty()) { classes.push_back(Class::building); }
+
+    std::sort(classes.begin(), classes.end());
+    return classes;
+}
+
+Classes classes(const Classes &l, const Classes &r)
+{
+    Classes classes;
+
+    std::set_union(l.begin(), l.end(), r.begin(), r.end()
+                   , std::back_inserter(classes));
+
+    return classes;
 }
 
 } // namespace semantic

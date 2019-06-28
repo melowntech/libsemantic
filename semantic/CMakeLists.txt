@@ -5,6 +5,7 @@ define_module(LIBRARY semantic=${semantic_VERSION}
   DEPENDS
   BuildSystem>=1.4 C++>=14
   geo jsoncpp
+  Boost_IOSTREAMS
   )
 
 set(semantic_SOURCES

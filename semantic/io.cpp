@@ -28,6 +28,9 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 #include "dbglog/dbglog.hpp"
 
 #include "jsoncpp/io.hpp"
@@ -36,6 +39,7 @@
 #include "io.hpp"
 
 namespace fs = boost::filesystem;
+namespace bio = boost::iostreams;
 
 namespace semantic {
 
@@ -150,8 +154,6 @@ void parse(World &world, const Json::Value &value)
         Json::get(srs, value, "srs");
         world.srs = geo::SrsDefinition::fromString(srs);
     }
-    world.adjustVertical = false;
-    Json::getOpt(world.adjustVertical, value, "adjustVertical");
     parse(world.origin, Json::check(value, "origin", Json::arrayValue));
 
     parse(world.buildings, Json::check(value, "buildings", Json::arrayValue));
@@ -271,7 +273,6 @@ void build(Json::Value &value, const World &world)
     value = Json::objectValue;
 
     value["srs"] = world.srs.as(geo::SrsDefinition::Type::proj4).toString();
-    if (world.adjustVertical) { value["adjustVertical"] = true; }
 
     build(value["origin"], world.origin);
     build(value["buildings"], world.buildings);
@@ -285,12 +286,55 @@ World load(std::istream &is, const fs::path &path)
     return world;
 }
 
-void save(const World &world, std::ostream &os, const fs::path &path)
+void save(const World &world, std::ostream &os
+          , const SerializationOptions &options)
 {
-    Json::Value value;
-    build(value, world);
-    Json::write(os, value, true); // TODO: make configurable
-    (void) path; // unused
+    switch (options.format) {
+    case Format::json: {
+        Json::Value value;
+        build(value, world);
+        Json::write(os, value, true); // TODO: make configurable
+    } break;
+
+    case Format::binary: {
+        LOGTHROW(err2, std::runtime_error)
+            << "Binary format not implemented yet.";
+    } break;
+    }
+}
+
+template <typename T>
+void serializeEntityImpl(std::ostream &os, const T &entity
+                         , const SerializationOptions &options)
+{
+    switch (options.format) {
+    case Format::json: {
+        Json::Value value;
+        build(value, entity, options.shift);
+        Json::write(os, value, false);
+    } break;
+
+    case Format::binary: {
+        LOGTHROW(err2, std::runtime_error)
+            << "Binary format not implemented yet.";
+    } break;
+    }
+}
+
+template <typename T>
+void serializeEntity(std::ostream &os, const T &entity
+                     , const SerializationOptions &options)
+{
+    if (options.compress) {
+        bio::filtering_ostream gz;
+        gz.push(bio::gzip_compressor(bio::gzip_params(9), 1 << 16));
+        gz.push(os);
+        serializeEntityImpl(gz, entity, options);
+        gz.flush();
+        return;
+    }
+
+    serializeEntityImpl(os, entity, options);
 }
 
 } // namespace
@@ -306,22 +350,31 @@ World load(const fs::path &path)
     return world;
 }
 
-void save(const World &world, const fs::path &path)
+void save(const World &world, const fs::path &path
+          , const SaveOptions &options)
 {
     LOG(info1) << "Saving world to " << path  << ".";
     std::ofstream f;
     f.exceptions(std::ios::badbit | std::ios::failbit);
     f.open(path.string(), (std::ios_base::out | std::ios_base::trunc));
-    save(world, f, path);
+
+    if (options.compress) {
+        bio::filtering_ostream gz;
+        gz.push(bio::gzip_compressor(bio::gzip_params(9), 1 << 16));
+        gz.push(f);
+        save(world, gz, options);
+        gz.flush();
+    } else {
+        save(world, f, options);
+    }
+
     f.close();
 }
 
 void serialize(std::ostream &os, const Building &building
-               , const math::Point3 &shift)
+               , const SerializationOptions &options)
 {
-    Json::Value value;
-    build(value, building, shift);
-    Json::write(os, value, false);
+    serializeEntity(os, building, options);
 }
 
 } // namespace semantic

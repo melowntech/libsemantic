@@ -35,27 +35,45 @@
 
 namespace semantic {
 
+enum class Format { json, binary };
+
+struct SaveOptions {
+    bool compress = false;
+    Format format = Format::json;
+};
+
 World load(const boost::filesystem::path &path);
 
-void save(const World &world, const boost::filesystem::path &path);
+void save(const World &world, const boost::filesystem::path &path
+          , const SaveOptions &options = {});
 
 /** Entity serialization.
  */
 
+struct SerializationOptions : SaveOptions {
+    math::Point3 shift;
+
+    SerializationOptions() = default;
+    SerializationOptions(const SaveOptions &so
+                         , const math::Point3 &shift = {})
+        : SaveOptions(so), shift(shift)
+    {}
+};
+
 void serialize(std::ostream &os, const Building &building
-               , const math::Point3 &shift = math::Point3());
+               , const SerializationOptions &options = {});
 
 template <typename T>
 std::string serialize(const T &entity
-                      , const math::Point3 &shift = math::Point3());
+                      , const SerializationOptions &options = {});
 
 // inlines
 
 template <typename T>
-std::string serialize(const T &entity, const math::Point3 &shift)
+std::string serialize(const T &entity, const SerializationOptions &options)
 {
     std::ostringstream os;
-    serialize(os, entity, shift);
+    serialize(os, entity, options);
     return os.str();
 }
 
