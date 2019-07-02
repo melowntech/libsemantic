@@ -70,6 +70,9 @@ void parse(roof::Rectangular &r, const Json::Value &value)
     parse(r.skew, Json::check(value, "skew", Json::arrayValue));
     Json::get(r.azimuth, value, "azimuth");
     Json::get(r.curb, value, "curb");
+    if (!Json::getOpt(r.hip, value, "hip")) {
+        r.hip = roof::Rectangular::defaultHip;
+    }
 
     const auto &height(Json::check(value, "height", Json::objectValue
                                    , "height"));
@@ -199,6 +202,9 @@ void build(Json::Value &value, const roof::Rectangular &r)
     build(value["skew"], r.skew);
     value["azimuth"] = r.azimuth;
     build(value["curb"], r.curb);
+    if (r.hip != roof::Rectangular::defaultHip) {
+        build(value["hip"], r.hip);
+    }
 
     auto &height(value["height"] = Json::objectValue);
     height["ridge"] = r.ridgeHeight;

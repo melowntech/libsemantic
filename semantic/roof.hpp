@@ -38,13 +38,22 @@
 namespace semantic { namespace roof {
 
 struct Rectangular {
+    using Curb = std::array<double, 4>;
+    using Hip = std::array<double, 2>;
+    using EaveHeight = std::array<double, 4>;
+
+    constexpr static Curb defaultCurb = { 1.0, 1.0, 0.0, 0.0 };
+    constexpr static Hip defaultHip = { 1.0, 1.0 };
+    constexpr static EaveHeight defaultEaveHeight = { 0.0, 0.0, 0.0, 0.0 };
+
     math::Size2f size;
     math::Point2d skew;
     double azimuth = 0.0;
-    std::array<double, 4> curb = {};
+    Curb curb = defaultCurb;
+    Hip hip = defaultHip;
     double ridgeHeight = 0.0;
     double curbHeight = 0.0;
-    std::array<double, 4> eaveHeight = {};
+    EaveHeight eaveHeight = defaultEaveHeight;
 
     enum class Key { top = 0, bottom = 1, left = 2, right = 3 };
 };

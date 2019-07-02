@@ -168,11 +168,11 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
 
     Composer c(m);
 
-    auto curbLeft(r.curb[+Key::left]);
-    auto curbRight(r.curb[+Key::right]);
+    const auto curbLeft(r.curb[+Key::left]);
+    const auto curbRight(r.curb[+Key::right]);
 
-    auto curbTop(r.curb[+Key::top]);
-    auto curbBottom(r.curb[+Key::bottom]);
+    const auto curbTop(r.curb[+Key::top]);
+    const auto curbBottom(r.curb[+Key::bottom]);
 
     const auto curbMiddle((curbLeft - curbRight) / 2.0);
 
@@ -365,6 +365,9 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
 
     deferred.expand(c, v);
 
+    const auto hipTop(r.hip[+Key::top]);
+    const auto hipBottom(r.hip[+Key::bottom]);
+
     v[12] = c.point(-curbLeft
                     , curbTop - skewTopTan * (curbLeft - curbMiddle)
                     , r.curbHeight);
@@ -373,7 +376,7 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
                     , curbTop + skewTopTan * (curbRight + curbMiddle)
                     , r.curbHeight);
 
-    v[14] = c.point(-curbMiddle, curbTop, r.ridgeHeight);
+    v[14] = c.point(-curbMiddle, curbTop * hipTop, r.ridgeHeight);
 
     v[15] = c.point(-curbLeft
                     , -curbBottom - skewBottomTan * (curbLeft - curbMiddle)
@@ -383,7 +386,7 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
                     , -curbBottom + skewBottomTan * (curbRight + curbMiddle)
                     , r.curbHeight);
 
-    v[17] = c.point(-curbMiddle, -curbBottom, r.ridgeHeight);
+    v[17] = c.point(-curbMiddle, -curbBottom * hipBottom, r.ridgeHeight);
 
     c.face(v, 8, 10, 12, Material::roof);
     c.face(v, 12, 10, 15, Material::roof);
