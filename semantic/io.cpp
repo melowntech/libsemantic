@@ -141,12 +141,23 @@ void parse(Building &building, const Json::Value &value)
     parse(building.roofs, Json::check(value, "roofs", Json::arrayValue));
 }
 
-void parse(Building::list &buildings, const Json::Value &value)
+void parse(Tree &tree, const Json::Value &value)
 {
-    buildings.reserve(value.size());
+    parse(static_cast<Entity&>(tree), value);
+    // TODO: implement me
+}
+
+template <typename EntityType>
+void parse(std::vector<EntityType> &entities, const Json::Value &container
+           , const char *name)
+{
+    if (!container.isMember(name)) { return; }
+    const auto &value(check(container[name], Json::arrayValue, name));
+
+    entities.reserve(value.size());
     for (const auto &item : value) {
-        buildings.emplace_back();
-        parse(buildings.back(), item);
+        entities.emplace_back();
+        parse(entities.back(), item);
     }
 }
 
@@ -159,7 +170,8 @@ void parse(World &world, const Json::Value &value)
     }
     parse(world.origin, Json::check(value, "origin", Json::arrayValue));
 
-    parse(world.buildings, Json::check(value, "buildings", Json::arrayValue));
+    parse(world.buildings, value, "buildings");
+    parse(world.trees, value, "trees");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -264,13 +276,23 @@ void build(Json::Value &value, const Building &building
     build(value["roofs"], building.roofs);
 }
 
-void build(Json::Value &value, const Building::list &buildings
+void build(Json::Value &value, const Tree &tree
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(tree), shift);
+    // TODO: implemement me
+}
+
+template <typename EntityType>
+void build(Json::Value &container, const char *name
+           , const std::vector<EntityType> &entities
            , const math::Point3 &shift = math::Point3())
 {
-    value = Json::arrayValue;
-    for (const auto &building : buildings) {
+    if (entities.empty()) { return; }
+    auto &value(container[name] = Json::arrayValue);
+    for (const auto &entity : entities) {
         auto &item(value.append(Json::objectValue));
-        build(item, building, shift);
+        build(item, entity, shift);
     }
 }
 
@@ -281,7 +303,8 @@ void build(Json::Value &value, const World &world)
     value["srs"] = world.srs.as(geo::SrsDefinition::Type::proj4).toString();
 
     build(value["origin"], world.origin);
-    build(value["buildings"], world.buildings);
+    build(value, "buildings", world.buildings);
+    build(value, "trees", world.trees);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -405,15 +428,18 @@ void save(const World &world, const fs::path &path
     f.close();
 }
 
-void serialize(std::ostream &os, const Building &building
-               , const SerializationOptions &options)
-{
-    serializeEntity(os, building, options);
-}
+#define SEMANTIC_DEFINE_ENTITY_IO_PAIR(ENTITY)              \
+    void serialize(std::ostream &os, const ENTITY &entity   \
+                   , const SerializationOptions &options)   \
+    {                                                       \
+        serializeEntity(os, entity, options);               \
+    }                                                       \
+    void deserialize(std::istream &is, ENTITY &entity)      \
+    {                                                       \
+        deserializeEntity(is, entity);                      \
+    }
 
-void deserialize(std::istream &is, Building &building)
-{
-    deserializeEntity(is, building);
-}
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(Building)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(Tree)
 
 } // namespace semantic

@@ -16,15 +16,19 @@ set(semantic_SOURCES
 
   mesh.hpp
   mesh/mesh.cpp mesh/mesh.incl.hpp
+  mesh/building.hpp
   mesh/roof.hpp
   mesh/roof/circular.cpp
   mesh/roof/rectangular.cpp
+  mesh/tree.hpp mesh/tree.cpp
 
   ogr.hpp
   ogr/ogr.cpp ogr/ogr.incl.hpp
+  ogr/building.hpp
   ogr/roof.hpp
   ogr/roof/circular.cpp
   ogr/roof/rectangular.cpp
+  ogr/tree.hpp ogr/tree.cpp
 
   gpkg.hpp gpkg.cpp
   )

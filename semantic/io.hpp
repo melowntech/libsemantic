@@ -60,14 +60,19 @@ struct SerializationOptions : SaveOptions {
     {}
 };
 
-void serialize(std::ostream &os, const Building &building
-               , const SerializationOptions &options = {});
+#define SEMANTIC_DECLARE_ENTITY_IO_PAIR(ENTITY)                 \
+    void serialize(std::ostream &os, const ENTITY &entity       \
+                   , const SerializationOptions &options = {}); \
+    void deserialize(std::istream &is, ENTITY &entity)
+
+SEMANTIC_DECLARE_ENTITY_IO_PAIR(Building);
+SEMANTIC_DECLARE_ENTITY_IO_PAIR(Tree);
+
+#undef SEMANTIC_DECLARE_ENTITY_IO_PAIR
 
 template <typename T>
 std::string serialize(const T &entity
                       , const SerializationOptions &options = {});
-
-void deserialize(std::istream &is, Building &building);
 
 // inlines
 

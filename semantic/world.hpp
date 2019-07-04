@@ -44,6 +44,7 @@ namespace semantic {
  */
 UTILITY_GENERATE_ENUM(Class,
                       ((building))
+                      ((tree))
                       )
 
 typedef std::vector<Class> Classes;
@@ -69,6 +70,20 @@ struct Building : Entity {
     roof::Roof::list roofs;
 };
 
+/** Tree.
+ */
+struct Tree : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::tree;
+    typedef std::vector<Tree> list;
+
+    math::Point3 center;
+    double a = 0.0;
+    double b = 0.0;
+    std::vector<double> harmonics;
+};
+
 /** Semantic world.
  *
  * NB: Contains only a list of buildings, so far.
@@ -88,6 +103,10 @@ struct World {
     /** All buildings in the world.
      */
     Building::list buildings;
+
+    /** All trees in the world.
+     */
+    Tree::list trees;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -116,7 +135,8 @@ template <typename Op>
 void distribute(Class cls, const World &world, const Op &op)
 {
     switch (cls) {
-    case Class::building: op(world.buildings);
+    case Class::building: op(world.buildings); break;
+    case Class::tree: op(world.trees); break;
     }
 }
 
@@ -124,7 +144,8 @@ template <typename Op>
 void distribute(Class cls, World &world, const Op &op)
 {
     switch (cls) {
-    case Class::building: op(world.buildings);
+    case Class::building: op(world.buildings); break;
+    case Class::tree: op(world.trees); break;
     }
 }
 

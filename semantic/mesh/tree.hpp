@@ -24,48 +24,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_ogr_ogr_incl_hpp_included_
-#define semantic_ogr_ogr_incl_hpp_included_
+#ifndef semantic_mesh_tree_hpp_included_
+#define semantic_mesh_tree_hpp_included_
 
-#ifndef semantic_ogr_hpp_guard
-#  error "This file must be included from ogr.hpp only."
-#endif
+#include "../world.hpp"
 
-#include "roof.hpp"
-#include "building.hpp"
-#include "tree.hpp"
+namespace semantic { namespace lod2 {
 
-namespace semantic {
+geometry::Mesh mesh(const Tree &tree, const MeshConfig &config
+                    , const math::Point3 &origin);
 
-template <typename OgrCallback>
-void ogr(const Building &building, const math::Point3 &origin
-         , const OgrCallback &ogrCallback)
-{
-    ogrCallback(building, ogr(building, origin));
-}
+} } // namespace semantic::lod2
 
-template <typename OgrCallback>
-void ogr(const Tree &tree, const math::Point3 &origin
-         , const OgrCallback &ogrCallback)
-{
-    ogrCallback(tree, ogr(tree, origin));
-}
-
-template <typename OgrCallback>
-void ogr(const World &world, const OgrCallback &ogrCallback)
-{
-#define SEMANTIC_ENTITY_DISTRIBUTE(WHAT)                \
-    for (const auto &e : world.WHAT) {                  \
-        ogr(e, world.origin, ogrCallback);              \
-    }
-
-    // ENTITY: update when adding a new entity
-    SEMANTIC_ENTITY_DISTRIBUTE(buildings);
-    SEMANTIC_ENTITY_DISTRIBUTE(trees);
-
-#undef SEMANTIC_ENTITY_DISTRIBUTE
-}
-
-} // namespace semantic
-
-#endif // semantic_ogr_ogr_incl_hpp_included_
+#endif // semantic_mesh_tree_hpp_included_

@@ -35,6 +35,7 @@
 
 #include "roof.hpp"
 #include "building.hpp"
+#include "tree.hpp"
 
 namespace semantic {
 
@@ -51,6 +52,14 @@ void mesh(const Building &building, const MeshConfig &config
 }
 
 template <typename MeshCallback>
+void mesh(const Tree &tree, const MeshConfig &config
+          , const math::Point3 &origin
+          , const MeshCallback &meshCallback)
+{
+   meshCallback(tree, mesh(tree, config, origin));
+}
+
+template <typename MeshCallback>
 void mesh(const World &world, const MeshConfig &config
           , const MeshCallback &meshCallback)
 {
@@ -61,6 +70,7 @@ void mesh(const World &world, const MeshConfig &config
 
     // ENTITY: update when adding a new entity
     SEMANTIC_ENTITY_DISTRIBUTE(buildings);
+    SEMANTIC_ENTITY_DISTRIBUTE(trees);
 
 #undef SEMANTIC_ENTITY_DISTRIBUTE
 }

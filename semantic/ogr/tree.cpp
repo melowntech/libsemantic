@@ -24,48 +24,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_ogr_ogr_incl_hpp_included_
-#define semantic_ogr_ogr_incl_hpp_included_
+#include <cmath>
 
-#ifndef semantic_ogr_hpp_guard
-#  error "This file must be included from ogr.hpp only."
-#endif
-
-#include "roof.hpp"
-#include "building.hpp"
+#include "../ogr.hpp"
 #include "tree.hpp"
 
 namespace semantic {
 
-template <typename OgrCallback>
-void ogr(const Building &building, const math::Point3 &origin
-         , const OgrCallback &ogrCallback)
+OgrGeometry ogr(const Tree &tree, const math::Point3 &origin)
 {
-    ogrCallback(building, ogr(building, origin));
-}
+    auto cs(std::make_unique< ::OGRCircularString>());
 
-template <typename OgrCallback>
-void ogr(const Tree &tree, const math::Point3 &origin
-         , const OgrCallback &ogrCallback)
-{
-    ogrCallback(tree, ogr(tree, origin));
-}
+    const math::Point3 center(origin + tree.origin + tree.center);
 
-template <typename OgrCallback>
-void ogr(const World &world, const OgrCallback &ogrCallback)
-{
-#define SEMANTIC_ENTITY_DISTRIBUTE(WHAT)                \
-    for (const auto &e : world.WHAT) {                  \
-        ogr(e, world.origin, ogrCallback);              \
-    }
+    /** Closed circle between two arcs.
+     *  TODO: take harminics into account
+     */
+    cs->addPoint(center(0) - tree.a, center(1), center(2));
+    cs->addPoint(center(0) + tree.a, center(1), center(2));
+    cs->addPoint(center(0) - tree.a, center(1), center(2));
 
-    // ENTITY: update when adding a new entity
-    SEMANTIC_ENTITY_DISTRIBUTE(buildings);
-    SEMANTIC_ENTITY_DISTRIBUTE(trees);
-
-#undef SEMANTIC_ENTITY_DISTRIBUTE
+    return cs;
 }
 
 } // namespace semantic
-
-#endif // semantic_ogr_ogr_incl_hpp_included_

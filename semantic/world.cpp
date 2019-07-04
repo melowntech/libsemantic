@@ -33,6 +33,7 @@
 namespace semantic {
 
 const Class Building::cls;
+const Class Tree::cls;
 
 Classes classes(const World &world)
 {
