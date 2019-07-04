@@ -26,9 +26,13 @@
 
 #include <algorithm>
 
+#include "dbglog/dbglog.hpp"
+
 #include "world.hpp"
 
 namespace semantic {
+
+const Class Building::cls;
 
 Classes classes(const World &world)
 {
@@ -49,6 +53,12 @@ Classes classes(const Classes &l, const Classes &r)
                    , std::back_inserter(classes));
 
     return classes;
+}
+
+void localize(World &world)
+{
+    (void) world;
+    LOG(warn3) << "TODO: implement me";
 }
 
 } // namespace semantic

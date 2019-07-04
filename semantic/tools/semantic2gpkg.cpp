@@ -2,6 +2,8 @@
 #include <unordered_map>
 #include <iostream>
 
+#include <ogrsf_frmts.h>
+
 #include "utility/buildsys.hpp"
 #include "utility/gccversion.hpp"
 #include "utility/streams.hpp"
@@ -11,7 +13,7 @@
 #include "geometry/meshop.hpp"
 
 #include "semantic/io.hpp"
-#include "semantic/ogr.hpp"
+#include "semantic/gpkg.hpp"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -78,107 +80,6 @@ If multiple input files are used their SRS must be the same.
     return false;
 }
 
-class Layers {
-public:
-    struct Layer {
-        OGRLayer *layer;
-        OGRFeatureDefn *definition;
-
-        Layer(OGRLayer *layer)
-            : layer(layer), definition(layer->GetLayerDefn())
-        {}
-    };
-
-    Layers(GDALDataset &gpkg, const geo::SrsDefinition &srs)
-    {
-        saveOptions_.compress = true;
-
-        auto srsRef(srs.reference());
-
-        // create layers
-        for (const auto &cls : enumerationValues(semantic::Class())) {
-            auto layer(gpkg.CreateLayer
-                       (boost::lexical_cast<std::string>(cls).c_str()
-                        , &srsRef));
-            auto &l(layers_.emplace(cls, layer).first->second);
-
-            {
-                auto content(std::make_unique< ::OGRFieldDefn>
-                             ("id", ::OGRFieldType::OFTString));
-                l.definition->AddFieldDefn(content.get());
-            }
-            {
-                auto content(std::make_unique< ::OGRFieldDefn>
-                             ("content", ::OGRFieldType::OFTBinary));
-                l.definition->AddFieldDefn(content.get());
-            }
-        }
-    }
-
-    Layer& operator()(semantic::Class cls) {
-        auto flayers(layers_.find(cls));
-        if (flayers == layers_.end()) {
-            LOGTHROW(err3, std::logic_error)
-                << "Layer for class <" << cls << "> not found.";
-        }
-        return flayers->second;
-    }
-
-    const Layer& operator()(semantic::Class cls) const {
-        return const_cast<Layers*>(this)->operator()(cls);
-    }
-
-    void add(const semantic::World &world) {
-        semantic::SerializationOptions options(saveOptions_, world.origin);
-
-        semantic::ogr(world, [&,&layers=*this](const auto &e, auto &&geometry)
-        {
-            auto &layer(layers(e.cls));
-
-            // create feature
-            auto feature(std::make_unique< ::OGRFeature>(layer.definition));
-
-            // set feature geometry
-            if (feature->SetGeometryDirectly(geometry.release())
-                != OGRERR_NONE)
-            {
-                LOGTHROW(err3, std::runtime_error)
-                    << "Cannot add geometry of entity <" << e.cls << ">.\""
-                    << e.id << "\".";
-            }
-
-            // set id
-            feature->SetField(0, e.id.c_str());
-
-            // set content
-            {
-                const auto content(semantic::serialize(e, options));
-                feature->SetField
-                    (1, content.size()
-                     , const_cast<GByte*>(reinterpret_cast<const GByte*>
-                                          (content.data())));
-            }
-
-            // store feature in layer
-            if (OGRERR_NONE != layer.layer->CreateFeature(feature.get())) {
-                LOGTHROW(err3, std::runtime_error)
-                    << "Cannot create feature for entity <" << e.cls << ">.\""
-                    << e.id << "\".";
-            }
-
-        });
-    }
-
-    void add(const semantic::World::list &worlds) {
-        for (const auto &world : worlds) { add(world); }
-    }
-
-private:
-    semantic::SaveOptions saveOptions_;
-    using Mapping = std::unordered_map<semantic::Class, Layer>;
-    Mapping layers_;
-};
-
 int Semantic2Gpkg::run()
 {
     semantic::World::list worlds;
@@ -196,19 +97,10 @@ int Semantic2Gpkg::run()
         }
     }
 
-    auto driver(::GetGDALDriverManager()->GetDriverByName("GPKG"));
-    if (!driver) {
-        LOG(fatal) << "Cannot find GPKG GDAL driver.";
-        return EXIT_FAILURE;
+    {
+        semantic::GeoPackage gpkg(output_, *srs);
+        for (const auto &world : worlds) { gpkg.add(world); }
     }
-
-    // create file
-    std::unique_ptr<GDALDataset>
-        gpkg(driver->Create(output_.c_str(), 0, 0, 0, GDT_Unknown, nullptr));
-
-    Layers layers(*gpkg, *srs);
-
-    layers.add(worlds);
 
     return EXIT_SUCCESS;
 }

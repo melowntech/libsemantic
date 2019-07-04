@@ -90,11 +90,43 @@ struct World {
     Building::list buildings;
 };
 
+/** Localizes world. Sets world origin center of all world bounding box.
+ */
+void localize(World &world);
+
 /** Get list of entity classes used in given world.
  */
 Classes classes(const World &world);
 
 Classes classes(const Classes &l, const Classes &r);
+
+/** Calls provided op with entity list matching given class.
+ */
+template <typename Op>
+void distribute(Class cls, const World &world, const Op &op);
+
+/** Calls provided op with entity list matching given class.
+ */
+template <typename Op>
+void distribute(Class cls, World &world, const Op &op);
+
+// inlines
+
+template <typename Op>
+void distribute(Class cls, const World &world, const Op &op)
+{
+    switch (cls) {
+    case Class::building: op(world.buildings);
+    }
+}
+
+template <typename Op>
+void distribute(Class cls, World &world, const Op &op)
+{
+    switch (cls) {
+    case Class::building: op(world.buildings);
+    }
+}
 
 } // namespace semantic
 

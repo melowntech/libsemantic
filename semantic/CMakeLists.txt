@@ -25,6 +25,8 @@ set(semantic_SOURCES
   ogr/roof.hpp
   ogr/roof/circular.cpp
   ogr/roof/rectangular.cpp
+
+  gpkg.hpp gpkg.cpp
   )
 
 add_library(semantic STATIC ${semantic_SOURCES})

@@ -328,6 +328,15 @@ void serializeEntityImpl(std::ostream &os, const T &entity
 }
 
 template <typename T>
+void deserializeEntityImpl(std::istream &is, T &entity)
+{
+    // TODO: detect format, use JSON for now
+    Json::Value value;
+    Json::read(is, value);
+    parse(entity, value);
+}
+
+template <typename T>
 void serializeEntity(std::ostream &os, const T &entity
                      , const SerializationOptions &options)
 {
@@ -335,12 +344,31 @@ void serializeEntity(std::ostream &os, const T &entity
         bio::filtering_ostream gz;
         gz.push(bio::gzip_compressor(bio::gzip_params(9), 1 << 16));
         gz.push(os);
+        gz.exceptions(os.exceptions());
         serializeEntityImpl(gz, entity, options);
         gz.flush();
         return;
     }
 
     serializeEntityImpl(os, entity, options);
+}
+
+template <typename T>
+void deserializeEntity(std::istream &is, T &entity)
+{
+    if (is.peek() == 0x1f) {
+        // gzipped
+        bio::filtering_istream gz;
+        gz.push(bio::gzip_decompressor
+                (bio::gzip_params().window_bits, 1 << 16));
+        gz.push(is);
+        gz.exceptions(is.exceptions());
+
+        deserializeEntityImpl(gz, entity);
+        return;
+    }
+
+    deserializeEntityImpl(is, entity);
 }
 
 } // namespace
@@ -381,6 +409,11 @@ void serialize(std::ostream &os, const Building &building
                , const SerializationOptions &options)
 {
     serializeEntity(os, building, options);
+}
+
+void deserialize(std::istream &is, Building &building)
+{
+    deserializeEntity(is, building);
 }
 
 } // namespace semantic

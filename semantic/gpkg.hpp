@@ -24,61 +24,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_io_hpp_included_
-#define semantic_io_hpp_included_
+#ifndef semantic_gpkg_hpp_included_
+#define semantic_gpkg_hpp_included_
 
-#include <sstream>
+#include <memory>
 
+#include <boost/optional.hpp>
 #include <boost/filesystem/path.hpp>
+
+#include "geo/srsdef.hpp"
 
 #include "world.hpp"
 
 namespace semantic {
 
-enum class Format { json, binary };
+class GeoPackage {
+public:
+    /** Opens existing (read-only) dataset.
+     */
+    GeoPackage(const boost::filesystem::path &path);
 
-struct SaveOptions {
-    bool compress = false;
-    Format format = Format::json;
+    /** Creates new dataset.
+     */
+    GeoPackage(const boost::filesystem::path &path
+               , const geo::SrsDefinition &srs);
+
+    ~GeoPackage();
+
+    void add(const World &world);
+
+    /** Query descriptor.
+     */
+    struct Query {
+        /** Extents. Defaults to whole world. Extents are in srs.
+         */
+        boost::optional<math::Extents2> extents;
+
+        /** Query SRS. Defaults to dataset SRS.
+         */
+        boost::optional<geo::SrsDefinition> srs;
+    };
+
+    World world(const Query &query = {}) const;
+
+    struct Detail;
+
+private:
+    std::unique_ptr<Detail> detail_;
 };
-
-World load(const boost::filesystem::path &path);
-
-void save(const World &world, const boost::filesystem::path &path
-          , const SaveOptions &options = {});
-
-/** Entity serialization.
- */
-
-struct SerializationOptions : SaveOptions {
-    math::Point3 shift;
-
-    SerializationOptions() = default;
-    SerializationOptions(const SaveOptions &so
-                         , const math::Point3 &shift = {})
-        : SaveOptions(so), shift(shift)
-    {}
-};
-
-void serialize(std::ostream &os, const Building &building
-               , const SerializationOptions &options = {});
-
-template <typename T>
-std::string serialize(const T &entity
-                      , const SerializationOptions &options = {});
-
-void deserialize(std::istream &is, Building &building);
-
-// inlines
-
-template <typename T>
-std::string serialize(const T &entity, const SerializationOptions &options)
-{
-    std::ostringstream os;
-    serialize(os, entity, options);
-    return os.str();
-}
 
 } // namespace semantic
 
-#endif // semantic_io_hpp_included_
+#endif // semantic_gpkg_hpp_included_

@@ -81,11 +81,11 @@ OgrGeometry ogr(const roof::Rectangular &r, const math::Point3 &origin)
     // top-right
     add(1.0, 1.0 + skewTopTan * (1.0 + curbMiddle));
 
-    // bottom-left
-    add(-1.0, -1.0 - skewBottomTan * (1.0 - curbMiddle));
-
     // bottom-right
     add(1.0 , -1.0 + skewBottomTan * (1.0 + curbMiddle));
+
+    // bottom-left
+    add(-1.0, -1.0 - skewBottomTan * (1.0 - curbMiddle));
 
     // close ring
     addVertex(start);

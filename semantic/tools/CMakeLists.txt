@@ -1,9 +1,8 @@
-# used indirectly by module service (from libservice repo)
-
 define_module(BINARY semantic2obj
   DEPENDS semantic service utility
   )
 
+# Semantic world to OBJ encoder.
 set(semantic2obj_SOURCES
   semantic2obj.cpp
   )
@@ -12,6 +11,7 @@ add_executable(semantic2obj ${semantic2obj_SOURCES})
 target_link_libraries(semantic2obj ${MODULE_LIBRARIES})
 buildsys_binary(semantic2obj)
 
+# Simple format checker, load and saves semantic world file.
 set(semantic2semantic_SOURCES
   semantic2semantic.cpp
   )
@@ -20,6 +20,7 @@ add_executable(semantic2semantic ${semantic2semantic_SOURCES})
 target_link_libraries(semantic2semantic ${MODULE_LIBRARIES})
 buildsys_binary(semantic2semantic)
 
+# semantic world to (semantic) GeoPackage
 set(semantic2gpkg_SOURCES
   semantic2gpkg.cpp
   )
@@ -27,3 +28,12 @@ set(semantic2gpkg_SOURCES
 add_executable(semantic2gpkg ${semantic2gpkg_SOURCES})
 target_link_libraries(semantic2gpkg ${MODULE_LIBRARIES})
 buildsys_binary(semantic2gpkg)
+
+# (semantic) GeoPackage to semantic world
+set(gpkg2semantic_SOURCES
+  gpkg2semantic.cpp
+  )
+
+add_executable(gpkg2semantic ${gpkg2semantic_SOURCES})
+target_link_libraries(gpkg2semantic ${MODULE_LIBRARIES})
+buildsys_binary(gpkg2semantic)
