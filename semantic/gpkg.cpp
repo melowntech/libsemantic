@@ -26,6 +26,9 @@
 
 #include <unordered_map>
 
+#include <boost/optional.hpp>
+#include <boost/utility/in_place_factory.hpp>
+
 #include "dbglog/dbglog.hpp"
 
 #include "ogr.hpp"
@@ -192,6 +195,61 @@ private:
     Mapping layers_;
 };
 
+class SpatialFilter {
+public:
+    SpatialFilter(const geo::SrsDefinition &layerSrs
+                  , const GeoPackage::Query &query)
+    {
+        if (!query.extents) { return; }
+
+        // construct polygon from points
+        {
+            const auto &e(*query.extents);
+
+            const auto samples(query.srs ? query.segmentsPerExtentEdge : 1);
+
+            ::OGRLinearRing ring;
+
+            /** Adds line from a to b in n segments without last point.
+             */
+            const auto &addLine([&](const math::Point2 &a
+                                    , const math::Point2 &b)
+            {
+                ring.addPoint(a(0), a(1));
+                auto step((b - a) / samples);
+                for (std::size_t i(1); i < samples; ++i) {
+                    const math::Point2 p(a + i * step);
+                    ring.addPoint(p(0), p(1));
+                }
+            });
+
+            addLine(ll(e), ul(e));
+            addLine(ul(e), ur(e));
+            addLine(ur(e), lr(e));
+            addLine(lr(e), ll(e));
+            ring.addPoint(e.ll(0), e.ll(1));
+
+            filter = boost::in_place();
+            filter->addRing(&ring);
+        }
+
+        if (query.srs) {
+            // convert from extents srs to layer srs
+            auto srcSrs(query.srs->reference());
+            filter->assignSpatialReference(&srcSrs);
+            auto dstSrs(layerSrs.reference());
+            filter->transformTo(&dstSrs);
+        }
+    }
+
+    void setTo(::OGRLayer *layer) {
+        layer->SetSpatialFilter(filter ? &*filter : nullptr);
+    }
+
+private:
+    boost::optional< ::OGRPolygon> filter;
+};
+
 } // namespace
 
 struct GeoPackage::Detail {
@@ -254,12 +312,8 @@ struct GeoPackage::Detail {
     }
 
     template <typename Op>
-    void fetch(const Layers::Layer &layer, const Query &query, const Op &op)
-        const
+    void fetch(Layers::Layer &layer, const Op &op) const
     {
-        (void) query;
-        // TODO: set query
-
         auto &l(layer.layer);
         l->ResetReading();
         while (auto *feature = l->GetNextFeature()) {
@@ -277,15 +331,18 @@ struct GeoPackage::Detail {
         }
     }
 
-    World world(const Query &query) const {
+    World world(const Query &query) {
         World world;
         world.srs = layers.srs();
 
+        SpatialFilter filter(world.srs, query);
+
         for (auto cls : enumerationValues(Class())) {
-            if (const auto *layer  = layers(cls, std::nothrow)) {
+            if (auto *layer = layers(cls, std::nothrow)) {
+                filter.setTo(layer->layer);
                 distribute(cls, world, [&](auto &entities)
                 {
-                    this->fetch(*layer, query
+                    this->fetch(*layer
                                 , [&](const std::string&, const char *data
                                       , std::size_t size)
                     {

@@ -56,6 +56,8 @@ public:
     /** Query descriptor.
      */
     struct Query {
+        Query() {};
+
         /** Extents. Defaults to whole world. Extents are in srs.
          */
         boost::optional<math::Extents2> extents;
@@ -63,6 +65,10 @@ public:
         /** Query SRS. Defaults to dataset SRS.
          */
         boost::optional<geo::SrsDefinition> srs;
+
+        /** Used when query SRS is different from dataset SRS.
+         */
+        std::size_t segmentsPerExtentEdge = 4;
     };
 
     World world(const Query &query = {}) const;
