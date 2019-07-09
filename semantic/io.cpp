@@ -144,7 +144,10 @@ void parse(Building &building, const Json::Value &value)
 void parse(Tree &tree, const Json::Value &value)
 {
     parse(static_cast<Entity&>(tree), value);
-    // TODO: implement me
+    parse(tree.center, Json::check(value, "center", Json::arrayValue));
+    Json::get(tree.a, value, "a");
+    if (!Json::getOpt(tree.b, value, "b")) { tree.b = tree.a; }
+    Json::get(tree.harmonics, value, "harmonics");
 }
 
 template <typename EntityType>
@@ -280,7 +283,11 @@ void build(Json::Value &value, const Tree &tree
            , const math::Point3 &shift)
 {
     build(value, static_cast<const Entity&>(tree), shift);
-    // TODO: implemement me
+    build(value["center"], tree.center);
+    value["a"] = tree.a;
+    if (tree.a != tree.b) { value["b"] = tree.b; }
+    auto &harmonics(value["harmonics"] = Json::arrayValue);
+    for (auto harmonic : tree.harmonics) { harmonics.append(harmonic); }
 }
 
 template <typename EntityType>
