@@ -29,6 +29,9 @@
 
 #include <sstream>
 
+#include <boost/iostreams/stream_buffer.hpp>
+#include <boost/iostreams/device/array.hpp>
+
 #include <boost/filesystem/path.hpp>
 
 #include "world.hpp"
@@ -74,6 +77,9 @@ template <typename T>
 std::string serialize(const T &entity
                       , const SerializationOptions &options = {});
 
+template <typename T>
+void deserialize(const T &entity, const void *data, std::size_t size);
+
 // inlines
 
 template <typename T>
@@ -82,6 +88,17 @@ std::string serialize(const T &entity, const SerializationOptions &options)
     std::ostringstream os;
     serialize(os, entity, options);
     return os.str();
+}
+
+template <typename T>
+void deserialize(const void *data, std::size_t size, T &entity)
+{
+    namespace bio = boost::iostreams;
+    const auto *cdata(static_cast<const char*>(data));
+    bio::stream_buffer<bio::array_source> buffer(cdata, cdata + size);
+    std::istream is(&buffer);
+    is.exceptions(std::ios::badbit | std::ios::failbit);
+    deserialize(is, entity);
 }
 
 } // namespace semantic

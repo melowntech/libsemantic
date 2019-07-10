@@ -38,6 +38,11 @@
 
 namespace semantic {
 
+/** Semantic world as a georeferenced dataset.
+ *
+ *  Write support only for GeoPackage format (GPKG).
+ *  Read support for any OGR-supported dataset with matching format.
+ */
 class GeoPackage {
 public:
     /** Opens existing (read-only) dataset.
@@ -51,6 +56,14 @@ public:
 
     ~GeoPackage();
 
+    const geo::SrsDefinition& srs() const;
+
+    /** Get dataset extents.
+     */
+    math::Extents2 extents() const;
+
+    /** Add (sub) world to this dataset. Must be in write mode.
+     */
     void add(const World &world);
 
     /** Query descriptor.

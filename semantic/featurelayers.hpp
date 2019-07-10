@@ -36,7 +36,7 @@ namespace semantic {
 
 /** Construct feature layers from semantic world.
  *
- *  Each entity is broken to series of polygonal meshes with appropriate
+ *  Each entity is broken down intto series of polygonal meshes with appropriate
  *  material set in "material" property.
  *
  * \param world semantic world

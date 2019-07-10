@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <iostream>
 #include <unordered_map>
 
 #include <boost/optional.hpp>
@@ -64,7 +65,8 @@ Dataset createGpkg(const fs::path &path)
 
 Dataset openGpkg(const fs::path &path)
 {
-    const char *allowed[] = { "GPKG", 0x0 };
+    // const char *allowed[] = { "GPKG", 0x0 };
+    const char **allowed = nullptr;
     auto handle(::GDALOpenEx(path.c_str()
                              , GDAL_OF_VECTOR | GDAL_OF_READONLY
                              , allowed, nullptr, nullptr));
@@ -92,13 +94,13 @@ public:
     };
 
     Layers(const fs::path &path, const geo::SrsDefinition &srs)
-        : gpkg_(createGpkg(path)), srs_(srs)
+        : path_(path), readOnly_(false), ds_(createGpkg(path)), srs_(srs)
     {
         auto srsRef(new ::OGRSpatialReference(srs.reference()));
 
         // create layers
         for (const auto &cls : enumerationValues(Class())) {
-            auto layer(gpkg_->CreateLayer
+            auto layer(ds_->CreateLayer
                        (boost::lexical_cast<std::string>(cls).c_str()
                         , srsRef));
             auto &l(layers_.emplace(std::piecewise_construct
@@ -122,13 +124,13 @@ public:
     }
 
     Layers(const fs::path &path)
-        : gpkg_(openGpkg(path))
+        : path_(path), readOnly_(true), ds_(openGpkg(path))
     {
         bool hasSrs(false);
 
         // get mapping for known layers (if exists)
-        for (int i(0), e(gpkg_->GetLayerCount()); i < e; ++i) {
-            auto layer(gpkg_->GetLayer(i));
+        for (int i(0), e(ds_->GetLayerCount()); i < e; ++i) {
+            auto layer(ds_->GetLayer(i));
             Class cls;
             try {
                 cls = boost::lexical_cast<Class>(layer->GetName());
@@ -158,7 +160,8 @@ public:
         auto flayers(layers_.find(cls));
         if (flayers == layers_.end()) {
             LOGTHROW(err3, std::logic_error)
-                << "Layer for class <" << cls << "> not found.";
+                << "Layer for class <" << cls << "> not found "
+                << "in semantic dataset " << path_ << ".";
         }
         return flayers->second;
     }
@@ -177,18 +180,41 @@ public:
         return const_cast<Layers*>(this)->operator()(cls, std::nothrow);
     }
 
+    void checkWriteable() const {
+        if (readOnly_) {
+            LOGTHROW(err1, std::runtime_error)
+                << "Dataset " << path_ << " is read-only.";
+        }
+    }
+
     void checkCompatible(const geo::SrsDefinition &srs) const {
         if (!areSame(srs, srs_)) {
             LOGTHROW(err1, std::runtime_error)
-                << "Incompatible SRS <"
+                << "Semantic dataset " << path_ << ": Incompatible SRS <"
                 << srs << "> (expected <" << srs_ << ">).";
         }
     }
 
     const geo::SrsDefinition& srs() const { return srs_; }
 
+    math::Extents2 extents() const {
+        math::Extents2 extents(math::InvalidExtents{});
+        for (const auto &item : layers_) {
+            const auto &layer(item.second);
+            layer.layer->SetSpatialFilter(nullptr);
+            ::OGREnvelope envelope;
+            if (layer.layer->GetExtent(&envelope, TRUE) == OGRERR_NONE) {
+                update(extents, envelope.MinX, envelope.MinY);
+                update(extents, envelope.MaxX, envelope.MaxY);
+            }
+        }
+        return extents;
+    }
+
 private:
-    Dataset gpkg_;
+    const fs::path &path_;
+    bool readOnly_;
+    Dataset ds_;
     geo::SrsDefinition srs_;
 
     using Mapping = std::unordered_map<Class, Layer>;
@@ -269,6 +295,7 @@ struct GeoPackage::Detail {
     }
 
     void add(const World &world) {
+        layers.checkWriteable();
         layers.checkCompatible(world.srs);
 
         SerializationOptions options(saveOptions, world.origin);
@@ -346,10 +373,8 @@ struct GeoPackage::Detail {
                                 , [&](const std::string&, const char *data
                                       , std::size_t size)
                     {
-                        // TODO: use boost iostream memory stream
-                        std::istringstream is(std::string(data, size));
                         entities.emplace_back();
-                        deserialize(is, entities.back());
+                        deserialize(data, size, entities.back());
                     });
                 });
             }
@@ -357,6 +382,9 @@ struct GeoPackage::Detail {
 
         return world;
     }
+
+    math::Extents2 extents() const { return layers.extents(); }
+    const geo::SrsDefinition& srs() const { return layers.srs(); }
 };
 
 GeoPackage::GeoPackage(const fs::path &path)
@@ -375,6 +403,16 @@ void GeoPackage::add(const World &world)
 World GeoPackage::world(const Query &query) const
 {
     return detail_->world(query);
+}
+
+math::Extents2 GeoPackage::extents() const
+{
+    return detail_->extents();
+}
+
+const geo::SrsDefinition& GeoPackage::srs() const
+{
+    return detail_->srs();
 }
 
 } // namespace semantic
