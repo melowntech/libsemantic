@@ -30,6 +30,8 @@ set(semantic_SOURCES
   ogr/roof/rectangular.cpp
   ogr/tree.hpp ogr/tree.cpp
 
+  featurelayers.hpp featurelayers.cpp
+
   gpkg.hpp gpkg.cpp
   )
 

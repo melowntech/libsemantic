@@ -53,6 +53,7 @@ typedef std::vector<Class> Classes;
  */
 struct Entity {
     std::string id;
+    std::string descriptor;
     math::Point3 origin;
 };
 

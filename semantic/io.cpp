@@ -132,6 +132,7 @@ void parse(roof::Roof::list &roofs, const Json::Value &value)
 void parse(Entity &entity, const Json::Value &value)
 {
     Json::get(entity.id, value, "id");
+    Json::getOpt(entity.descriptor, value, "descriptor");
     parse(entity.origin, Json::check(value, "origin", Json::arrayValue));
 }
 
@@ -269,6 +270,9 @@ void build(Json::Value &value, const Entity &entity
 {
     value = Json::objectValue;
     value["id"] = entity.id;
+    if (!entity.descriptor.empty()) {
+        value["descriptor"] = entity.descriptor;
+    }
     build(value["origin"], math::Point3(entity.origin + shift));
 }
 
