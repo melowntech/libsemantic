@@ -43,8 +43,8 @@ for horizontal scale.
 World = {
     SRS srs                   // Spatial reference
     Point3 origin             // A point all entities in the world are relative
-    Array<Building> buildings // List of all buildings in the world
-    Array<Tree> trees         // List of all trees in the world
+    Optional Array<Building> buildings // List of all buildings in the world
+    Optional Array<Tree> trees         // List of all trees in the world
 }
 ```
 
