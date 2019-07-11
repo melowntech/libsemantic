@@ -28,8 +28,8 @@ This documentation uses pseudo format for documentation purposes:
 
 Special types:
  * `SRS` string with spatial reference system. Supports Proj.4 string, EPSG:code, EPSG:code+code, WKT string and custom [ENU](https://github.com/melowntech/true3d-format-spec/blob/master/enu.md).
- * `Point3` alias to Array<Double, 3>, point in Cartesian space [ x, y, z ]
- * `Size2` alias to Array<Double, 2>, [ width, height ]
+ * `Point3` alias to `Array<Double, 3>`, point in Cartesian space [ x, y, z ]
+ * `Size2` alias to `Array<Double, 2>`, [ width, height ]
 
 SRS must be a cartesian system. Geodetic system makes no sense.
 
