@@ -1,15 +1,15 @@
-= libsemantic =
+# libsemantic
 
 Semantic world manipulation library.
 
-= File format =
+# File format
 
-== On-disk representation ==
+## On-disk representation
 
 Semantic world on-disk format is JSON file with following structure. There may
 be a binary representation added in the future.
 
-== Definitions ==
+## Definitions
 
 This documentation uses pseudo format for documentation purposes:
 
@@ -37,7 +37,7 @@ Unless explicitely stated the default spatial unit is a SRS unit. If SRS is a
 projected system (e.g. UTM) all Z coordinates are vertically adjusted to account
 for horizontal scale.
 
-== Outline ==
+## Outline
 
 ```javascript
 World = {
@@ -48,9 +48,9 @@ World = {
 }
 ```
 
-== Entities ==
+## Entities
 
-=== Common entity attributes ==
+### Common entity attributes
 
 ```javascript
 Entity = {
@@ -62,7 +62,7 @@ Entity = {
 
 ```
 
-=== Building ===
+### Building
 
 Building is currently defined only by its roofs. Facades are implicite. There
 are two versatile roof types: rectangular and ciruclar. Nomenclature for
@@ -108,7 +108,7 @@ Building : Entity = {
 }
 ```
 
-=== Tree ===
+### Tree
 
 ```javascript
 Tree : Entity = {
