@@ -201,6 +201,8 @@ public:
         math::Extents2 extents(math::InvalidExtents{});
         for (const auto &item : layers_) {
             const auto &layer(item.second);
+            if (!layer.layer->GetFeatureCount(TRUE)) { continue; }
+
             layer.layer->SetSpatialFilter(nullptr);
             ::OGREnvelope envelope;
             if (layer.layer->GetExtent(&envelope, TRUE) == OGRERR_NONE) {
