@@ -33,7 +33,8 @@
 
 namespace semantic {
 
-OgrGeometry ogr(const roof::Rectangular &r, const math::Point3 &origin)
+bool ogr(::OGRGeometryCollection &collection, math::Extent &verticalExtent
+         , const roof::Rectangular &r, const math::Point3 &origin)
 {
     using Key = roof::Rectangular::Key;
 
@@ -54,7 +55,7 @@ OgrGeometry ogr(const roof::Rectangular &r, const math::Point3 &origin)
     const auto ca(std::cos(r.azimuth));
     const math::Size2f hsize(r.size.width / 2.0, r.size.height / 2.0);
 
-    auto ls(std::make_unique< ::OGRLineString>());
+    ::OGRLineString ls;
 
     const auto &vertex([&](double x, double y) -> math::Point3
     {
@@ -67,7 +68,7 @@ OgrGeometry ogr(const roof::Rectangular &r, const math::Point3 &origin)
 
     const auto addVertex([&](const math::Point3 &v)
     {
-        ls->addPoint(v(0), v(1), v(2));
+        ls.addPoint(v(0), v(1), v(2));
         return v;
     });
 
@@ -90,7 +91,16 @@ OgrGeometry ogr(const roof::Rectangular &r, const math::Point3 &origin)
     // close ring
     addVertex(start);
 
-    return ls;
+    if (OGRERR_NONE != collection.addGeometry(&ls)) { return false; }
+
+    // vertical extent
+    update(verticalExtent, origin(2));
+    update(verticalExtent, origin(2) + r.ridgeHeight);
+    for (auto height : r.eaveHeight) {
+        update(verticalExtent, origin(2) + height);
+    }
+
+    return true;
 }
 
 } // namespace semantic

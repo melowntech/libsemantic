@@ -44,7 +44,12 @@ OgrGeometry ogr(const Tree &tree, const math::Point3 &origin)
     cs->addPoint(center(0) + tree.a, center(1), center(2));
     cs->addPoint(center(0) - tree.a, center(1), center(2));
 
-    return cs;
+    math::Extent verticalExtent;
+    update(verticalExtent, origin(2) + tree.origin(2));
+    update(verticalExtent, center(2) + tree.b);
+    update(verticalExtent, center(2) - tree.b);
+
+    return { std::move(cs), verticalExtent };
 }
 
 } // namespace semantic

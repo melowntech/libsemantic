@@ -78,83 +78,35 @@ Dataset openGpkg(const fs::path &path)
     return Dataset(static_cast< ::GDALDataset*>(handle));
 }
 
+/** Semantic layers accessor.
+ */
 class Layers {
 public:
+    /** Layer descriptor
+     */
     struct Layer {
         Class cls;
         ::OGRLayer *layer;
         ::OGRFeatureDefn *definition;
         int id;
         int content;
+        int minVerticalExtent;
+        int maxVerticalExtent;
 
         Layer(Class cls, ::OGRLayer *layer)
             : cls(cls), layer(layer), definition(layer->GetLayerDefn())
             , id(-1), content(-1)
+            , minVerticalExtent(-1), maxVerticalExtent(-1)
         {}
     };
 
-    Layers(const fs::path &path, const geo::SrsDefinition &srs)
-        : path_(path), readOnly_(false), ds_(createGpkg(path)), srs_(srs)
-    {
-        auto srsRef(new ::OGRSpatialReference(srs.reference()));
+    /** Create OGR dataset with semantic layers.
+     */
+    Layers(const fs::path &path, const geo::SrsDefinition &srs);
 
-        // create layers
-        for (const auto &cls : enumerationValues(Class())) {
-            auto layer(ds_->CreateLayer
-                       (boost::lexical_cast<std::string>(cls).c_str()
-                        , srsRef));
-            auto &l(layers_.emplace(std::piecewise_construct
-                                    , std::forward_as_tuple(cls)
-                                    , std::forward_as_tuple(cls, layer))
-                    .first->second);
-
-            {
-                auto id(std::make_unique< ::OGRFieldDefn>
-                             ("id", ::OGRFieldType::OFTString));
-                l.definition->AddFieldDefn(id.get());
-                l.id = 0;
-            }
-            {
-                auto content(std::make_unique< ::OGRFieldDefn>
-                             ("content", ::OGRFieldType::OFTBinary));
-                l.definition->AddFieldDefn(content.get());
-                l.content = 1;
-            }
-        }
-    }
-
-    Layers(const fs::path &path)
-        : path_(path), readOnly_(true), ds_(openGpkg(path))
-    {
-        bool hasSrs(false);
-
-        // get mapping for known layers (if exists)
-        for (int i(0), e(ds_->GetLayerCount()); i < e; ++i) {
-            auto layer(ds_->GetLayer(i));
-            Class cls;
-            try {
-                cls = boost::lexical_cast<Class>(layer->GetName());
-            } catch (const boost::bad_lexical_cast&) {
-                LOG(warn2) << "Layer <" << layer->GetName()
-                           << "> doesn't match any known class.";
-                continue;
-            }
-
-            if (!hasSrs) {
-                if (const auto *ref = layer->GetSpatialRef()) {
-                    srs_ = geo::SrsDefinition::fromReference(*ref);
-                    hasSrs = true;
-                }
-            }
-
-            auto &l(layers_.emplace(std::piecewise_construct
-                                    , std::forward_as_tuple(cls)
-                                    , std::forward_as_tuple(cls, layer))
-                    .first->second);
-            l.id = l.definition->GetFieldIndex("id");
-            l.content = l.definition->GetFieldIndex("content");
-        }
-    }
+    /** Open existing OGR dataset with semantic layers.
+     */
+    Layers(const fs::path &path);
 
     Layer& operator()(Class cls) {
         auto flayers(layers_.find(cls));
@@ -197,21 +149,7 @@ public:
 
     const geo::SrsDefinition& srs() const { return srs_; }
 
-    math::Extents2 extents() const {
-        math::Extents2 extents(math::InvalidExtents{});
-        for (const auto &item : layers_) {
-            const auto &layer(item.second);
-            if (!layer.layer->GetFeatureCount(TRUE)) { continue; }
-
-            layer.layer->SetSpatialFilter(nullptr);
-            ::OGREnvelope envelope;
-            if (layer.layer->GetExtent(&envelope, TRUE) == OGRERR_NONE) {
-                update(extents, envelope.MinX, envelope.MinY);
-                update(extents, envelope.MaxX, envelope.MaxY);
-            }
-        }
-        return extents;
-    }
+    math::Extents2 extents() const;
 
 private:
     const fs::path &path_;
@@ -223,6 +161,101 @@ private:
     Mapping layers_;
 };
 
+Layers::Layers(const fs::path &path, const geo::SrsDefinition &srs)
+    : path_(path), readOnly_(false), ds_(createGpkg(path)), srs_(srs)
+{
+    auto srsRef(new ::OGRSpatialReference(srs.reference()));
+
+    // create layers
+    for (const auto &cls : enumerationValues(Class())) {
+        auto layer(ds_->CreateLayer
+                   (boost::lexical_cast<std::string>(cls).c_str()
+                    , srsRef));
+        auto &l(layers_.emplace(std::piecewise_construct
+                                , std::forward_as_tuple(cls)
+                                , std::forward_as_tuple(cls, layer))
+                .first->second);
+
+        {
+            auto id(std::make_unique< ::OGRFieldDefn>
+                    ("id", ::OGRFieldType::OFTString));
+            l.definition->AddFieldDefn(id.get());
+            l.id = 0;
+        }
+        {
+            auto content(std::make_unique< ::OGRFieldDefn>
+                         ("content", ::OGRFieldType::OFTBinary));
+            l.definition->AddFieldDefn(content.get());
+            l.content = 1;
+        }
+        {
+            auto ve(std::make_unique< ::OGRFieldDefn>
+                    ("minVerticalExtent", ::OGRFieldType::OFTReal));
+            l.definition->AddFieldDefn(ve.get());
+            l.minVerticalExtent = 2;
+        }
+        {
+            auto ve(std::make_unique< ::OGRFieldDefn>
+                    ("maxVerticalExtent", ::OGRFieldType::OFTReal));
+            l.definition->AddFieldDefn(ve.get());
+            l.maxVerticalExtent = 3;
+        }
+    }
+}
+
+Layers::Layers(const fs::path &path)
+    : path_(path), readOnly_(true), ds_(openGpkg(path))
+{
+    bool hasSrs(false);
+
+    // get mapping for known layers (if exists)
+    for (int i(0), e(ds_->GetLayerCount()); i < e; ++i) {
+        auto layer(ds_->GetLayer(i));
+        Class cls;
+        try {
+            cls = boost::lexical_cast<Class>(layer->GetName());
+        } catch (const boost::bad_lexical_cast&) {
+            LOG(warn2) << "Layer <" << layer->GetName()
+                       << "> doesn't match any known class.";
+            continue;
+        }
+
+        if (!hasSrs) {
+            if (const auto *ref = layer->GetSpatialRef()) {
+                srs_ = geo::SrsDefinition::fromReference(*ref);
+                hasSrs = true;
+            }
+        }
+
+        auto &l(layers_.emplace(std::piecewise_construct
+                                , std::forward_as_tuple(cls)
+                                , std::forward_as_tuple(cls, layer))
+                .first->second);
+        l.id = l.definition->GetFieldIndex("id");
+        l.content = l.definition->GetFieldIndex("content");
+        l.minVerticalExtent = l.definition->GetFieldIndex("minVerticalExtent");
+        l.maxVerticalExtent = l.definition->GetFieldIndex("maxVerticalExtent");
+    }
+}
+
+math::Extents2 Layers::extents() const {
+    math::Extents2 extents(math::InvalidExtents{});
+    for (const auto &item : layers_) {
+        const auto &layer(item.second);
+        if (!layer.layer->GetFeatureCount(TRUE)) { continue; }
+
+        layer.layer->SetSpatialFilter(nullptr);
+        ::OGREnvelope envelope;
+        if (layer.layer->GetExtent(&envelope, TRUE) == OGRERR_NONE) {
+            update(extents, envelope.MinX, envelope.MinY);
+            update(extents, envelope.MaxX, envelope.MaxY);
+        }
+    }
+    return extents;
+}
+
+/** Spatial filter generator.
+ */
 class SpatialFilter {
 public:
     SpatialFilter(const geo::SrsDefinition &layerSrs
@@ -233,7 +266,6 @@ public:
         // construct polygon from points
         {
             const auto &e(*query.extents);
-
             const auto samples(query.srs ? query.segmentsPerExtentEdge : 1);
 
             ::OGRLinearRing ring;
@@ -280,6 +312,8 @@ private:
 
 } // namespace
 
+/** Geo package interface internals.
+ */
 struct GeoPackage::Detail {
     Layers layers;
     SaveOptions saveOptions;
@@ -296,98 +330,170 @@ struct GeoPackage::Detail {
         saveOptions.compress = true;
     }
 
-    void add(const World &world) {
-        layers.checkWriteable();
-        layers.checkCompatible(world.srs);
+    /** Add all entities from semantic world into this dataset.
+     */
+    void add(const World &world);
 
-        SerializationOptions options(saveOptions, world.origin);
+    struct FetchMask {
+        using value_type = std::uint16_t;
+        enum : value_type {
+            id = 0x0001
+            , content = 0x0002
+            , verticalExtent = 0x0004
 
-        ogr(world, [&](const auto &e, auto &&geometry)
-        {
-            auto &layer(layers(e.cls));
+            , all = 0xffff
+         };
+    };
 
-            // create feature
-            auto feature(std::make_unique< ::OGRFeature>(layer.definition));
-
-            // set feature geometry
-            if (feature->SetGeometryDirectly(geometry.release())
-                != OGRERR_NONE)
-            {
-                LOGTHROW(err3, std::runtime_error)
-                    << "Cannot add geometry of entity <" << e.cls << ">.\""
-                    << e.id << "\".";
-            }
-
-            // set id
-            feature->SetField(0, e.id.c_str());
-
-            // set content
-            {
-                const auto content(serialize(e, options));
-                feature->SetField
-                    (1, content.size()
-                     , const_cast<GByte*>(reinterpret_cast<const GByte*>
-                                          (content.data())));
-            }
-
-            // store feature in layer
-            if (OGRERR_NONE != layer.layer->CreateFeature(feature.get())) {
-                LOGTHROW(err3, std::runtime_error)
-                    << "Cannot create feature for entity <" << e.cls << ">.\""
-                    << e.id << "\".";
-            }
-
-        });
-    }
-
+    /** Fetch entities from all layerr matching currently set spatial filter.
+     */
     template <typename Op>
-    void fetch(Layers::Layer &layer, const Op &op) const
-    {
-        auto &l(layer.layer);
-        l->ResetReading();
-        while (auto *feature = l->GetNextFeature()) {
-            // fetch feature info
-            const auto *id(feature->GetFieldAsString(layer.id));
-            if (!id) { id = ""; }
-            int size(0);
-            const auto *data
-                (reinterpret_cast<char*>
-                 (feature->GetFieldAsBinary(layer.content, &size)));
-            if (!data) { data = ""; size = 0; }
+    void fetch(const Layers::Layer &layer, const Op &op
+               , FetchMask::value_type mask = FetchMask::all) const;
 
-            // call op
-            op(id, data, size);
-        }
-    }
+    /** Generate (sub) world from entities matching query.
+     */
+    World world(const Query &query);
 
-    World world(const Query &query) {
-        World world;
-        world.srs = layers.srs();
-
-        SpatialFilter filter(world.srs, query);
-
-        for (auto cls : enumerationValues(Class())) {
-            if (auto *layer = layers(cls, std::nothrow)) {
-                filter.setTo(layer->layer);
-                distribute(cls, world, [&](auto &entities)
-                {
-                    this->fetch(*layer
-                                , [&](const std::string&, const char *data
-                                      , std::size_t size)
-                    {
-                        entities.emplace_back();
-                        deserialize(data, size, entities.back());
-                    });
-                });
-            }
-        }
-
-        return world;
-    }
+    math::Extent verticalExtent(const Query &query) const;
 
     math::Extents2 extents() const { return layers.extents(); }
     const geo::SrsDefinition& srs() const { return layers.srs(); }
 };
+
+template <typename Op>
+void GeoPackage::Detail::fetch(const Layers::Layer &layer, const Op &op
+                               , FetchMask::value_type mask) const
+{
+    auto &l(layer.layer);
+    l->ResetReading();
+    while (auto *feature = l->GetNextFeature()) {
+        // fetch feature info
+        const char *id("");
+        if (mask & FetchMask::id) {
+            id = feature->GetFieldAsString(layer.id);
+            if (!id) { id = ""; }
+        }
+
+        // data
+        const char *data(""); int size(0);
+        if (mask & FetchMask::content) {
+            data = reinterpret_cast<char*>
+                (feature->GetFieldAsBinary(layer.content, &size));
+            if (!data) { data = ""; size = 0; }
+        }
+
+        // vertical extent
+        math::Extent ve(math::InvalidExtents{});
+        if ((mask & FetchMask::verticalExtent)
+            && (layer.minVerticalExtent >= 0)
+            && (layer.maxVerticalExtent >= 0))
+        {
+            ve.l = feature->GetFieldAsDouble(layer.minVerticalExtent);
+            ve.r = feature->GetFieldAsDouble(layer.maxVerticalExtent);
+        }
+
+        // call op
+        op(id, data, size, ve);
+    }
+}
+
+void GeoPackage::Detail::add(const World &world)
+{
+    layers.checkWriteable();
+    layers.checkCompatible(world.srs);
+
+    SerializationOptions options(saveOptions, world.origin);
+
+    ogr(world, [&](const auto &e, auto &&geometry)
+    {
+        auto &layer(layers(e.cls));
+
+        // create feature
+        auto feature(std::make_unique< ::OGRFeature>(layer.definition));
+
+        // set feature geometry
+        if (feature->SetGeometryDirectly(geometry.geometry.release())
+            != OGRERR_NONE)
+        {
+            LOGTHROW(err3, std::runtime_error)
+                << "Cannot add geometry of entity <" << e.cls << ">.\""
+                << e.id << "\".";
+        }
+
+        // set id
+        feature->SetField(layer.id, e.id.c_str());
+
+        // set content
+        {
+            const auto content(serialize(e, options));
+            feature->SetField
+                (layer.content, content.size()
+                 , const_cast<GByte*>(reinterpret_cast<const GByte*>
+                                      (content.data())));
+        }
+
+        // set vertical extent
+        feature->SetField(layer.minVerticalExtent, geometry.verticalExtent.l);
+        feature->SetField(layer.maxVerticalExtent, geometry.verticalExtent.r);
+
+        // store feature in layer
+        if (OGRERR_NONE != layer.layer->CreateFeature(feature.get())) {
+            LOGTHROW(err3, std::runtime_error)
+                << "Cannot create feature for entity <" << e.cls << ">.\""
+                << e.id << "\".";
+        }
+    });
+}
+
+World GeoPackage::Detail::world(const Query &query)
+{
+    World world;
+    world.srs = layers.srs();
+
+    SpatialFilter filter(world.srs, query);
+
+    for (auto cls : enumerationValues(Class())) {
+        if (auto *layer = layers(cls, std::nothrow)) {
+            filter.setTo(layer->layer);
+            distribute(cls, world, [&](auto &entities)
+            {
+                this->fetch(*layer
+                            , [&](const std::string&, const char *data
+                                  , std::size_t size, const auto&...)
+                            {
+                                entities.emplace_back();
+                                deserialize(data, size, entities.back());
+                            }
+                            , FetchMask::id | FetchMask::content);
+            });
+        }
+    }
+
+    return world;
+}
+
+math::Extent GeoPackage::Detail::verticalExtent(const Query &query) const
+{
+    math::Extent verticalExtent(math::InvalidExtents{});
+
+    SpatialFilter filter(layers.srs(), query);
+
+    for (auto cls : enumerationValues(Class())) {
+        if (auto *layer = layers(cls, std::nothrow)) {
+            filter.setTo(layer->layer);
+            this->fetch(*layer
+                        , [&](const auto&, const auto&, const auto&
+                              , const math::Extent &ve)
+                        {
+                            math::update(verticalExtent, ve);
+                        }
+                        , FetchMask::verticalExtent);
+        }
+    }
+
+    return verticalExtent;
+}
 
 GeoPackage::GeoPackage(const fs::path &path)
     : detail_(std::make_unique<Detail>(path))
@@ -405,6 +511,11 @@ void GeoPackage::add(const World &world)
 World GeoPackage::world(const Query &query) const
 {
     return detail_->world(query);
+}
+
+math::Extent GeoPackage::verticalExtent(const Query &query) const
+{
+    return detail_->verticalExtent(query);
 }
 
 math::Extents2 GeoPackage::extents() const

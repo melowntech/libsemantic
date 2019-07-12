@@ -32,19 +32,26 @@
 
 namespace semantic {
 
-OgrGeometry ogr(const roof::Roof &roof, const math::Point3 &origin)
+bool ogr(::OGRGeometryCollection &collection, math::Extent &verticalExtent
+         , const roof::Roof &roof, const math::Point3 &origin)
 {
-    struct Visitor : public boost::static_visitor<OgrGeometry> {
+    struct Visitor : public boost::static_visitor<bool> {
+        ::OGRGeometryCollection &collection;
+        math::Extent &verticalExtent;
         const math::Point3 &origin;
-        Visitor(const math::Point3 &origin) : origin(origin)
-        {}
-        OgrGeometry operator()(const roof::Rectangular &r) const {
-            return ogr(r, origin);
+        Visitor(::OGRGeometryCollection &collection
+                , math::Extent &verticalExtent
+                , const math::Point3 &origin)
+            : collection(collection), verticalExtent(verticalExtent)
+            , origin(origin) {}
+
+        bool operator()(const roof::Rectangular &r) const {
+            return ogr(collection, verticalExtent, r, origin);
         }
-        OgrGeometry operator()(const roof::Circular &r) const {
-            return ogr(r, origin);
+        bool operator()(const roof::Circular &r) const {
+            return ogr(collection, verticalExtent, r, origin);
         }
-    } v(origin);
+    } v(collection, verticalExtent, origin);
     return boost::apply_visitor(v, roof.instance);
 }
 
@@ -52,23 +59,16 @@ OgrGeometry ogr(const Building &building, const math::Point3 &origin_)
 {
     const auto origin(origin_ + building.origin);
 
-    // optimization for single-roofed building
-    if (building.roofs.size() == 1) {
-        const auto &roof(building.roofs.front());
-        return ogr(roof, origin + roof.center);
-    }
-
     // any other roof count: make a collection
     auto collection(std::make_unique< ::OGRGeometryCollection>());
+    math::Extent verticalExtent(math::InvalidExtents{});
     for (const auto &roof : building.roofs) {
-        if (OGRERR_NONE
-            != collection->addGeometry(ogr(roof, origin + roof.center).get()))
-        {
+        if (!ogr(*collection, verticalExtent, roof, origin + roof.center)) {
             LOGTHROW(err1, std::runtime_error)
                 << "Unable to add geometry to OGRGeometryCollection.";
         }
     }
-    return collection;
+    return { std::move(collection), verticalExtent };
 
 }
 

@@ -31,17 +31,26 @@
 
 namespace semantic {
 
-OgrGeometry ogr(const roof::Circular &roof, const math::Point3 &origin)
+bool ogr(::OGRGeometryCollection &collection, math::Extent &verticalExtent
+         , const roof::Circular &r, const math::Point3 &origin)
 {
-    auto cs(std::make_unique< ::OGRCircularString>());
+    ::OGRCircularString cs;
 
     /** Closed circle between two arcs.
      */
-    cs->addPoint(origin(0) - roof.radius, origin(1), origin(2));
-    cs->addPoint(origin(0) + roof.radius, origin(1), origin(2));
-    cs->addPoint(origin(0) - roof.radius, origin(1), origin(2));
+    cs.addPoint(origin(0) - r.radius, origin(1), origin(2));
+    cs.addPoint(origin(0) + r.radius, origin(1), origin(2));
+    cs.addPoint(origin(0) - r.radius, origin(1), origin(2));
 
-    return cs;
+    if (OGRERR_NONE != collection.addGeometry(&cs)) { return false; }
+
+    // vertical extent
+    update(verticalExtent, origin(2));
+    update(verticalExtent, origin(2) + r.ridgeHeight);
+    update(verticalExtent, origin(2) + r.curbHeight);
+    update(verticalExtent, origin(2) + r.eaveHeight);
+
+    return true;
 }
 
 } // namespace semantic

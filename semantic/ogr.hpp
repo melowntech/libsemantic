@@ -31,11 +31,16 @@
 
 #include <ogrsf_frmts.h>
 
+#include "math/extent.hpp"
+
 #include "world.hpp"
 
 namespace semantic {
 
-typedef std::unique_ptr< ::OGRGeometry> OgrGeometry;
+struct OgrGeometry {
+    std::unique_ptr< ::OGRGeometry> geometry;
+    math::Extent verticalExtent;
+};
 
 /** Calls featureCallback(const auto &entity, OGRGeometry&&)
  */

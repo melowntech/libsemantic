@@ -31,11 +31,14 @@
 
 namespace semantic {
 
-OgrGeometry ogr(const roof::Roof &roof, const math::Point3 &origin);
+bool ogr(::OGRGeometryCollection &collection, math::Extent &verticalExtent
+         , const roof::Roof &roof, const math::Point3 &origin);
 
-OgrGeometry ogr(const roof::Rectangular &roof, const math::Point3 &origin);
+bool ogr(::OGRGeometryCollection &collection, math::Extent &verticalExtent
+         , const roof::Rectangular &roof, const math::Point3 &origin);
 
-OgrGeometry ogr(const roof::Circular &roof, const math::Point3 &origin);
+bool ogr(::OGRGeometryCollection &collection, math::Extent &verticalExtent
+         , const roof::Circular &roof, const math::Point3 &origin);
 
 } // namespace semantic
 

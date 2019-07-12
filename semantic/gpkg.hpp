@@ -32,6 +32,8 @@
 #include <boost/optional.hpp>
 #include <boost/filesystem/path.hpp>
 
+#include "math/extent.hpp"
+
 #include "geo/srsdef.hpp"
 
 #include "world.hpp"
@@ -85,6 +87,10 @@ public:
     };
 
     World world(const Query &query = {}) const;
+
+    /** Returns vertical extent matching query.
+     */
+    math::Extent verticalExtent(const Query &query = {}) const;
 
     struct Detail;
 
