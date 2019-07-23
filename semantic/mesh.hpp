@@ -41,6 +41,8 @@ enum class Material : int {
     default_ = 0
     , facade = 1
     , roof = 2
+    , treeCrown = 3
+    , treeTrunk = 4
 };
 
 /** Helper for material-enum--to-number converion.
@@ -84,6 +86,8 @@ UTILITY_GENERATE_ENUM_IO(Material,
                          ((default_)("default"))
                          ((facade))
                          ((roof))
+                         ((treeCrown)("tree-crown"))
+                         ((treeTrunk)("tree-trunk"))
                          )
 
 } // namespace semantic
