@@ -29,6 +29,8 @@
 
 #include "dbglog/dbglog.hpp"
 
+#include "shtools/shtools.hpp"
+
 #include "../mesh.hpp"
 #include "detail.hpp"
 
@@ -42,8 +44,10 @@ namespace {
 
 class SphereBuilder {
 public:
-    SphereBuilder(geometry::Mesh &mesh, const MeshConfig &config)
+    SphereBuilder(geometry::Mesh &mesh, const MeshConfig &config
+                  , Material material)
         : mesh_(mesh), config_(config)
+        , material_(material)
     {
         run(2);
     }
@@ -60,7 +64,7 @@ private:
     }
 
     void addFace(Index a, Index b, Index c) {
-        mesh_.faces.emplace_back(a, b, c, 0, 0, 0, +Material::treeCrown);
+        mesh_.faces.emplace_back(a, b, c, 0, 0, 0, +material_);
     }
 
     Index getMidpoint(Index p1, Index p2) {
@@ -146,8 +150,62 @@ private:
 
     geometry::Mesh &mesh_;
     const MeshConfig &config_;
+    Material material_;
     VertexCache vcache_;
 };
+
+void buildSphere(geometry::Mesh &mesh, const MeshConfig &config
+                 , Material material)
+{
+    SphereBuilder(mesh, config, material);
+}
+
+void buildSphericalHarmonics(geometry::Mesh &mesh, const MeshConfig &config
+                             , const std::vector<double> &harmonics
+                             , Material material)
+{
+    const auto grid(shtools::makeGridDH
+                    (harmonics, shtools::Sampling::equallySpaced));
+
+    const auto rows(grid.height());
+    const auto cols(grid.width());
+
+    mesh.vertices.emplace_back(0, 0, grid(0, 0));
+
+    for (int row(1); row < rows; ++row) {
+        const double theta((M_PI * row) / rows);
+        for (int col(0); col < cols; ++col) {
+            const double phi((2 * M_PI * col) / cols);
+            const auto r(grid(col, row));
+            mesh.vertices.emplace_back
+                (r * std::sin(theta) * std::cos(phi)
+                 , r * std::sin(theta) * std::sin(phi)
+                 , r * std::cos(theta));
+        }
+    }
+
+    const auto &addFace([&](int a, int b, int c)
+    {
+        mesh.faces.emplace_back(a, b, c, 0, 0, 0, +material);
+    });
+
+    for (int col(0); col < cols; ++col) {
+        addFace(0, col + 1, (col + 1) % cols + 1);
+    }
+
+    for (int row(2); row < rows; ++row) {
+        const auto startRow((row - 1) * cols + 1);
+        for (int col(0); col < cols; ++col) {
+            const auto i(col + startRow);
+            const auto next = (col + 1) % cols + startRow;
+
+            addFace(i, next - cols, i - cols);
+            addFace(i, next, next - cols);
+        }
+    }
+
+    (void) config;
+}
 
 } // namespace
 
@@ -155,9 +213,13 @@ geometry::Mesh mesh(const Tree &tree, const MeshConfig &config
                     , const math::Point3 &origin)
 {
     geometry::Mesh m;
-    SphereBuilder(m, config);
+#if 0
+    buildSphere(m, config, Material::treeCrown);
+#else
+    buildSphericalHarmonics(m, config, tree.harmonics, Material::treeCrown);
+#endif
 
-    const math::Point3 offset(origin + tree.origin);
+    const math::Point3 offset(origin + tree.origin + tree.center);
 
     for (auto &v : m.vertices) {
         v(0) = v(0) * tree.a + offset(0);
