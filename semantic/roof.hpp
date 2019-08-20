@@ -70,8 +70,8 @@ struct Circular {
     double eaveHeight = 0.0;
 };
 
-typedef boost::variant<Rectangular, Circular> Instance;
-enum class Type { rectangular = 0, circular };
+typedef boost::variant<Circular, Rectangular> Instance;
+enum class Type { circular = 0, rectangular };
 
 struct Roof {
     typedef std::vector<Roof> list;
