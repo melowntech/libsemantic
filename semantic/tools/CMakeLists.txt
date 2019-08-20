@@ -37,3 +37,11 @@ set(gpkg2semantic_SOURCES
 add_executable(gpkg2semantic ${gpkg2semantic_SOURCES})
 target_link_libraries(gpkg2semantic ${MODULE_LIBRARIES})
 buildsys_binary(gpkg2semantic)
+
+# On-request installation
+if(semantic-tools-INSTALL-COMPONENT)
+  install(TARGETS
+    semantic2obj semantic2semantic semantic2gpkg gpkg2semantic
+    RUNTIME DESTINATION bin
+    COMPONENT ${semantic-tools-INSTALL-COMPONENT})
+endif()
