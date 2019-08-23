@@ -29,6 +29,7 @@
 
 #include <vector>
 #include <array>
+#include <functional>
 
 #include <boost/variant.hpp>
 
@@ -151,5 +152,15 @@ void distribute(Class cls, World &world, const Op &op)
 }
 
 } // namespace semantic
+
+namespace std {
+
+template<> struct hash<semantic::Class> {
+    std::size_t operator()(semantic::Class cls) const {
+        return static_cast<std::size_t>(cls);
+    }
+};
+
+} // namespace std
 
 #endif // semantic_world_hpp_included_
