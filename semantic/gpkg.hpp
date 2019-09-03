@@ -58,6 +58,9 @@ public:
 
     ~GeoPackage();
 
+    GeoPackage(GeoPackage&&) = default;
+    GeoPackage& operator=(GeoPackage&&) = default;
+
     const geo::SrsDefinition& srs() const;
 
     /** Get dataset extents.
