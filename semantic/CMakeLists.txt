@@ -6,6 +6,7 @@ define_module(LIBRARY semantic=${semantic_VERSION}
   BuildSystem>=1.4 C++>=14
   shtools
   geo jsoncpp
+  geometry>=1.12
   Boost_IOSTREAMS
   )
 
