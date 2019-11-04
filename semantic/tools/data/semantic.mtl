@@ -1,0 +1,14 @@
+newmtl default
+Kd 0.8628 0.8628 0.8628
+
+# Whitish facade color
+newmtl facade
+Kd 0.9608 0.9608 0.9608
+
+# terracotta roof
+newmtl roof
+Kd 0.8863 0.4471 0.3569
+
+# green tree crown
+newmtl tree-crown
+0.2588 0.4118 0.1843

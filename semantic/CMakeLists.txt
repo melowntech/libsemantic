@@ -1,5 +1,5 @@
 # bump version here
-set(semantic_VERSION 0.0)
+set(semantic_VERSION 1.0)
 
 define_module(LIBRARY semantic=${semantic_VERSION}
   DEPENDS
