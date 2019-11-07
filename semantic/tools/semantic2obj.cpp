@@ -6,6 +6,7 @@
 #include "utility/buildsys.hpp"
 #include "utility/gccversion.hpp"
 #include "utility/streams.hpp"
+#include "utility/path.hpp"
 
 #include "service/cmdline.hpp"
 
@@ -13,6 +14,7 @@
 
 #include "semantic/io.hpp"
 #include "semantic/mesh.hpp"
+#include "data/semantic.mtl.hpp"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -83,10 +85,22 @@ int Semantic2Obj::run()
     const auto world(semantic::load(input_));
     const auto mesh(semantic::mesh(world, meshConfig_));
 
-    geometry::ObjMaterial mtl("semantic.mtl");
+    const auto mtlPath(utility::addExtension(output_, ".mlt"));
+
+    geometry::ObjMaterial mtl(mtlPath.filename().string());
     mtl.names = semantic::materials();
 
-    geometry::saveAsObj(mesh, output_, mtl);
+    // write mtl
+    utility::write(mtlPath, semantic2obj::semantic_mtl);
+
+    const auto &setStream([&](std::ostream &os)
+    {
+        os << std::fixed;
+        os << "### SRS: " << world.srs << "\n\n";
+        return true;
+    });
+
+    geometry::saveAsObj(mesh, output_, mtl, setStream);
 
     return EXIT_SUCCESS;
 }
