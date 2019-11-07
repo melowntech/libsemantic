@@ -9,6 +9,7 @@ set(semantic2obj_SOURCES
 
 add_executable(semantic2obj ${semantic2obj_SOURCES})
 target_link_libraries(semantic2obj ${MODULE_LIBRARIES})
+buildsys_target_compile_definitions(semantic2obj ${MODULE_DEFINITIONS})
 buildsys_binary(semantic2obj)
 
 # Simple format checker, load and saves semantic world file.
@@ -18,6 +19,7 @@ set(semantic2semantic_SOURCES
 
 add_executable(semantic2semantic ${semantic2semantic_SOURCES})
 target_link_libraries(semantic2semantic ${MODULE_LIBRARIES})
+buildsys_target_compile_definitions(semantic2semantic ${MODULE_DEFINITIONS})
 buildsys_binary(semantic2semantic)
 
 # semantic world to (semantic) GeoPackage
@@ -27,6 +29,7 @@ set(semantic2gpkg_SOURCES
 
 add_executable(semantic2gpkg ${semantic2gpkg_SOURCES})
 target_link_libraries(semantic2gpkg ${MODULE_LIBRARIES})
+buildsys_target_compile_definitions(semantic2gpkg ${MODULE_DEFINITIONS})
 buildsys_binary(semantic2gpkg)
 
 # (semantic) GeoPackage to semantic world
@@ -36,6 +39,7 @@ set(gpkg2semantic_SOURCES
 
 add_executable(gpkg2semantic ${gpkg2semantic_SOURCES})
 target_link_libraries(gpkg2semantic ${MODULE_LIBRARIES})
+buildsys_target_compile_definitions(gpkg2semantic ${MODULE_DEFINITIONS})
 buildsys_binary(gpkg2semantic)
 
 # On-request installation
