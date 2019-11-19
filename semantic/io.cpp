@@ -295,6 +295,11 @@ void build(Json::Value &value, const Tree &tree
     if (tree.a != tree.b) { value["b"] = tree.b; }
     auto &harmonics(value["harmonics"] = Json::arrayValue);
     for (auto harmonic : tree.harmonics) { harmonics.append(harmonic); }
+
+    if (tree.type != Tree::Type::deciduous) {
+        value["type"] = boost::lexical_cast<std::string>(tree.type);
+    }
+
 }
 
 template <typename EntityType>
