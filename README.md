@@ -111,10 +111,18 @@ Building : Entity = {
 ### Tree
 
 ```javascript
+TreeType = Enum {
+    deciduous                 // deciduous tree
+    , coniferous              // coniferous tree
+}
+```
+
+```javascript
 Tree : Entity = {
     Point3 center             // Tree center relative to Entity.origin
     Double a                  // Semi-major axis of the base spheroid
     Double b                  // Semi-minor axis of the base spheroid
     Array<Double> harmonics   // Spherical harmonics parameters
+    Optional TreeType type;   // Tree type; defaults to "deciduous"
 }
 ```
