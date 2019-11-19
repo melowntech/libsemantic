@@ -149,6 +149,9 @@ void parse(Tree &tree, const Json::Value &value)
     Json::get(tree.a, value, "a");
     if (!Json::getOpt(tree.b, value, "b")) { tree.b = tree.a; }
     Json::get(tree.harmonics, value, "harmonics");
+    if (!Json::getOpt(tree.type, value, "type")) {
+        tree.type = Tree::Type::deciduous;
+    }
 }
 
 template <typename EntityType>

@@ -41,8 +41,9 @@ enum class Material : int {
     default_ = 0
     , facade = 1
     , roof = 2
-    , treeCrown = 3
-    , treeTrunk = 4
+    , tree_trunk = 3
+    , tree_crown_deciduous = 4
+    , tree_crown_coniferous = 5
 };
 
 /** Helper for material-enum--to-number converion.
@@ -86,8 +87,9 @@ UTILITY_GENERATE_ENUM_IO(Material,
                          ((default_)("default"))
                          ((facade))
                          ((roof))
-                         ((treeCrown)("tree-crown"))
-                         ((treeTrunk)("tree-trunk"))
+                         ((tree_trunk)("tree-trunk"))
+                         ((tree_crown_deciduous)("tree_crown_deciduous"))
+                         ((tree_crown_coniferous)("tree-crown-coniferous"))
                          )
 
 } // namespace semantic

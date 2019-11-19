@@ -80,11 +80,21 @@ struct Tree : Entity {
     static const constexpr Class cls = Class::tree;
     typedef std::vector<Tree> list;
 
+    enum class Type { deciduous, coniferous };
+
+    Type type = Type::deciduous;
     math::Point3 center;
     double a = 0.0;
     double b = 0.0;
     std::vector<double> harmonics;
 };
+
+/** Tree subclass classes.
+ */
+UTILITY_GENERATE_ENUM_IO(Tree::Type,
+                      ((deciduous))
+                      ((coniferous))
+                      )
 
 /** Semantic world.
  *
