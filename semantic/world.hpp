@@ -56,6 +56,8 @@ struct Entity {
     std::string id;
     std::string descriptor;
     math::Point3 origin;
+
+    bool operator==(const Entity &e) const;
 };
 
 /** Building. Only roofs so far, facades are implicit.
@@ -89,12 +91,12 @@ struct Tree : Entity {
     std::vector<double> harmonics;
 };
 
-/** Tree subclass classes.
+/** Tree subclasses.
  */
 UTILITY_GENERATE_ENUM_IO(Tree::Type,
-                      ((deciduous))
-                      ((coniferous))
-                      )
+                         ((deciduous))
+                         ((coniferous))
+                         )
 
 /** Semantic world.
  *
@@ -159,6 +161,11 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
     }
+}
+
+inline bool Entity::operator==(const Entity &e) const
+{
+    return (id == e.id);
 }
 
 } // namespace semantic

@@ -38,7 +38,10 @@
 
 namespace semantic {
 
-enum class Format { json, binary };
+UTILITY_GENERATE_ENUM(Format,
+                      ((json))
+                      ((binary))
+                      )
 
 struct SaveOptions {
     bool compress = false;

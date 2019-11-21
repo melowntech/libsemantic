@@ -80,6 +80,9 @@ struct Roof {
     Instance instance;
 
     Type type() const { return static_cast<Type>(instance.which()); }
+
+    // needed by python bindings
+    bool operator==(const Roof &r) const;
 };
 
 // inline stuff
@@ -87,6 +90,13 @@ struct Roof {
 UTILITY_GENERATE_ENUM_IO(Type,
                          ((rectangular))
                          ((circular))
+                         )
+
+UTILITY_GENERATE_ENUM_IO(Rectangular::Key,
+                         ((top))
+                         ((bottom))
+                         ((left))
+                         ((right))
                          )
 
 inline int operator+(Rectangular::Key key) {

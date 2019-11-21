@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 Melown Technologies SE
+ * Copyright (c) 2018 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,22 +24,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "roof.hpp"
+#ifndef semantic_python_semanticmodule_hpp_included_
+#define semantic_python_semanticmodule_hpp_included_
 
-namespace semantic { namespace roof {
+#include <boost/python.hpp>
 
-constexpr Rectangular::Curb Rectangular::defaultCurb;
-constexpr Rectangular::Hip Rectangular::defaultHip;
-constexpr Rectangular::EaveHeight Rectangular::defaultEaveHeight;
+namespace semantic { namespace py {
 
-bool Roof::operator==(const Roof &r) const
-{
-    if (center != r.center) { return false; }
-    if (type() != r.type()) { return false; }
+boost::python::object import();
 
-    // TODO: call compare on instances
-    return true;
-}
+} } // namespace semantic::py
 
-
-} } // namespace roof::semantic
+#endif // semantic_python_semanticmodule_hpp_included_
