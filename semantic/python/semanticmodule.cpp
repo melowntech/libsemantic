@@ -91,6 +91,46 @@ void save3(const World &world, const boost::filesystem::path &path
     return semantic::save(world, path, options);
 }
 
+// "namespace"
+struct lod2 {};
+
+geometry::Mesh meshRoof2(const roof::Roof &roof, const MeshConfig &config
+                         , const math::Point3 &origin)
+{
+    return semantic::lod2::mesh(roof, config, origin);
+}
+
+geometry::Mesh meshCircularRoof2(const roof::Circular &roof
+                                 , const MeshConfig &config
+                                 , const math::Point3 &origin)
+{
+    return semantic::lod2::mesh(roof, config, origin);
+}
+
+geometry::Mesh meshRectangularRoof2(const roof::Rectangular &roof
+                                    , const MeshConfig &config
+                                    , const math::Point3 &origin)
+{
+    return semantic::lod2::mesh(roof, config, origin);
+}
+
+geometry::Mesh meshBuilding2(const Building &building, const MeshConfig &config
+                             , const math::Point3 &origin)
+{
+    return semantic::lod2::mesh(building, config, origin);
+}
+
+geometry::Mesh meshTree2(const Tree &tree, const MeshConfig &config
+                         , const math::Point3 &origin)
+{
+    return semantic::lod2::mesh(tree, config, origin);
+}
+
+geometry::Mesh meshWorld2(const World &world, const MeshConfig &config)
+{
+    return semantic::mesh(world, config, 2);
+}
+
 } } // namespace semantic::py
 
 BOOST_PYTHON_MODULE(melown_semantic)
@@ -240,6 +280,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
             ;
     }
 
+
     // IO
 
     pysupport::fillEnum<semantic::Format>
@@ -258,6 +299,37 @@ BOOST_PYTHON_MODULE(melown_semantic)
     def("save", py::save3);
 
     // TODO: serialization
+
+
+    // meshing
+
+    auto MeshConfig = class_<semantic::MeshConfig>
+        ("MeshConfig", init<const semantic::MeshConfig&>())
+        .def(init<>())
+
+        .def_readwrite("maxCircleSegment"
+                       , &semantic::MeshConfig::maxCircleSegment)
+        .def_readwrite("minSegmentCount"
+                       , &semantic::MeshConfig::minSegmentCount)
+        ;
+
+    pysupport::fillEnum<semantic::Material>
+        ("Material", "Mesh material.");
+
+    def("materials", &semantic::materials);
+
+    auto lod2 = class_<py::lod2>("lod2", init<>());
+
+    {
+        bp::scope scope(lod2);
+
+        def("mesh", &py::meshRoof2);
+        def("mesh", &py::meshCircularRoof2);
+        def("mesh", &py::meshRectangularRoof2);
+        def("mesh", &py::meshBuilding2);
+        def("mesh", &py::meshTree2);
+        def("mesh", &py::meshWorld2);
+    }
 }
 
 namespace semantic { namespace py {
