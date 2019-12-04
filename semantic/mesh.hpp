@@ -88,7 +88,7 @@ UTILITY_GENERATE_ENUM_IO(Material,
                          ((facade))
                          ((roof))
                          ((tree_trunk)("tree-trunk"))
-                         ((tree_crown_deciduous)("tree_crown_deciduous"))
+                         ((tree_crown_deciduous)("tree-crown-deciduous"))
                          ((tree_crown_coniferous)("tree-crown-coniferous"))
                          )
 

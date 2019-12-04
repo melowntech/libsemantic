@@ -38,24 +38,12 @@ namespace lod2 {
 
 using detail::Index;
 
-namespace {
-
-Index computeArcPoints(const MeshConfig &config, double radius)
-{
-    return std::max(Index(config.minSegmentCount)
-                    , Index(std::ceil
-                            (M_PI / std::asin(config.maxCircleSegment
-                                              / (2 * radius)))));
-}
-
-} // namespace
-
 geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config
                     , const math::Point3 &origin)
 {
     geometry::Mesh mesh;
 
-    const auto arcPoints(computeArcPoints(config, roof.radius));
+    const auto arcPoints(detail::computeArcPoints(config, roof.radius));
 
     const auto &vertex([&](double x, double y, double z)
     {

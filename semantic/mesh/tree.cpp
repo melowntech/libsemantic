@@ -96,6 +96,66 @@ Material treeCrownMaterial(const Tree &tree)
             : Material::tree_crown_coniferous);
 }
 
+Material treeTrunkMaterial(const Tree &tree)
+{
+    // if there is ever a need for different trunk material for different tree
+    // types
+    return ((tree.type == Tree::Type::deciduous)
+            ? Material::tree_trunk
+            : Material::tree_trunk);
+}
+
+void trunk(geometry::Mesh &out, const Tree &tree, const MeshConfig &config
+           , const math::Point3 &origin, Material material)
+{
+    geometry::Mesh mesh;
+
+    const auto height(tree.center[2] + tree.b);
+    const auto r(std::sqrt(tree.a) / 6.0
+                 + std::sqrt(height) / 8.0
+                 - 0.25);
+    const auto top(tree.center[2] - tree.b / 2.0);
+
+    const auto arcPoints(detail::computeArcPoints(config, r));
+
+    const auto &vertex([&](double x, double y, double z)
+    {
+        mesh.vertices.emplace_back
+            (x + origin(0), y + origin(1), z + origin(2));
+    });
+
+    const auto &vertexPoint([&](const math::Point3 &p)
+    {
+        mesh.vertices.emplace_back
+            (p(0) + origin(0), p(1) + origin(1), p(2) + origin(2));
+    });
+
+    const auto &face([&](Index a, Index b, Index c)
+    {
+        mesh.faces.emplace_back(a, b, c, 0, 0, 0, +material);
+    });
+
+    const auto arcVertices(arcPoints * 2);
+
+    for (Index i(0); i < arcPoints; ++i) {
+        const double angle((2 * M_PI * i) / arcPoints);
+
+        const auto p(detail::rotate(0, r, top, angle));
+        vertexPoint(p);
+        vertex(p(0), p(1), 0.0);
+
+        const auto &v([&](Index index) -> Index
+        {
+            return (index + 2 * i) % arcVertices;
+        });
+
+        face(v(0), v(1), v(3));
+        face(v(0), v(3), v(2));
+    }
+
+    detail::append(out, mesh);
+}
+
 } // namespace
 
 geometry::Mesh mesh(const Tree &tree, const MeshConfig &config
@@ -106,12 +166,14 @@ geometry::Mesh mesh(const Tree &tree, const MeshConfig &config
                             , treeCrownMaterial(tree));
 
     const math::Point3 offset(origin + tree.origin + tree.center);
-
     for (auto &v : m.vertices) {
         v(0) = v(0) * tree.a + offset(0);
         v(1) = v(1) * tree.a + offset(1);
         v(2) = v(2) * tree.b + offset(2);
     }
+
+    // add tree trunk
+    trunk(m, tree, config, origin + tree.origin, treeTrunkMaterial(tree));
 
     return m;
 }

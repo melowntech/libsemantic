@@ -9,6 +9,14 @@ Kd 0.9608 0.9608 0.9608
 newmtl roof
 Kd 0.8863 0.4471 0.3569
 
-# green tree crown
-newmtl tree-crown
-0.2588 0.4118 0.1843
+# light green tree crown
+newmtl tree-crown-deciduous
+Kd 0.3372 0.5373 0.2392
+
+# dark green tree crown
+newmtl tree-crown-coniferous
+Kd 0.1608 0.2863 0.1020
+
+# brown tree trunk
+newmtl tree-trunk
+Kd 0.3255 0.2078 0.0392

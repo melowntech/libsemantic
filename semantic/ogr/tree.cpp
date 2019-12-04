@@ -38,7 +38,7 @@ OgrGeometry ogr(const Tree &tree, const math::Point3 &origin)
     const math::Point3 center(origin + tree.origin + tree.center);
 
     /** Closed circle between two arcs.
-     *  TODO: take harminics into account
+     *  TODO: take harmonics into account
      */
     cs->addPoint(center(0) - tree.a, center(1), center(2));
     cs->addPoint(center(0) + tree.a, center(1), center(2));

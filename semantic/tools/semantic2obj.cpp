@@ -85,7 +85,7 @@ int Semantic2Obj::run()
     const auto world(semantic::load(input_));
     const auto mesh(semantic::mesh(world, meshConfig_));
 
-    const auto mtlPath(utility::addExtension(output_, ".mlt"));
+    const auto mtlPath(utility::addExtension(output_, ".mtl"));
 
     geometry::ObjMaterial mtl(mtlPath.filename().string());
     mtl.names = semantic::materials();

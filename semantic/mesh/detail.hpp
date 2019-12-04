@@ -79,6 +79,14 @@ inline bool colinear(double a, double b, double c, double t)
     return (std::abs(expected - b) < 1e-5);
 }
 
+inline Index computeArcPoints(const MeshConfig &config, double radius)
+{
+    return std::max(Index(config.minSegmentCount)
+                    , Index(std::ceil
+                            (M_PI / std::asin(config.maxCircleSegment
+                                              / (2 * radius)))));
+}
+
 } } // namespace semantic::detail
 
 #endif // semantic_mesh_detail_hpp_included_
