@@ -7,6 +7,7 @@
 #include "utility/gccversion.hpp"
 #include "utility/streams.hpp"
 #include "utility/path.hpp"
+#include "utility/implicit-value.hpp"
 
 #include "service/cmdline.hpp"
 
@@ -56,6 +57,10 @@ void Semantic2Obj::configuration(po::options_description &cmdline
          , "Path to the input file with semantic data.")
         ("output", po::value(&output_)->required()
          , "Path to the output OBJ file.")
+        ("closedSurface"
+         , utility::implicit_value(&meshConfig_.closedSurface, true)
+         ->default_value(false)
+         , "Generate closed surface.")
         ;
 
     pd.add("input", 1).add("output", 1);

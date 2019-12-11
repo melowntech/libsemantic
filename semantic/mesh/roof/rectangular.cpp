@@ -218,6 +218,12 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
     c.face(v, 2, 3, 6, Material::facade);
     c.face(v, 6, 3, 7, Material::facade);
 
+    if (config.closedSurface) {
+        // add building bottom
+        c.face(v, 0, 1, 3, Material::facade);
+        c.face(v, 0, 3, 2, Material::facade);
+    }
+
     DeferredFaces deferred;
 
     // roof

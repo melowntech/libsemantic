@@ -62,8 +62,14 @@ geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config
         mesh.faces.emplace_back(a, b, c, 0, 0, 0, +m);
     });
 
-    // roof center
+    Index extraVertices(1);
+    // roof top center
     vertex(0.0, 0.0, roof.ridgeHeight);
+    if (config.closedSurface) {
+        // roof bottom center
+        vertex(0.0, 0.0, 0);
+        ++extraVertices;
+    }
 
     if (detail::colinear(roof.ridgeHeight, roof.curbHeight, roof.eaveHeight
                          , roof.curb))
@@ -82,12 +88,16 @@ geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config
 
             const auto &v([&](Index index) -> Index
             {
-                return 1 + ((index + 2 * i) % arcVertices);
+                return extraVertices + ((index + 2 * i) % arcVertices);
             });
 
             face(0, v(0), v(2), Material::roof);
             face(v(0), v(3), v(2), Material::facade);
             face(v(0), v(1), v(3), Material::facade);
+
+            if (config.closedSurface) {
+                face(1, v(3), v(1), Material::facade);
+            }
         }
     } else {
         const auto arcVertices(arcPoints * 3);
@@ -109,7 +119,7 @@ geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config
 
             const auto &v([&](Index index) -> Index
             {
-                return 1 + ((index + 3 * i) % arcVertices);
+                return extraVertices + ((index + 3 * i) % arcVertices);
             });
 
             face(0, v(0), v(3), Material::roof);
@@ -117,6 +127,10 @@ geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config
             face(v(0), v(4), v(3), Material::roof);
             face(v(1), v(2), v(5), Material::facade);
             face(v(1), v(5), v(4), Material::facade);
+
+            if (config.closedSurface) {
+                face(1, v(5), v(2), Material::facade);
+            }
         }
     }
 

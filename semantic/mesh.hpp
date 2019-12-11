@@ -58,6 +58,10 @@ struct MeshConfig {
     /** Minimum number of circle segments.
      */
     unsigned int minSegmentCount = 16;
+
+    /** Generate closed surface (solids)?
+     */
+    bool closedSurface = false;
 };
 
 /** Generate mesh in given LOD.
