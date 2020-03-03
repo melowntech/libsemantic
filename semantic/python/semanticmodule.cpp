@@ -46,6 +46,7 @@
 #include "pysupport/enum.hpp"
 #include "pysupport/converters.hpp"
 #include "pysupport/array.hpp"
+#include "pysupport/vector.hpp"
 #include "pysupport/variant.hpp"
 
 #include "../world.hpp"
@@ -151,6 +152,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("origin", &semantic::World::origin)
         .def_readwrite("buildings", &semantic::World::buildings)
         .def_readwrite("trees", &semantic::World::trees)
+        .def_readwrite("railways", &semantic::World::railways)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -175,9 +177,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::fillEnum<semantic::Tree::Type>
             ("Type", "Tree type.");
 
-        class_<semantic::Tree::list>("list")
-            .def(vector_indexing_suite<semantic::Tree::list>())
-            ;
+        pysupport::vector<semantic::Tree::list>("list");
     }
 
     auto Building = class_<semantic::Building>
@@ -195,9 +195,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
     {
         bp::scope scope(Building);
 
-        class_<semantic::Building::list>("list")
-            .def(vector_indexing_suite<semantic::Building::list>())
-            ;
+        pysupport::vector<semantic::Building::list>("list");
     }
 
     auto Roof = class_<semantic::roof::Roof>
@@ -225,9 +223,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::fillEnum<semantic::roof::Type>
             ("Type", "Roof type.");
 
-        class_<semantic::roof::Roof::list>("list")
-            .def(vector_indexing_suite<semantic::roof::Roof::list>())
-            ;
+        pysupport::vector<semantic::roof::Roof::list>("list");
 
         auto Circular = class_<semantic::roof::Circular>
             ("Circular", init<const semantic::roof::Circular&>())
@@ -280,6 +276,27 @@ BOOST_PYTHON_MODULE(melown_semantic)
             ;
     }
 
+    auto Railway = class_<semantic::Railway>
+        ("Railway", init<const semantic::Railway&>())
+        .def(init<>())
+
+        .def_readonly("cls", &semantic::Railway::cls)
+        .def_readwrite("id", &semantic::Railway::id)
+        .def_readwrite("descriptor", &semantic::Railway::descriptor)
+        .def_readwrite("origin", &semantic::Railway::origin)
+        .def_readwrite("vertices", &semantic::Railway::vertices)
+        .def_readwrite("lines", &semantic::Railway::lines)
+        ;
+
+    {
+        bp::scope scope(Railway);
+
+        pysupport::vector<semantic::Railway::list>("list");
+        pysupport::vector<semantic::Railway::Line
+                          , return_value_policy<return_by_value>
+                          >("Line");
+        pysupport::vector<semantic::Railway::Lines>("Lines");
+    }
 
     // IO
 

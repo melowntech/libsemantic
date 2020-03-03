@@ -64,6 +64,15 @@ void parse(math::Point3 &point, const Json::Value &value)
     Json::unpack(value, "Point3", point(0), point(1), point(2));
 }
 
+void parse(math::Points3 &points, const Json::Value &value)
+{
+    points.resize(value.size());
+    auto ipoints(points.begin());
+    for (const auto &item : value) {
+        parse(*ipoints++, item);
+    }
+}
+
 void parse(roof::Rectangular &r, const Json::Value &value)
 {
     parse(r.size, Json::check(value, "size", Json::arrayValue));
@@ -154,6 +163,22 @@ void parse(Tree &tree, const Json::Value &value)
     }
 }
 
+void parse(Railway::Lines &lines, const Json::Value &value)
+{
+    lines.reserve(value.size());
+    for (const auto &item : value) {
+        lines.emplace_back();
+        Json::get(lines.back(), item, "line");
+    }
+}
+
+void parse(Railway &railway, const Json::Value &value)
+{
+    parse(static_cast<Entity&>(railway), value);
+    parse(railway.vertices, Json::check(value, "vertices", Json::arrayValue));
+    parse(railway.lines, Json::check(value, "lines", Json::arrayValue));
+}
+
 template <typename EntityType>
 void parse(std::vector<EntityType> &entities, const Json::Value &container
            , const char *name)
@@ -179,6 +204,7 @@ void parse(World &world, const Json::Value &value)
 
     parse(world.buildings, value, "buildings");
     parse(world.trees, value, "trees");
+    parse(world.railways, value, "railways");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -205,6 +231,13 @@ void build(Json::Value &value, const math::Point3 &point)
     value.append(point(0));
     value.append(point(1));
     value.append(point(2));
+}
+
+void build(Json::Value &value, const math::Points3 &points)
+{
+    for (const auto &point : points) {
+        build(value.append(Json::arrayValue), point);
+    }
 }
 
 template <std::size_t N>
@@ -302,6 +335,26 @@ void build(Json::Value &value, const Tree &tree
 
 }
 
+void build(Json::Value &value, const Railway::Lines &lines)
+{
+    value = Json::arrayValue;
+    for (const auto &line : lines) {
+        auto &item(value.append(Json::arrayValue));
+        for (auto index : line) {
+            item.append(index);
+        }
+    }
+}
+
+void build(Json::Value &value, const Railway &railway
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(railway), shift);
+
+    build(value, railway.vertices);
+    build(value, railway.lines);
+}
+
 template <typename EntityType>
 void build(Json::Value &container, const char *name
            , const std::vector<EntityType> &entities
@@ -324,6 +377,7 @@ void build(Json::Value &value, const World &world)
     build(value["origin"], world.origin);
     build(value, "buildings", world.buildings);
     build(value, "trees", world.trees);
+    build(value, "railways", world.railways);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -460,5 +514,6 @@ void save(const World &world, const fs::path &path
 
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Building)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Tree)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(Railway)
 
 } // namespace semantic

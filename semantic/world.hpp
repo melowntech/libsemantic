@@ -46,6 +46,7 @@ namespace semantic {
 UTILITY_GENERATE_ENUM(Class,
                       ((building))
                       ((tree))
+                      ((railway))
                       )
 
 typedef std::vector<Class> Classes;
@@ -98,6 +99,21 @@ UTILITY_GENERATE_ENUM_IO(Tree::Type,
                          ((coniferous))
                          )
 
+/** Building. Only roofs so far, facades are implicit.
+ */
+struct Railway : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::railway;
+
+    typedef std::vector<Railway> list;
+
+    math::Points3 vertices;
+    typedef std::vector<int> Line;
+    typedef std::vector<Line> Lines;
+    Lines lines;
+};
+
 /** Semantic world.
  *
  * NB: Contains only a list of buildings, so far.
@@ -121,6 +137,10 @@ struct World {
     /** All trees in the world.
      */
     Tree::list trees;
+
+    /** All railways in the world.
+     */
+    Railway::list railways;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -151,6 +171,7 @@ void distribute(Class cls, const World &world, const Op &op)
     switch (cls) {
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
+    case Class::railway: op(world.railways); break;
     }
 }
 
@@ -160,6 +181,7 @@ void distribute(Class cls, World &world, const Op &op)
     switch (cls) {
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
+    case Class::railway: op(world.railways); break;
     }
 }
 
