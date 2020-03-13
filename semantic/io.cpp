@@ -235,6 +235,7 @@ void build(Json::Value &value, const math::Point3 &point)
 
 void build(Json::Value &value, const math::Points3 &points)
 {
+    value = Json::arrayValue;
     for (const auto &point : points) {
         build(value.append(Json::arrayValue), point);
     }
@@ -351,8 +352,8 @@ void build(Json::Value &value, const Railway &railway
 {
     build(value, static_cast<const Entity&>(railway), shift);
 
-    build(value, railway.vertices);
-    build(value, railway.lines);
+    build(value["vertices"], railway.vertices);
+    build(value["lines"], railway.lines);
 }
 
 template <typename EntityType>
