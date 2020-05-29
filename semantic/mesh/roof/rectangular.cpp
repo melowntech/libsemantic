@@ -374,6 +374,9 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
     const auto hipTop(r.hip[+Key::top]);
     const auto hipBottom(r.hip[+Key::bottom]);
 
+    const auto totalCurbVertical((curbTop + curbBottom) / 2);
+    const auto curbMiddleVertical((curbBottom - curbTop) / 2);
+
     v[12] = c.point(-curbLeft
                     , curbTop - skewTopTan * (curbLeft - curbMiddle)
                     , r.curbHeight);
@@ -382,7 +385,9 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
                     , curbTop + skewTopTan * (curbRight + curbMiddle)
                     , r.curbHeight);
 
-    v[14] = c.point(-curbMiddle, curbTop * hipTop, r.ridgeHeight);
+    v[14] = c.point(-curbMiddle
+                    , -curbMiddleVertical + hipTop * totalCurbVertical
+                    , r.ridgeHeight);
 
     v[15] = c.point(-curbLeft
                     , -curbBottom - skewBottomTan * (curbLeft - curbMiddle)
@@ -392,7 +397,9 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
                     , -curbBottom + skewBottomTan * (curbRight + curbMiddle)
                     , r.curbHeight);
 
-    v[17] = c.point(-curbMiddle, -curbBottom * hipBottom, r.ridgeHeight);
+    v[17] = c.point(-curbMiddle,
+                    -curbMiddleVertical - hipBottom * totalCurbVertical,
+                    r.ridgeHeight);
 
     c.face(v, 8, 10, 12, Material::roof);
     c.face(v, 12, 10, 15, Material::roof);
