@@ -324,7 +324,7 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
              , -useCurbBottom - skewBottomTan * (useCurbLeft - curbMiddle)
              , eaveHeight);
 
-        if (useCurbBottom == 1.0) {
+        if (useCurbLeft == 1.0) {
             deferred.face(4, 10, 8, Material::roof);
             deferred.face(4, 6, 10, Material::roof);
         } else {
@@ -360,7 +360,7 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
              , -useCurbBottom + skewBottomTan * (useCurbRight + curbMiddle)
              , eaveHeight);
 
-        if (useCurbRight == 1.0) {
+        if (useCurbBottom == 1.0) {
             deferred.face(6, 11, 10, Material::roof);
             deferred.face(6, 7, 11, Material::roof);
         } else {
