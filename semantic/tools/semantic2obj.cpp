@@ -44,7 +44,7 @@ private:
     virtual int run() override;
 
     semantic::MeshConfig meshConfig_;
-    fs::path input_;
+    std::vector<fs::path> input_;
     fs::path output_;
 };
 
@@ -63,7 +63,7 @@ void Semantic2Obj::configuration(po::options_description &cmdline
          , "Generate closed surface.")
         ;
 
-    pd.add("input", 1).add("output", 1);
+    pd.add("output", 1).add("input", -1);
 
     (void) config;
 }
@@ -78,7 +78,9 @@ bool Semantic2Obj::help(std::ostream &out, const std::string &what) const
     if (what.empty()) {
         out << R"RAW(semantic2obj
 usage
-    semantic2obj input output [OPTIONS]
+    semantic2obj output input* [OPTIONS]
+
+If multiple input files are used their SRS must be the same.
 
 )RAW";
     }
@@ -87,8 +89,23 @@ usage
 
 int Semantic2Obj::run()
 {
-    const auto world(semantic::load(input_));
-    const auto mesh(semantic::mesh(world, meshConfig_));
+    boost::optional<geo::SrsDefinition> srs;
+
+    geometry::Mesh mesh;
+    for (const auto &input : input_) {
+        const auto world(semantic::load(input));
+
+        if (!srs) {
+            srs = world.srs;
+        } else if (!areSame(*srs, world.srs)) {
+            LOG(fatal)
+                << "Different SRS in input world file "
+                << input << ": '" << world.srs << "'.";
+            return EXIT_FAILURE;
+        }
+
+        append(mesh, semantic::mesh(world, meshConfig_));
+    }
 
     const auto mtlPath(utility::addExtension(output_, ".mtl"));
 
@@ -101,7 +118,7 @@ int Semantic2Obj::run()
     const auto &setStream([&](std::ostream &os)
     {
         os << std::fixed;
-        os << "### SRS: " << world.srs << "\n\n";
+        os << "### SRS: " << srs.value() << "\n\n";
         return true;
     });
 
