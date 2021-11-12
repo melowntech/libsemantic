@@ -28,6 +28,7 @@
 
 #include "../mesh.hpp"
 #include "building.hpp"
+#include "block.hpp"
 
 namespace semantic {
 

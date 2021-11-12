@@ -36,6 +36,7 @@
 #include "utility/enum-io.hpp"
 #include "math/geometry_core.hpp"
 #include "geo/srsdef.hpp"
+#include "geometry/multipolymesh.hpp"
 
 #include "roof.hpp"
 
@@ -47,6 +48,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((building))
                       ((tree))
                       ((railway))
+                      ((block))
                       )
 
 typedef std::vector<Class> Classes;
@@ -114,6 +116,18 @@ struct Railway : Entity {
     Lines lines;
 };
 
+/** Block subclasses.
+ */
+struct Block : Entity
+{
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::block;
+    typedef std::vector<Block> list;
+
+    geometry::MultiPolyMesh<std::string> mesh;
+};
+
 /** Semantic world.
  *
  * NB: Contains only a list of buildings, so far.
@@ -141,6 +155,10 @@ struct World {
     /** All railways in the world.
      */
     Railway::list railways;
+
+    /** All blocks in the world.
+     */
+    Block::list blocks;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -172,6 +190,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
     case Class::railway: op(world.railways); break;
+    case Class::block: op(world.blocks); break;
     }
 }
 
@@ -182,6 +201,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
     case Class::railway: op(world.railways); break;
+    case Class::block: op(world.blocks); break;
     }
 }
 

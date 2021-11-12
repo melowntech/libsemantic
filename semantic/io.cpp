@@ -64,7 +64,18 @@ void parse(math::Point3 &point, const Json::Value &value)
     Json::unpack(value, "Point3", point(0), point(1), point(2));
 }
 
-void parse(math::Points3 &points, const Json::Value &value)
+void parse(std::string& str, const Json::Value &value)
+{
+    str = Json::as<std::string>(value);
+}
+
+void parse(std::size_t& num, const Json::Value &value)
+{
+    num = Json::as<std::size_t>(value);
+}
+
+template<typename T>
+void parse(std::vector<T> &points, const Json::Value &value)
 {
     points.resize(value.size());
     auto ipoints(points.begin());
@@ -179,6 +190,19 @@ void parse(Railway &railway, const Json::Value &value)
     parse(railway.lines, Json::check(value, "lines", Json::arrayValue));
 }
 
+void parse(geometry::MultiPolyMesh<std::string>& m, const Json::Value& value)
+{
+    parse(m.vertices, Json::check(value, "vertices", Json::arrayValue));
+    parse(m.faces, Json::check(value, "faces", Json::arrayValue));
+    parse(m.faceLabels, Json::check(value, "faceLabels", Json::arrayValue));
+}
+
+void parse(Block &block, const Json::Value &value)
+{
+    parse(static_cast<Entity&>(block), value);
+    parse(block.mesh, Json::check(value, "mesh", Json::objectValue));
+}
+
 template <typename EntityType>
 void parse(std::vector<EntityType> &entities, const Json::Value &container
            , const char *name)
@@ -205,6 +229,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.buildings, value, "buildings");
     parse(world.trees, value, "trees");
     parse(world.railways, value, "railways");
+    parse(world.blocks, value, "blocks");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -233,11 +258,22 @@ void build(Json::Value &value, const math::Point3 &point)
     value.append(point(2));
 }
 
-void build(Json::Value &value, const math::Points3 &points)
+void build(Json::Value &value, const std::string &s)
+{
+    value = Json::Value(s);
+}
+
+void build(Json::Value &value, const std::size_t &n)
+{
+    value = Json::Value::UInt(n);
+}
+
+template<typename T>
+void build(Json::Value &value, const std::vector<T> &vec)
 {
     value = Json::arrayValue;
-    for (const auto &point : points) {
-        build(value.append(Json::arrayValue), point);
+    for (const auto &it : vec) {
+        build(value.append(Json::arrayValue), it);
     }
 }
 
@@ -356,6 +392,21 @@ void build(Json::Value &value, const Railway &railway
     build(value["lines"], railway.lines);
 }
 
+void build(Json::Value& value,
+           const geometry::MultiPolyMesh<std::string>& mesh)
+{
+    build(value["vertices"], mesh.vertices);
+    build(value["faces"], mesh.faces);
+    build(value["faceLabels"], mesh.faceLabels);
+}
+
+void build(Json::Value & value, const Block& block, const math::Point3& shift)
+{ 
+    build(value, static_cast<const Entity&>(block), shift);
+    
+    build(value["mesh"], block.mesh);
+}
+
 template <typename EntityType>
 void build(Json::Value &container, const char *name
            , const std::vector<EntityType> &entities
@@ -379,6 +430,7 @@ void build(Json::Value &value, const World &world)
     build(value, "buildings", world.buildings);
     build(value, "trees", world.trees);
     build(value, "railways", world.railways);
+    build(value, "blocks", world.blocks);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -516,5 +568,6 @@ void save(const World &world, const fs::path &path
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Building)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Tree)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Railway)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(Block)
 
 } // namespace semantic
