@@ -24,20 +24,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_mesh_block_hpp_included_
-#define semantic_mesh_block_hpp_included_
-
-#include "../world.hpp"
+#include "../mesh.hpp"
 
 namespace semantic
 {
 namespace lod2
 {
-geometry::Mesh mesh(const Block& block,
+inline Material string2Material(const std::string& s)
+{
+    Material res;
+    if(boost::conversion::try_lexical_convert<Material>(s, res)){
+        return res;
+    }
+    return Material::default_;
+}
+
+geometry::Mesh mesh(const geometry::MultiPolyMesh<std::string>& mpmesh,
                     const MeshConfig& config,
-                    const math::Point3& origin);
+                    const math::Point3& origin)
+{
+    (void) config;
+    std::vector<std::string> faceLabels;
+    geometry::Mesh m = mpmesh.triangulateFaces(&faceLabels);
+
+    for (auto& v : m.vertices)
+    {
+        v += origin;
+    }
+
+    for (std::size_t i = 0; i < m.faces.size(); i++)
+    {
+        m.faces[i].imageId = +string2Material(faceLabels[i]);
+    }
+
+    return m;
+}
 
 } // namespace lod2
 } // namespace semantic
-
-#endif // semantic_mesh_block_hpp_included_
