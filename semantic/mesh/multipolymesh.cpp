@@ -40,10 +40,9 @@ inline Material string2Material(const std::string& s)
 }
 
 geometry::Mesh mesh(const geometry::MultiPolyMesh<std::string>& mpmesh,
-                    const MeshConfig& config,
+                    const MeshConfig& /* config */,
                     const math::Point3& origin)
 {
-    (void) config;
     std::vector<std::string> faceLabels;
     geometry::Mesh m = mpmesh.triangulateFaces(&faceLabels);
 

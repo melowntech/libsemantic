@@ -90,7 +90,7 @@ private:
 };
 
 void Semantic2Vef::configuration(po::options_description &cmdline
-                        , po::options_description &config
+                        , po::options_description & /* config */
                         , po::positional_options_description &pd)
 {
     cmdline.add_options()
@@ -108,13 +108,10 @@ void Semantic2Vef::configuration(po::options_description &cmdline
         ;
 
     pd.add("output", 1).add("input", -1);
-
-    (void) config;
 }
 
-void Semantic2Vef::configure(const po::variables_map &vars)
+void Semantic2Vef::configure(const po::variables_map & /* vars */)
 {
-    (void) vars;
 }
 
 bool Semantic2Vef::help(std::ostream &out, const std::string &what) const
