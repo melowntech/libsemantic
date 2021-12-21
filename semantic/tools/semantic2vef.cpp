@@ -133,7 +133,7 @@ cv::Mat3b createTextureImg(const int colorWidth)
     auto materials = enumerationValues(semantic::Material());
     cv::Mat3b img(colorWidth, materials.size() * colorWidth);
 
-    for (auto& m : materials)
+    for (const auto& m : materials)
     {
         // get color
         cv::Vec3b color(0, 0, 0);
@@ -154,7 +154,7 @@ void addTextureCoords(geometry::Mesh& mesh, const int colorWidth)
 
     // create texture coordinates
     mesh.tCoords.resize(materials.size() * 3);
-    for (auto& m : materials)
+    for (const auto& m : materials)
     {
         // x-coords in image
         double x0 = ((+m + 0.25) * colorWidth) / imWidth;
