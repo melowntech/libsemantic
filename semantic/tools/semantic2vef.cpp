@@ -70,18 +70,18 @@ public:
     {}
 
 private:
-    virtual void configuration(po::options_description &cmdline
-                               , po::options_description &config
-                               , po::positional_options_description &pd)
+    void configuration(po::options_description &cmdline
+                       , po::options_description &config
+                       , po::positional_options_description &pd)
         override;
 
-    virtual void configure(const po::variables_map &vars)
+    void configure(const po::variables_map &vars)
         override;
 
-    virtual bool help(std::ostream &out, const std::string &what) const
+    bool help(std::ostream &out, const std::string &what) const
         override;
 
-    virtual int run() override;
+    int run() override;
 
     semantic::MeshConfig meshConfig_;
     std::vector<fs::path> input_;
