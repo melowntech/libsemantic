@@ -60,9 +60,9 @@ geometry::Mesh mesh(const Building &building, const MeshConfig &config
     const auto origin(origin_ + building.origin);
 
     geometry::Mesh m;
-    if (building.mesh.vertices.size())
+    if (!building.mesh.vertices.empty())
     {
-        if (building.roofs.size())
+        if (!building.roofs.empty())
         {
             LOG(warn4)
                 << "Building contains both roof(s) and building mesh. Choosing "
