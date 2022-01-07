@@ -36,6 +36,7 @@
 #include "utility/enum-io.hpp"
 #include "math/geometry_core.hpp"
 #include "geo/srsdef.hpp"
+#include "geometry/multipolymesh.hpp"
 
 #include "roof.hpp"
 
@@ -73,6 +74,10 @@ struct Building : Entity {
     /** List of roofs.
      */
     roof::Roof::list roofs;
+
+    /** Alternative representation by mesh
+     */
+    geometry::MultiPolyMesh<std::string> mesh;
 };
 
 /** Tree.

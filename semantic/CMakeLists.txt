@@ -23,6 +23,7 @@ set(semantic_SOURCES
   mesh/roof/circular.cpp
   mesh/roof/rectangular.cpp
   mesh/tree.hpp mesh/tree.cpp
+  mesh/multipolymesh.hpp mesh/multipolymesh.cpp
 
   ogr.hpp
   ogr/ogr.cpp ogr/ogr.incl.hpp

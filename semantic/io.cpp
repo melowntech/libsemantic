@@ -64,7 +64,18 @@ void parse(math::Point3 &point, const Json::Value &value)
     Json::unpack(value, "Point3", point(0), point(1), point(2));
 }
 
-void parse(math::Points3 &points, const Json::Value &value)
+void parse(std::string& str, const Json::Value& value)
+{
+    str = Json::as<std::string>(value);
+}
+
+void parse(std::size_t& num, const Json::Value &value)
+{
+    num = Json::as<std::size_t>(value);
+}
+
+template<typename T>
+void parse(std::vector<T> &points, const Json::Value &value)
 {
     points.resize(value.size());
     auto ipoints(points.begin());
@@ -145,10 +156,21 @@ void parse(Entity &entity, const Json::Value &value)
     parse(entity.origin, Json::check(value, "origin", Json::arrayValue));
 }
 
+void parse(geometry::MultiPolyMesh<std::string>& m, const Json::Value& value)
+{
+    parse(m.vertices, Json::check(value, "vertices", Json::arrayValue));
+    parse(m.faces, Json::check(value, "faces", Json::arrayValue));
+    parse(m.faceLabels, Json::check(value, "faceLabels", Json::arrayValue));
+}
+
 void parse(Building &building, const Json::Value &value)
 {
     parse(static_cast<Entity&>(building), value);
     parse(building.roofs, Json::check(value, "roofs", Json::arrayValue));
+    if(value.isMember("mesh"))
+    {
+        parse(building.mesh, Json::check(value, "mesh", Json::objectValue));
+    }
 }
 
 void parse(Tree &tree, const Json::Value &value)
@@ -233,11 +255,22 @@ void build(Json::Value &value, const math::Point3 &point)
     value.append(point(2));
 }
 
-void build(Json::Value &value, const math::Points3 &points)
+void build(Json::Value &value, const std::string &s)
+{
+    value = Json::Value(s);
+}
+
+void build(Json::Value &value, const std::size_t &n)
+{
+    value = Json::Value::UInt(n);
+}
+
+template<typename T>
+void build(Json::Value &value, const std::vector<T> &vec)
 {
     value = Json::arrayValue;
-    for (const auto &point : points) {
-        build(value.append(Json::arrayValue), point);
+    for (const auto &it : vec) {
+        build(value.append(Json::arrayValue), it);
     }
 }
 
@@ -313,11 +346,20 @@ void build(Json::Value &value, const Entity &entity
     build(value["origin"], math::Point3(entity.origin + shift));
 }
 
+void build(Json::Value& value,
+           const geometry::MultiPolyMesh<std::string>& mesh)
+{
+    build(value["vertices"], mesh.vertices);
+    build(value["faces"], mesh.faces);
+    build(value["faceLabels"], mesh.faceLabels);
+}
+
 void build(Json::Value &value, const Building &building
            , const math::Point3 &shift)
 {
     build(value, static_cast<const Entity&>(building), shift);
     build(value["roofs"], building.roofs);
+    build(value["mesh"], building.mesh);
 }
 
 void build(Json::Value &value, const Tree &tree
