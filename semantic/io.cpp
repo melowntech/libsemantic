@@ -64,7 +64,7 @@ void parse(math::Point3 &point, const Json::Value &value)
     Json::unpack(value, "Point3", point(0), point(1), point(2));
 }
 
-void parse(std::string& str, const Json::Value &value)
+void parse(std::string& str, const Json::Value& value)
 {
     str = Json::as<std::string>(value);
 }
