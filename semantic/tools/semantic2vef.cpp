@@ -183,6 +183,8 @@ int Semantic2Vef::run()
     boost::optional<geo::SrsDefinition> srs;
     cv::Mat3b txtImg = createTextureImg(txtColorWidth_);
 
+    meshConfig_.worldCrs = true;
+
     geometry::Mesh mesh;
     for (const auto &input : input_) {
         // load world
@@ -205,7 +207,12 @@ int Semantic2Vef::run()
             windowName = input.parent_path().filename().string();
         }
 
-        vef::Id winId = ar.addWindow(windowName, boost::none);
+        math::Matrix4 worldTf(math::identity4());
+        worldTf(0, 3) = world.origin(0);
+        worldTf(1, 3) = world.origin(1);
+        worldTf(2, 3) = world.origin(2);
+
+        vef::Id winId = ar.addWindow(windowName, worldTf);
         vef::Id lodId = ar.addLod(winId);
 
         // save texture
