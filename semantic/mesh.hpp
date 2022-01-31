@@ -63,6 +63,10 @@ struct MeshConfig {
     /** Generate closed surface (solids)?
      */
     bool closedSurface = false;
+
+    /** Keep the mesh in world's CRS (i.e. do not shift by world origin)
+     */
+    bool worldCrs = false;
 };
 
 /** Generate mesh in given LOD.

@@ -57,7 +57,9 @@ geometry::Mesh mesh(const roof::Roof &roof
 geometry::Mesh mesh(const Building &building, const MeshConfig &config
                     , const math::Point3 &origin_)
 {
-    const auto origin(origin_ + building.origin);
+    auto origin(building.origin);
+    // shift to world origin
+    if (!config.worldCrs) { origin += origin_; }
 
     geometry::Mesh m;
     if (!building.mesh.vertices.empty())
