@@ -1,7 +1,8 @@
-define_module(LIBRARY pysemantic=${MODULE_geo_VERSION}
+define_module(LIBRARY pysemantic=${MODULE_semantic_VERSION}
   DEPENDS
   semantic=${MODULE_semantic_VERSION}
-  Boost_THREAD Boost_SYSTEM Boost_PYTHON PYTHONLIBS)
+  pysupport>=1.3
+  Boost_THREAD Boost_SYSTEM)
 
 set(pysemantic_SOURCES
   semanticmodule.cpp

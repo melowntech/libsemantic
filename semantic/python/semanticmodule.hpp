@@ -31,7 +31,7 @@
 
 namespace semantic { namespace py {
 
-boost::python::object import();
+boost::python::object import(const boost::python::object* = nullptr);
 
 } } // namespace semantic::py
 
