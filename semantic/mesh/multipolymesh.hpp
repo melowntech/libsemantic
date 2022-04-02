@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Melown Technologies SE
+ * Copyright (c) 2021 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,15 +24,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_python_semanticmodule_hpp_included_
-#define semantic_python_semanticmodule_hpp_included_
+#ifndef semantic_mesh_multipolymesh_hpp_included_
+#define semantic_mesh_multipolymesh_hpp_included_
 
-#include <boost/python.hpp>
+#include "../world.hpp"
 
-namespace semantic { namespace py {
+namespace semantic
+{
+namespace lod2
+{
+geometry::Mesh mesh(const geometry::MultiPolyMesh<std::string>& mpmesh,
+                    const MeshConfig& config,
+                    const math::Point3& origin);
 
-boost::python::object import(const boost::python::object* = nullptr);
+} // namespace lod2
+} // namespace semantic
 
-} } // namespace semantic::py
-
-#endif // semantic_python_semanticmodule_hpp_included_
+#endif // semantic_mesh_multipolymesh_hpp_included_

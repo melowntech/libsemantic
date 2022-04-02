@@ -52,6 +52,7 @@
 #include "../world.hpp"
 #include "../io.hpp"
 #include "../mesh.hpp"
+#include "semanticmodule.hpp"
 
 namespace fs = boost::filesystem;
 namespace bp = boost::python;

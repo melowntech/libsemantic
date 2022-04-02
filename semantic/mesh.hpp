@@ -44,6 +44,7 @@ enum class Material : int {
     , tree_trunk = 3
     , tree_crown_deciduous = 4
     , tree_crown_coniferous = 5
+    , terrace = 6
 };
 
 /** Helper for material-enum--to-number converion.
@@ -62,6 +63,10 @@ struct MeshConfig {
     /** Generate closed surface (solids)?
      */
     bool closedSurface = false;
+
+    /** Keep the mesh in world's CRS (i.e. do not shift by world origin)
+     */
+    bool worldCrs = false;
 };
 
 /** Generate mesh in given LOD.
@@ -94,6 +99,7 @@ UTILITY_GENERATE_ENUM_IO(Material,
                          ((tree_trunk)("tree-trunk"))
                          ((tree_crown_deciduous)("tree-crown-deciduous"))
                          ((tree_crown_coniferous)("tree-crown-coniferous"))
+                         ((terrace))
                          )
 
 } // namespace semantic

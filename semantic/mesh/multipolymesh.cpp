@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Melown Technologies SE
+ * Copyright (c) 2021 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,15 +24,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_python_semanticmodule_hpp_included_
-#define semantic_python_semanticmodule_hpp_included_
+#include "../mesh.hpp"
 
-#include <boost/python.hpp>
+namespace semantic
+{
+namespace lod2
+{
+inline Material string2Material(const std::string& s)
+{
+    Material res;
+    if(boost::conversion::try_lexical_convert<Material>(s, res)){
+        return res;
+    }
+    return Material::default_;
+}
 
-namespace semantic { namespace py {
+geometry::Mesh mesh(const geometry::MultiPolyMesh<std::string>& mpmesh,
+                    const MeshConfig& /* config */,
+                    const math::Point3& origin)
+{
+    std::vector<std::string> faceLabels;
+    geometry::Mesh m = mpmesh.triangulateFaces(&faceLabels);
 
-boost::python::object import(const boost::python::object* = nullptr);
+    for (auto& v : m.vertices)
+    {
+        v += origin;
+    }
 
-} } // namespace semantic::py
+    for (std::size_t i = 0; i < m.faces.size(); i++)
+    {
+        m.faces[i].imageId = +string2Material(faceLabels[i]);
+    }
 
-#endif // semantic_python_semanticmodule_hpp_included_
+    return m;
+}
+
+} // namespace lod2
+} // namespace semantic

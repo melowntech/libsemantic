@@ -28,6 +28,7 @@
 
 #include "../mesh.hpp"
 #include "building.hpp"
+#include "multipolymesh.hpp"
 
 namespace semantic {
 
@@ -56,12 +57,29 @@ geometry::Mesh mesh(const roof::Roof &roof
 geometry::Mesh mesh(const Building &building, const MeshConfig &config
                     , const math::Point3 &origin_)
 {
-    const auto origin(origin_ + building.origin);
+    auto origin(building.origin);
+    // shift to world origin
+    if (!config.worldCrs) { origin += origin_; }
 
     geometry::Mesh m;
-    for (const auto &roof : building.roofs) {
-        detail::append(m, mesh(roof, config, origin + roof.center));
+    if (!building.mesh.vertices.empty())
+    {
+        if (!building.roofs.empty())
+        {
+            LOG(warn4)
+                << "Building contains both roof(s) and building mesh. Choosing "
+                   "building mesh to produce the semantic mesh.";
+        }
+        detail::append(m, mesh(building.mesh, config, origin));
     }
+    else
+    {
+        for (const auto& roof : building.roofs)
+        {
+            detail::append(m, mesh(roof, config, origin + roof.center));
+        }
+    }
+
     return m;
 }
 

@@ -311,7 +311,9 @@ geometry::Mesh mesh(const Tree &tree, const MeshConfig &config
     buildSphericalHarmonics(m, config, tree.harmonics
                             , treeCrownMaterial(tree));
 
-    const math::Point3 offset(origin + tree.origin + tree.center);
+    math::Point3 offset(tree.origin + tree.center);
+    // shift to world origin if not local crs
+    if (!config.worldCrs) { offset += origin; }
     for (auto &v : m.vertices) {
         v(0) = v(0) * tree.a + offset(0);
         v(1) = v(1) * tree.a + offset(1);
@@ -319,7 +321,9 @@ geometry::Mesh mesh(const Tree &tree, const MeshConfig &config
     }
 
     // add tree trunk
-    trunk(m, tree, config, origin + tree.origin, treeTrunkMaterial(tree));
+    math::Point3 trunkOrigin(tree.origin);
+    if (!config.worldCrs) { trunkOrigin += origin; }
+    trunk(m, tree, config, trunkOrigin, treeTrunkMaterial(tree));
 
     return m;
 }
