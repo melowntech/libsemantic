@@ -46,20 +46,31 @@ target_link_libraries(gpkg2semantic ${MODULE_LIBRARIES})
 buildsys_target_compile_definitions(gpkg2semantic ${MODULE_DEFINITIONS})
 buildsys_binary(gpkg2semantic)
 
-# Semantic world to vef converter
-set(semantic2vef_SOURCES
-  semantic2vef.cpp
-  )
-
-add_executable(semantic2vef ${semantic2vef_SOURCES})
-target_link_libraries(semantic2vef ${MODULE_LIBRARIES} vef)
-buildsys_target_compile_definitions(semantic2vef ${MODULE_DEFINITIONS})
-buildsys_binary(semantic2vef)
-
 # On-request installation
 if(semantic-tools-INSTALL-COMPONENT)
   install(TARGETS
-    semantic2obj semantic2semantic semantic2gpkg gpkg2semantic semantic2vef
+    semantic2obj semantic2semantic semantic2gpkg gpkg2semantic
     RUNTIME DESTINATION bin
     COMPONENT ${semantic-tools-INSTALL-COMPONENT})
 endif()
+
+# Semantic world to vef converter
+if (TARGET vef)
+  set(semantic2vef_SOURCES
+    semantic2vef.cpp
+    )
+
+  add_executable(semantic2vef ${semantic2vef_SOURCES})
+  target_link_libraries(semantic2vef ${MODULE_LIBRARIES} vef)
+  buildsys_target_compile_definitions(semantic2vef ${MODULE_DEFINITIONS})
+  buildsys_binary(semantic2vef)
+
+  # On-request installation
+  if(semantic-tools-INSTALL-COMPONENT)
+    install(TARGETS
+      semantic2vef
+      RUNTIME DESTINATION bin
+      COMPONENT ${semantic-tools-INSTALL-COMPONENT})
+  endif()
+endif()
+
