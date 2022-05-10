@@ -60,14 +60,14 @@ Dataset createGpkg(const fs::path &path)
 {
     auto driver(gpkgDriver());
     return Dataset
-        (driver->Create(path.c_str(), 0, 0, 0, GDT_Unknown, nullptr));
+        (driver->Create(path.string().c_str(), 0, 0, 0, GDT_Unknown, nullptr));
 }
 
 Dataset openGpkg(const fs::path &path)
 {
     // const char *allowed[] = { "GPKG", 0x0 };
     const char **allowed = nullptr;
-    auto handle(::GDALOpenEx(path.c_str()
+    auto handle(::GDALOpenEx(path.string().c_str()
                              , GDAL_OF_VECTOR | GDAL_OF_READONLY
                              , allowed, nullptr, nullptr));
     if (!handle) {
