@@ -1,7 +1,7 @@
 define_module(LIBRARY pysemantic=${MODULE_semantic_VERSION}
   DEPENDS
   semantic=${MODULE_semantic_VERSION}
-  pysupport>=1.3
+  pysupport>=1.4
   Boost_THREAD Boost_SYSTEM)
 
 set(pysemantic_SOURCES
