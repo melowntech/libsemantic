@@ -104,7 +104,7 @@ UTILITY_GENERATE_ENUM_IO(Tree::Type,
                          ((coniferous))
                          )
 
-/** Building. Only roofs so far, facades are implicit.
+/** Railway.
  */
 struct Railway : Entity {
     /** Entity class.

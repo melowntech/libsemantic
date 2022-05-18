@@ -14,6 +14,7 @@
 
 #include "semantic/io.hpp"
 #include "semantic/gpkg.hpp"
+#include "semantic/gpkg/config.hpp"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -43,6 +44,8 @@ private:
 
     std::vector<fs::path> input_;
     fs::path output_;
+
+    semantic::GeoPackage::CreationConfig::Options options_;
 };
 
 void Semantic2Gpkg::configuration(po::options_description &cmdline
@@ -54,6 +57,16 @@ void Semantic2Gpkg::configuration(po::options_description &cmdline
          , "Path to the output GeoPackage file.")
         ("input", po::value(&input_)->required()
          , "One ore more paths to the input files with semantic data.")
+
+        ("simplified"
+         , po::value(&options_.simplified)
+         ->default_value(options_.simplified)
+         , "Generate simplified geometry.")
+
+        ("includeSemanticJson"
+         , po::value(&options_.includeSemanticJson)
+         ->default_value(options_.includeSemanticJson)
+         , "Include semantic JSON snippet in features attributes.")
         ;
 
     pd.add("output", 1).add("input", -1);
@@ -97,8 +110,10 @@ int Semantic2Gpkg::run()
         }
     }
 
+    auto cc(std::make_shared<semantic::GeoPackage::CreationConfig>(options_));
+
     {
-        semantic::GeoPackage gpkg(output_, *srs);
+        semantic::GeoPackage gpkg(output_, *srs, cc);
         for (const auto &world : worlds) { gpkg.add(world); }
     }
 

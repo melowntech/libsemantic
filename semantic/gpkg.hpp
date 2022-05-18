@@ -47,6 +47,8 @@ namespace semantic {
  */
 class GeoPackage {
 public:
+    class CreationConfig;
+
     /** Opens existing (read-only) dataset.
      */
     GeoPackage(const boost::filesystem::path &path);
@@ -54,7 +56,8 @@ public:
     /** Creates new dataset.
      */
     GeoPackage(const boost::filesystem::path &path
-               , const geo::SrsDefinition &srs);
+               , const geo::SrsDefinition &srs
+               , const std::shared_ptr<CreationConfig> &config = {});
 
     ~GeoPackage();
 

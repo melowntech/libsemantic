@@ -31,7 +31,8 @@
 
 namespace semantic {
 
-OgrGeometry ogr(const Tree &tree, const math::Point3 &origin);
+OgrGeometry ogr(const Tree &tree, const math::Point3 &origin
+                , const OgrConfig &config);
 
 } // namespace semantic
 

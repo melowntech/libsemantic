@@ -31,23 +31,32 @@
 
 namespace semantic {
 
-OgrGeometry ogr(const Tree &tree, const math::Point3 &origin)
+OgrGeometry ogr(const Tree &tree, const math::Point3 &origin
+                , const OgrConfig &config)
 {
-    auto cs(std::make_unique< ::OGRCircularString>());
-
     const math::Point3 center(origin + tree.origin + tree.center);
 
+    math::Extent verticalExtent(math::InvalidExtents{});
+    update(verticalExtent, origin(2) + tree.origin(2));
+    update(verticalExtent, center(2) + tree.b);
+    update(verticalExtent, center(2) - tree.b);
+
+    if (config.simplified) {
+        // just point at base of the tree trunk
+        const math::Point3 base(origin + tree.origin);
+        return {
+            std::make_unique< ::OGRPoint>(base(0), base(1), base(2))
+            , verticalExtent
+        };
+    }
+
+    auto cs(std::make_unique< ::OGRCircularString>());
+
     /** Closed circle between two arcs.
-     *  TODO: take harmonics into account
      */
     cs->addPoint(center(0) - tree.a, center(1), center(2));
     cs->addPoint(center(0) + tree.a, center(1), center(2));
     cs->addPoint(center(0) - tree.a, center(1), center(2));
-
-    math::Extent verticalExtent;
-    update(verticalExtent, origin(2) + tree.origin(2));
-    update(verticalExtent, center(2) + tree.b);
-    update(verticalExtent, center(2) - tree.b);
 
     return { std::move(cs), verticalExtent };
 }

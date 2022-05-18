@@ -36,6 +36,8 @@
 #include "io.hpp"
 #include "gpkg.hpp"
 
+#include "gpkg/config.hpp"
+
 namespace fs = boost::filesystem;
 
 namespace semantic {
@@ -102,7 +104,8 @@ public:
 
     /** Create OGR dataset with semantic layers.
      */
-    Layers(const fs::path &path, const geo::SrsDefinition &srs);
+    Layers(const fs::path &path, const geo::SrsDefinition &srs
+           , GeoPackage::CreationConfig *config);
 
     /** Open existing OGR dataset with semantic layers.
      */
@@ -161,7 +164,8 @@ private:
     Mapping layers_;
 };
 
-Layers::Layers(const fs::path &path, const geo::SrsDefinition &srs)
+Layers::Layers(const fs::path &path, const geo::SrsDefinition &srs
+               , GeoPackage::CreationConfig *config)
     : path_(path), readOnly_(false), ds_(createGpkg(path)), srs_(srs)
 {
     auto srsRef(new ::OGRSpatialReference(srs.reference()));
@@ -180,26 +184,33 @@ Layers::Layers(const fs::path &path, const geo::SrsDefinition &srs)
             auto id(std::make_unique< ::OGRFieldDefn>
                     ("id", ::OGRFieldType::OFTString));
             l.definition->AddFieldDefn(id.get());
-            l.id = 0;
+            l.id = l.definition->GetFieldIndex("id");
         }
-        {
+
+        if (!config || config->options().includeSemanticJson) {
             auto content(std::make_unique< ::OGRFieldDefn>
                          ("content", ::OGRFieldType::OFTBinary));
             l.definition->AddFieldDefn(content.get());
-            l.content = 1;
+            l.content = l.definition->GetFieldIndex("content");
         }
+
         {
             auto ve(std::make_unique< ::OGRFieldDefn>
                     ("minVerticalExtent", ::OGRFieldType::OFTReal));
             l.definition->AddFieldDefn(ve.get());
-            l.minVerticalExtent = 2;
+            l.minVerticalExtent
+                = l.definition->GetFieldIndex("minVerticalExtent");
         }
+
         {
             auto ve(std::make_unique< ::OGRFieldDefn>
                     ("maxVerticalExtent", ::OGRFieldType::OFTReal));
             l.definition->AddFieldDefn(ve.get());
-            l.maxVerticalExtent = 3;
+            l.maxVerticalExtent
+                = l.definition->GetFieldIndex("maxVerticalExtent");
         }
+
+        if (config) { config->createCustomFields(cls, l.definition); }
     }
 }
 
@@ -312,11 +323,24 @@ private:
 
 } // namespace
 
+GeoPackage::CreationConfig::CreationConfig(const Options &options)
+    : options_(options)
+{}
+
+GeoPackage::CreationConfig::~CreationConfig() {}
+
+void GeoPackage::CreationConfig
+::createCustomFields(Class, ::OGRFeatureDefn*) {}
+
+void GeoPackage::CreationConfig
+::addCustomFields(const Entity&, ::OGRFeature *) {}
+
 /** Geo package interface internals.
  */
 struct GeoPackage::Detail {
     Layers layers;
     SaveOptions saveOptions;
+    std::shared_ptr<CreationConfig> config;
 
     Detail(const fs::path &path)
         : layers(path)
@@ -324,8 +348,9 @@ struct GeoPackage::Detail {
         saveOptions.compress = true;
     }
 
-    Detail(const fs::path &path, const geo::SrsDefinition &srs)
-        : layers(path, srs)
+    Detail(const fs::path &path, const geo::SrsDefinition &srs
+           , const std::shared_ptr<CreationConfig> &config)
+        : layers(path, srs, config.get()), config(config)
     {
         saveOptions.compress = true;
     }
@@ -377,7 +402,9 @@ void GeoPackage::Detail::fetch(const Layers::Layer &layer, const Op &op
 
         // data
         const char *data(""); int size(0);
-        if (mask & FetchMask::content) {
+        if ((mask & FetchMask::content)
+            && (layer.content >= 0))
+        {
             data = reinterpret_cast<char*>
                 (feature->GetFieldAsBinary(layer.content, &size));
             if (!data) { data = ""; size = 0; }
@@ -405,6 +432,11 @@ void GeoPackage::Detail::add(const World &world)
 
     SerializationOptions options(saveOptions, world.origin);
 
+    OgrConfig ogrConfig;
+    if (config) {
+        ogrConfig.simplified = config->options().simplified;
+    }
+
     ogr(world, [&](const auto &e, auto &&geometry)
     {
         auto &layer(layers(e.cls));
@@ -425,7 +457,7 @@ void GeoPackage::Detail::add(const World &world)
         feature->SetField(layer.id, e.id.c_str());
 
         // set content
-        {
+        if (layer.content >= 0) {
             const auto content(serialize(e, options));
             feature->SetField
                 (layer.content, content.size()
@@ -437,13 +469,16 @@ void GeoPackage::Detail::add(const World &world)
         feature->SetField(layer.minVerticalExtent, geometry.verticalExtent.l);
         feature->SetField(layer.maxVerticalExtent, geometry.verticalExtent.r);
 
+        // fill in custom fields
+        if (config) { config->addCustomFields(e, feature.get()); }
+
         // store feature in layer
         if (OGRERR_NONE != layer.layer->CreateFeature(feature.get())) {
             LOGTHROW(err3, std::runtime_error)
                 << "Cannot create feature for entity <" << e.cls << ">.\""
                 << e.id << "\".";
         }
-    });
+    }, ogrConfig);
 }
 
 World GeoPackage::Detail::world(const Query &query)
@@ -499,8 +534,9 @@ GeoPackage::GeoPackage(const fs::path &path)
     : detail_(std::make_unique<Detail>(path))
 {}
 
-GeoPackage::GeoPackage(const fs::path &path, const geo::SrsDefinition &srs)
-    : detail_(std::make_unique<Detail>(path, srs))
+GeoPackage::GeoPackage(const fs::path &path, const geo::SrsDefinition &srs
+                       , const std::shared_ptr<CreationConfig> &config)
+    : detail_(std::make_unique<Detail>(path, srs, config))
 {}
 
 void GeoPackage::add(const World &world)

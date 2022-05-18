@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 Melown Technologies SE
+ * Copyright (c) 2022 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,38 +24,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_ogr_hpp_included_
-#define semantic_ogr_hpp_included_
+#ifndef semantic_gpkg_config_hpp_included_
+#define semantic_gpkg_config_hpp_included_
 
-#include <memory>
-
-#include <ogrsf_frmts.h>
-
-#include "math/extent.hpp"
-
-#include "world.hpp"
+#include "../gpkg.hpp"
 
 namespace semantic {
 
-struct OgrGeometry {
-    std::unique_ptr< ::OGRGeometry> geometry;
-    math::Extent verticalExtent;
-};
+class GeoPackage::CreationConfig {
+public:
+    struct Options {
+        bool includeSemanticJson = true;
+        bool simplified = false;
 
-struct OgrConfig {
-    bool simplified = false;
-};
+        Options() {};
+    };
 
-/** Calls featureCallback(const auto &entity, OGRGeometry&&)
- */
-template <typename FeatureCallback>
-void ogr(const World &world, const FeatureCallback &featureCallback
-         , const OgrConfig &config = {});
+    CreationConfig(const Options &options = {});
+    virtual ~CreationConfig();
+
+    virtual void createCustomFields(Class cls, ::OGRFeatureDefn *definition);
+    virtual void addCustomFields(const Entity &entity, ::OGRFeature *feature);
+
+    const Options &options() const { return options_; }
+
+private:
+    Options options_;
+};
 
 } // namespace semantic
 
-#define semantic_ogr_hpp_guard
-#include "ogr/ogr.incl.hpp"
-#undef semantic_ogr_hpp_guard
-
-#endif // semantic_ogr_hpp_included_
+#endif // semantic_gpkg_config_hpp_included_

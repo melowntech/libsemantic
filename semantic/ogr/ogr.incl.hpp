@@ -39,24 +39,25 @@ namespace semantic {
 
 template <typename OgrCallback>
 void ogr(const Building &building, const math::Point3 &origin
-         , const OgrCallback &ogrCallback)
+         , const OgrCallback &ogrCallback, const OgrConfig &config)
 {
-    ogrCallback(building, ogr(building, origin));
+    ogrCallback(building, ogr(building, origin, config));
 }
 
 template <typename OgrCallback>
 void ogr(const Tree &tree, const math::Point3 &origin
-         , const OgrCallback &ogrCallback)
+         , const OgrCallback &ogrCallback, const OgrConfig &config)
 {
-    ogrCallback(tree, ogr(tree, origin));
+    ogrCallback(tree, ogr(tree, origin, config));
 }
 
 template <typename OgrCallback>
-void ogr(const World &world, const OgrCallback &ogrCallback)
+void ogr(const World &world, const OgrCallback &ogrCallback
+         , const OgrConfig &config)
 {
 #define SEMANTIC_ENTITY_DISTRIBUTE(WHAT)                \
     for (const auto &e : world.WHAT) {                  \
-        ogr(e, world.origin, ogrCallback);              \
+        ogr(e, world.origin, ogrCallback, config);      \
     }
 
     // ENTITY: update when adding a new entity

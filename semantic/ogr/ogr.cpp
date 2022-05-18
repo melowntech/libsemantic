@@ -55,8 +55,11 @@ bool ogr(::OGRGeometryCollection &collection, math::Extent &verticalExtent
     return boost::apply_visitor(v, roof.instance);
 }
 
-OgrGeometry ogr(const Building &building, const math::Point3 &origin_)
+OgrGeometry ogr(const Building &building, const math::Point3 &origin_
+                , const OgrConfig &config)
 {
+    (void) config;
+
     const auto origin(origin_ + building.origin);
 
     // any other roof count: make a collection
@@ -68,6 +71,7 @@ OgrGeometry ogr(const Building &building, const math::Point3 &origin_)
                 << "Unable to add geometry to OGRGeometryCollection.";
         }
     }
+
     return { std::move(collection), verticalExtent };
 
 }

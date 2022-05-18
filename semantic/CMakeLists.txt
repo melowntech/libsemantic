@@ -36,6 +36,7 @@ set(semantic_SOURCES
   featurelayers.hpp featurelayers.cpp
 
   gpkg.hpp gpkg.cpp
+  gpkg/config.hpp
   )
 
 add_library(semantic STATIC ${semantic_SOURCES})
