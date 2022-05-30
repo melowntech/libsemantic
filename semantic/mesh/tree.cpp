@@ -26,6 +26,8 @@
 
 #include <cmath>
 #include <map>
+#include <unordered_map>
+#include <algorithm>
 
 #include "dbglog/dbglog.hpp"
 
@@ -42,10 +44,152 @@ using detail::Index;
 
 namespace {
 
+using uint32 = std::uint32_t;
+
+double distance(math::Point3 a, math::Point3 b)
+{
+    return math::length(b - a);
+}
+
+geometry::Mesh newMeshIcosahedronRaw()
+{
+    geometry::Mesh mesh;
+
+    // https://www.danielsieger.com/blog/2021/01/03/generating-platonic-solids.html
+
+    constexpr double phi = (1.0f + sqrt(5.0f)) * 0.5f; // golden ratio
+    constexpr double a = 1.0f;
+    constexpr double b = 1.0f / phi;
+
+    mesh.vertices.emplace_back(math::normalize(math::Point3(0, +b, -a)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(+b, +a, 0)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(-b, +a, 0)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(0, +b, +a)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(0, -b, +a)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(-a, 0, +b)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(0, -b, -a)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(+a, 0, -b)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(+a, 0, +b)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(-a, 0, -b)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(+b, -a, 0)));
+    mesh.vertices.emplace_back(math::normalize(math::Point3(-b, -a, 0)));
+
+    mesh.faces.emplace_back(2, 1, 0);
+    mesh.faces.emplace_back(1, 2, 3);
+    mesh.faces.emplace_back(5, 4, 3);
+    mesh.faces.emplace_back(4, 8, 3);
+    mesh.faces.emplace_back(7, 6, 0);
+    mesh.faces.emplace_back(6, 9, 0);
+    mesh.faces.emplace_back(11, 10, 4);
+    mesh.faces.emplace_back(10, 11, 6);
+    mesh.faces.emplace_back(9, 5, 2);
+    mesh.faces.emplace_back(5, 9, 11);
+    mesh.faces.emplace_back(8, 7, 1);
+    mesh.faces.emplace_back(7, 8, 10);
+    mesh.faces.emplace_back(2, 5, 3);
+    mesh.faces.emplace_back(8, 1, 3);
+    mesh.faces.emplace_back(9, 2, 0);
+    mesh.faces.emplace_back(1, 7, 0);
+    mesh.faces.emplace_back(11, 9, 6);
+    mesh.faces.emplace_back(7, 10, 6);
+    mesh.faces.emplace_back(5, 11, 4);
+    mesh.faces.emplace_back(10, 8, 4);
+
+    return mesh;
+}
+
+/*
+double averageEdgesLength(const geometry::Mesh &mesh)
+{
+    double sum = 0;
+    uint32 cnt = 0;
+    const uint32 facesCount = mesh.faces.size();
+    for (uint32 i = 0; i < facesCount; i++)
+    {
+        const uint32 a = mesh.faces[i].vertex(0);
+        const uint32 b = mesh.faces[i].vertex(1);
+        const uint32 c = mesh.faces[i].vertex(2);
+        sum += distance(mesh.vertices[a], mesh.vertices[b]);
+        sum += distance(mesh.vertices[b], mesh.vertices[c]);
+        sum += distance(mesh.vertices[c], mesh.vertices[a]);
+        cnt += 3;
+    }
+    return sum / cnt;
+}
+*/
+
+geometry::Mesh newMeshSphereRegular(uint32 subdivisions)
+{
+    geometry::Mesh mesh = newMeshIcosahedronRaw();
+
+    for (uint32 iter = 0; iter < subdivisions; iter++)
+    {
+        // subdivide the mesh
+        geometry::Mesh tmp;
+        tmp.vertices = mesh.vertices;
+        struct Hasher {
+            std::size_t operator () (const std::pair<uint32, uint32> &p) const
+            {
+                const auto h = std::hash<uint32>();
+                return (h(p.first) ^ p.second) + h(p.second);
+            }
+        };
+        std::unordered_map<std::pair<uint32, uint32>, uint32, Hasher> mapping;
+        mapping.reserve(mesh.vertices.size() * 2);
+        const auto &split = [&](uint32 a, uint32 b) -> uint32 {
+            uint32 &r = mapping[std::pair<uint32, uint32>(std::min(a, b), std::max(a, b))];
+            if (r == 0)
+            {
+                r = tmp.vertices.size();
+                tmp.vertices.emplace_back(math::normalize(mesh.vertices[a] + mesh.vertices[b]));
+            }
+            return r;
+        };
+        const uint32 originalFacesCount = mesh.faces.size();
+        for (uint32 i = 0; i < originalFacesCount; i++)
+        {
+            const uint32 a = mesh.faces[i].vertex(0);
+            const uint32 b = mesh.faces[i].vertex(1);
+            const uint32 c = mesh.faces[i].vertex(2);
+            const uint32 d = split(a, b);
+            const uint32 e = split(b, c);
+            const uint32 f = split(c, a);
+            tmp.faces.emplace_back(a, d, f);
+            tmp.faces.emplace_back(d, e, f);
+            tmp.faces.emplace_back(b, e, d);
+            tmp.faces.emplace_back(c, f, e);
+        }
+        std::swap(mesh, tmp);
+    }
+
+    return mesh;
+}
+
 void buildSphericalHarmonics(geometry::Mesh &mesh, const MeshConfig &config
                              , const std::vector<double> &harmonics
                              , Material material)
 {
+#if 1 // use subdivided icosahedron
+
+    // the config was never used in the first place, therefore same base mesh can be used for all trees
+    static const geometry::Mesh meshBase = newMeshSphereRegular(2);
+
+    mesh = meshBase;
+    for (auto &it : mesh.faces)
+        it.imageId = +material;
+
+    math::Points2 lonlat;
+    lonlat.reserve((mesh.vertices.size()));
+    for (const auto &p : mesh.vertices)
+        lonlat.emplace_back(std::asin(p[2]) * 180 / M_PI, std::atan2(p[1], p[0]) * 180 / M_PI);
+
+    std::vector<double> sh = shtools::expand(harmonics, lonlat);
+    auto shit = sh.begin(); // spherical harmonics iterator shortcut
+    for (auto &p : mesh.vertices)
+        p *= *shit++;
+
+#else // use UV sphere
+
     const auto grid(shtools::makeGridDH
                     (harmonics, shtools::Sampling::equallySpaced));
 
@@ -85,6 +229,8 @@ void buildSphericalHarmonics(geometry::Mesh &mesh, const MeshConfig &config
             addFace(i, next, next - cols);
         }
     }
+
+#endif // end use subdivided icosahedron
 
     (void) config;
 }
