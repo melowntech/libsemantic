@@ -190,7 +190,13 @@ void parse(Railway::Lines &lines, const Json::Value &value)
     lines.reserve(value.size());
     for (const auto &item : value) {
         lines.emplace_back();
-        Json::get(lines.back(), item, "line");
+        Railway::Line &line = lines.back();
+        line.reserve(item.size());
+        for (const auto &item2 : item)
+        {
+            line.emplace_back();
+            Json::get(line.back(), item2);
+        }
     }
 }
 
