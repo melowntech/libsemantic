@@ -61,6 +61,10 @@ void Semantic2Obj::configuration(po::options_description &cmdline
          , utility::implicit_value(&meshConfig_.closedSurface, true)
          ->default_value(false)
          , "Generate closed surface.")
+        ("worldCrs"
+         , utility::implicit_value(&meshConfig_.worldCrs, true)
+         ->default_value(false)
+         , "Keep the mesh in world's CRS (i.e. do not shift by world origin).")
         ;
 
     pd.add("output", 1).add("input", -1);

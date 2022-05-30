@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 Melown Technologies SE
+ * Copyright (c) 2022 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,57 +24,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_ogr_ogr_incl_hpp_included_
-#define semantic_ogr_ogr_incl_hpp_included_
+#include <cmath>
 
-#ifndef semantic_ogr_hpp_guard
-#  error "This file must be included from ogr.hpp only."
-#endif
-
-#include "roof.hpp"
-#include "building.hpp"
-#include "tree.hpp"
+#include "../ogr.hpp"
 #include "pole.hpp"
 
 namespace semantic {
 
-template <typename OgrCallback>
-void ogr(const Building &building, const math::Point3 &origin
-         , const OgrCallback &ogrCallback)
+OgrGeometry ogr(const Pole &pole, const math::Point3 &origin)
 {
-    ogrCallback(building, ogr(building, origin));
-}
+    auto cs(std::make_unique< ::OGRCircularString>());
 
-template <typename OgrCallback>
-void ogr(const Tree &tree, const math::Point3 &origin
-         , const OgrCallback &ogrCallback)
-{
-    ogrCallback(tree, ogr(tree, origin));
-}
+    const math::Point3 center(origin + pole.origin);
 
-template <typename OgrCallback>
-void ogr(const Pole &pole, const math::Point3 &origin
-         , const OgrCallback &ogrCallback)
-{
-    ogrCallback(pole, ogr(pole, origin));
-}
+    /** Just simple circle at pole origin. Not taking direction into account,
+     *  yet.
+     */
+    cs->addPoint(center(0) - pole.radius, center(1), center(2));
+    cs->addPoint(center(0) + pole.radius, center(1), center(2));
+    cs->addPoint(center(0) - pole.radius, center(1), center(2));
 
-template <typename OgrCallback>
-void ogr(const World &world, const OgrCallback &ogrCallback)
-{
-#define SEMANTIC_ENTITY_DISTRIBUTE(WHAT)                \
-    for (const auto &e : world.WHAT) {                  \
-        ogr(e, world.origin, ogrCallback);              \
-    }
+    math::Extent verticalExtent;
+    update(verticalExtent, center(2) + pole.length);
+    update(verticalExtent, center(2) + pole.distanceToGround);
 
-    // ENTITY: update when adding a new entity
-    SEMANTIC_ENTITY_DISTRIBUTE(buildings);
-    SEMANTIC_ENTITY_DISTRIBUTE(trees);
-    SEMANTIC_ENTITY_DISTRIBUTE(poles);
-
-#undef SEMANTIC_ENTITY_DISTRIBUTE
+    return { std::move(cs), verticalExtent };
 }
 
 } // namespace semantic
-
-#endif // semantic_ogr_ogr_incl_hpp_included_

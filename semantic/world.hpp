@@ -48,6 +48,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((building))
                       ((tree))
                       ((railway))
+                      ((pole))
                       )
 
 typedef std::vector<Class> Classes;
@@ -104,7 +105,7 @@ UTILITY_GENERATE_ENUM_IO(Tree::Type,
                          ((coniferous))
                          )
 
-/** Building. Only roofs so far, facades are implicit.
+/** Railroad
  */
 struct Railway : Entity {
     /** Entity class.
@@ -117,6 +118,21 @@ struct Railway : Entity {
     typedef std::vector<int> Line;
     typedef std::vector<Line> Lines;
     Lines lines;
+};
+
+/** Pole
+ */
+struct Pole : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::pole;
+
+    math::Point3 direction;
+    double length = 0.0;
+    double distanceToGround = 0.0;
+    double radius = 0.0;
+
+    typedef std::vector<Pole> list;
 };
 
 /** Semantic world.
@@ -146,6 +162,10 @@ struct World {
     /** All railways in the world.
      */
     Railway::list railways;
+
+    /** All poles in the world.
+     */
+    Pole::list poles;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -177,6 +197,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
     case Class::railway: op(world.railways); break;
+    case Class::pole: op(world.poles); break;
     }
 }
 
@@ -187,6 +208,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
     case Class::railway: op(world.railways); break;
+    case Class::pole: op(world.poles); break;
     }
 }
 

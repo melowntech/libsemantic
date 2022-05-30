@@ -201,6 +201,15 @@ void parse(Railway &railway, const Json::Value &value)
     parse(railway.lines, Json::check(value, "lines", Json::arrayValue));
 }
 
+void parse(Pole &pole, const Json::Value &value)
+{
+    parse(static_cast<Entity&>(pole), value);
+    parse(pole.direction, Json::check(value, "direction", Json::arrayValue));
+    Json::get(pole.length, value, "length");
+    Json::get(pole.distanceToGround, value, "distanceToGround");
+    Json::get(pole.radius, value, "radius");
+}
+
 template <typename EntityType>
 void parse(std::vector<EntityType> &entities, const Json::Value &container
            , const char *name)
@@ -227,6 +236,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.buildings, value, "buildings");
     parse(world.trees, value, "trees");
     parse(world.railways, value, "railways");
+    parse(world.poles, value, "poles");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -398,6 +408,17 @@ void build(Json::Value &value, const Railway &railway
     build(value["lines"], railway.lines);
 }
 
+void build(Json::Value &value, const Pole &pole
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(pole), shift);
+
+    build(value["direction"], pole.direction);
+    value["length"] = pole.length;
+    value["distanceToGround"] = pole.distanceToGround;
+    value["radius"] =  pole.radius;
+}
+
 template <typename EntityType>
 void build(Json::Value &container, const char *name
            , const std::vector<EntityType> &entities
@@ -421,6 +442,7 @@ void build(Json::Value &value, const World &world)
     build(value, "buildings", world.buildings);
     build(value, "trees", world.trees);
     build(value, "railways", world.railways);
+    build(value, "poles", world.poles);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -558,5 +580,6 @@ void save(const World &world, const fs::path &path
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Building)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Tree)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Railway)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(Pole)
 
 } // namespace semantic

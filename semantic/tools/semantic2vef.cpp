@@ -60,7 +60,9 @@ const utility::small_map<semantic::Material, cv::Vec3b> materialColors(
       { semantic::Material::tree_trunk, cv::Vec3b(83, 53, 10) },
       { semantic::Material::tree_crown_deciduous, cv::Vec3b(86, 137, 61) },
       { semantic::Material::tree_crown_coniferous, cv::Vec3b(41, 73, 26) },
-      { semantic::Material::terrace, cv::Vec3b(71, 164, 233) } });
+      { semantic::Material::terrace, cv::Vec3b(71, 164, 233) },
+      { semantic::Material::pole, cv::Vec3b(74, 79, 85) }
+    });
 
 class Semantic2Vef : public service::Cmdline
 {

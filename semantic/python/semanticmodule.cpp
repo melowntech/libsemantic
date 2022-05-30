@@ -132,9 +132,26 @@ geometry::Mesh meshTree2(const Tree &tree, const MeshConfig &config
     return semantic::lod2::mesh(tree, config, origin);
 }
 
+geometry::Mesh meshPole2(const Pole &pole, const MeshConfig &config
+                         , const math::Point3 &origin)
+{
+    return semantic::lod2::mesh(pole, config, origin);
+}
+
 geometry::Mesh meshWorld2(const World &world, const MeshConfig &config)
 {
     return semantic::mesh(world, config, 2);
+}
+
+template <typename Class>
+void addCommon(bp::class_<Class> &cls)
+{
+    cls
+        .def_readonly("cls", &Class::cls)
+        .def_readwrite("id", &Class::id)
+        .def_readwrite("descriptor", &Class::descriptor)
+        .def_readwrite("origin", &Class::origin)
+        ;
 }
 
 } } // namespace semantic::py
@@ -166,15 +183,12 @@ BOOST_PYTHON_MODULE(melown_semantic)
     auto Tree = class_<semantic::Tree>("Tree", init<const semantic::Tree&>())
         .def(init<>())
 
-        .def_readonly("cls", &semantic::Tree::cls)
-        .def_readwrite("id", &semantic::Tree::id)
-        .def_readwrite("descriptor", &semantic::Tree::descriptor)
-        .def_readwrite("origin", &semantic::Tree::origin)
         .def_readwrite("type", &semantic::Tree::type)
         .def_readwrite("a", &semantic::Tree::a)
         .def_readwrite("b", &semantic::Tree::b)
         .def_readwrite("harmonics", &semantic::Tree::harmonics)
         ;
+    py::addCommon(Tree);
 
     {
         bp::scope scope(Tree);
@@ -189,13 +203,9 @@ BOOST_PYTHON_MODULE(melown_semantic)
         ("Building", init<const semantic::Building&>())
         .def(init<>())
 
-        .def_readonly("cls", &semantic::Building::cls)
-        .def_readwrite("id", &semantic::Building::id)
-        .def_readwrite("descriptor", &semantic::Building::descriptor)
-        .def_readwrite("origin", &semantic::Building::origin)
-
         .def_readwrite("roofs", &semantic::Building::roofs)
         ;
+    py::addCommon(Building);
 
     {
         bp::scope scope(Building);
@@ -285,13 +295,10 @@ BOOST_PYTHON_MODULE(melown_semantic)
         ("Railway", init<const semantic::Railway&>())
         .def(init<>())
 
-        .def_readonly("cls", &semantic::Railway::cls)
-        .def_readwrite("id", &semantic::Railway::id)
-        .def_readwrite("descriptor", &semantic::Railway::descriptor)
-        .def_readwrite("origin", &semantic::Railway::origin)
         .def_readwrite("vertices", &semantic::Railway::vertices)
         .def_readwrite("lines", &semantic::Railway::lines)
         ;
+    py::addCommon(Railway);
 
     {
         bp::scope scope(Railway);
@@ -301,6 +308,22 @@ BOOST_PYTHON_MODULE(melown_semantic)
                           , return_value_policy<return_by_value>
                           >("Line");
         pysupport::vector<semantic::Railway::Lines>("Lines");
+    }
+
+    auto Pole = class_<semantic::Pole>("Pole", init<const semantic::Pole&>())
+        .def(init<>())
+
+        .def_readwrite("direction", &semantic::Pole::direction)
+        .def_readwrite("length", &semantic::Pole::length)
+        .def_readwrite("distanceToGround", &semantic::Pole::distanceToGround)
+        .def_readwrite("radius", &semantic::Pole::radius)
+        ;
+    py::addCommon(Pole);
+
+    {
+        bp::scope scope(Pole);
+
+        pysupport::vector<semantic::Pole::list>("list");
     }
 
     // IO
@@ -350,6 +373,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         def("mesh", &py::meshRectangularRoof2);
         def("mesh", &py::meshBuilding2);
         def("mesh", &py::meshTree2);
+        def("mesh", &py::meshPole2);
         def("mesh", &py::meshWorld2);
     }
 }

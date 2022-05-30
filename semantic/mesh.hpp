@@ -45,6 +45,7 @@ enum class Material : int {
     , tree_crown_deciduous = 4
     , tree_crown_coniferous = 5
     , terrace = 6
+    , pole = 7
 };
 
 /** Helper for material-enum--to-number converion.
@@ -100,6 +101,7 @@ UTILITY_GENERATE_ENUM_IO(Material,
                          ((tree_crown_deciduous)("tree-crown-deciduous"))
                          ((tree_crown_coniferous)("tree-crown-coniferous"))
                          ((terrace))
+                         ((pole))
                          )
 
 } // namespace semantic
