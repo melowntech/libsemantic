@@ -127,7 +127,7 @@ struct Pole : Entity {
      */
     static const constexpr Class cls = Class::pole;
 
-    math::Point3 direction;
+    math::Point3 direction = { 0.0, 0.0, 1.0 };
     double length = 0.0;
     double distanceToGround = 0.0;
     double radius = 0.0;

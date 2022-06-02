@@ -144,6 +144,19 @@ geometry::Mesh meshWorld2(const World &world, const MeshConfig &config)
 }
 
 template <typename Class>
+std::string classRepr(const Class &c)
+{
+    std::ostringstream os;
+
+    auto s(semantic::serialize(c));
+    if (!s.empty() && (s.back() == '\n')) { s.pop_back(); }
+
+    os << '<' << Class::cls << ": " << s << '>';
+
+    return os.str();
+}
+
+template <typename Class>
 void addCommon(bp::class_<Class> &cls)
 {
     cls
@@ -151,6 +164,8 @@ void addCommon(bp::class_<Class> &cls)
         .def_readwrite("id", &Class::id)
         .def_readwrite("descriptor", &Class::descriptor)
         .def_readwrite("origin", &Class::origin)
+        .def("__repr__", &classRepr<Class>
+             , "Returns class representation")
         ;
 }
 
@@ -174,6 +189,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("origin", &semantic::World::origin)
         .def_readwrite("buildings", &semantic::World::buildings)
         .def_readwrite("trees", &semantic::World::trees)
+        .def_readwrite("poles", &semantic::World::poles)
         .def_readwrite("railways", &semantic::World::railways)
         ;
 
@@ -356,6 +372,10 @@ BOOST_PYTHON_MODULE(melown_semantic)
                        , &semantic::MeshConfig::maxCircleSegment)
         .def_readwrite("minSegmentCount"
                        , &semantic::MeshConfig::minSegmentCount)
+        .def_readwrite("closedSurface"
+                       , &semantic::MeshConfig::closedSurface)
+        .def_readwrite("worldCrs"
+                       , &semantic::MeshConfig::worldCrs)
         ;
 
     pysupport::fillEnum<semantic::Material>
