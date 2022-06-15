@@ -46,10 +46,10 @@ namespace {
 
 using uint32 = std::uint32_t;
 
-double distance(math::Point3 a, math::Point3 b)
-{
-    return math::length(b - a);
-}
+// double distance(math::Point3 a, math::Point3 b)
+// {
+//     return math::length(b - a);
+// }
 
 geometry::Mesh newMeshIcosahedronRaw()
 {
