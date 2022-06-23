@@ -4,7 +4,7 @@ set(semantic_VERSION 1.2)
 define_module(LIBRARY semantic=${semantic_VERSION}
   DEPENDS
   BuildSystem>=1.4 C++>=14
-  shtools
+  shtools>=1.1
   geo jsoncpp
   geometry>=1.12
   Boost_IOSTREAMS
@@ -44,4 +44,4 @@ add_library(semantic STATIC ${semantic_SOURCES})
 buildsys_library(semantic)
 
 target_link_libraries(semantic ${MODULE_LIBRARIES})
-buildsys_target_compile_definitions(semantic ${MODULE_DEFINITIONS})
+target_compile_definitions(semantic PRIVATE ${MODULE_DEFINITIONS})
