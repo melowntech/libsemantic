@@ -39,6 +39,7 @@
 #include "geometry/multipolymesh.hpp"
 
 #include "roof.hpp"
+#include "tree.hpp"
 
 namespace semantic {
 
@@ -89,21 +90,15 @@ struct Tree : Entity {
     static const constexpr Class cls = Class::tree;
     typedef std::vector<Tree> list;
 
-    enum class Type { deciduous, coniferous };
+    tree::Instance instance;
 
-    Type type = Type::deciduous;
-    math::Point3 center;
-    double a = 0.0;
-    double b = 0.0;
-    std::vector<double> harmonics;
+    tree::Kind kind() const {
+        return static_cast<tree::Kind>(instance.which());
+    }
+
+    // needed by python bindings
+    bool operator==(const Tree &r) const;
 };
-
-/** Tree subclasses.
- */
-UTILITY_GENERATE_ENUM_IO(Tree::Type,
-                         ((deciduous))
-                         ((coniferous))
-                         )
 
 /** Railroad
  */

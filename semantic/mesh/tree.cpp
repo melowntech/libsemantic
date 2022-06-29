@@ -235,23 +235,24 @@ void buildSphericalHarmonics(geometry::Mesh &mesh, const MeshConfig &config
     (void) config;
 }
 
-Material treeCrownMaterial(const Tree &tree)
+Material treeCrownMaterial(const tree::Aerial &tree)
 {
-    return ((tree.type == Tree::Type::deciduous)
+    return ((tree.type == tree::Aerial::Type::deciduous)
             ? Material::tree_crown_deciduous
             : Material::tree_crown_coniferous);
 }
 
-Material treeTrunkMaterial(const Tree &tree)
+Material treeTrunkMaterial(const tree::Aerial &tree)
 {
     // if there is ever a need for different trunk material for different tree
     // types
-    return ((tree.type == Tree::Type::deciduous)
+    return ((tree.type == tree::Aerial::Type::deciduous)
             ? Material::tree_trunk
             : Material::tree_trunk);
 }
 
-void trunk(geometry::Mesh &out, const Tree &tree, const MeshConfig &config
+void trunk(geometry::Mesh &out, const tree::Aerial &tree
+           , const MeshConfig &config
            , const math::Point3 &origin, Material material)
 {
     geometry::Mesh mesh;
@@ -302,18 +303,14 @@ void trunk(geometry::Mesh &out, const Tree &tree, const MeshConfig &config
     detail::append(out, mesh);
 }
 
-} // namespace
-
-geometry::Mesh mesh(const Tree &tree, const MeshConfig &config
+geometry::Mesh mesh(const tree::Aerial &tree, const MeshConfig &config
                     , const math::Point3 &origin)
 {
     geometry::Mesh m;
     buildSphericalHarmonics(m, config, tree.harmonics
                             , treeCrownMaterial(tree));
 
-    math::Point3 offset(tree.origin + tree.center);
-    // shift to world origin if not local crs
-    if (!config.worldCrs) { offset += origin; }
+    math::Point3 offset(tree.center + origin);
     for (auto &v : m.vertices) {
         v(0) = v(0) * tree.a + offset(0);
         v(1) = v(1) * tree.a + offset(1);
@@ -321,9 +318,24 @@ geometry::Mesh mesh(const Tree &tree, const MeshConfig &config
     }
 
     // add tree trunk
-    math::Point3 trunkOrigin(tree.origin);
-    if (!config.worldCrs) { trunkOrigin += origin; }
+    math::Point3 trunkOrigin(origin);
     trunk(m, tree, config, trunkOrigin, treeTrunkMaterial(tree));
+
+    return m;
+}
+
+} // namespace
+
+geometry::Mesh mesh(const Tree &tree, const MeshConfig &config
+                    , const math::Point3 &origin)
+{
+    geometry::Mesh m;
+
+    auto localOrigin(tree.origin);
+    if (!config.worldCrs) { localOrigin += origin; }
+
+    // TODO: implement me
+    (void) localOrigin;
 
     return m;
 }

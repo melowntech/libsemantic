@@ -31,25 +31,67 @@
 
 namespace semantic {
 
-OgrGeometry ogr(const Tree &tree, const math::Point3 &origin)
+namespace {
+
+std::unique_ptr< ::OGRGeometry>
+makeCircle(const math::Point3 &center, double radius)
 {
     auto cs(std::make_unique< ::OGRCircularString>());
 
-    const math::Point3 center(origin + tree.origin + tree.center);
-
     /** Closed circle between two arcs.
-     *  TODO: take harmonics into account
      */
-    cs->addPoint(center(0) - tree.a, center(1), center(2));
-    cs->addPoint(center(0) + tree.a, center(1), center(2));
-    cs->addPoint(center(0) - tree.a, center(1), center(2));
+    cs->addPoint(center(0) - radius, center(1), center(2));
+    cs->addPoint(center(0) + radius, center(1), center(2));
+    cs->addPoint(center(0) - radius, center(1), center(2));
+
+    return cs;
+}
+
+OgrGeometry ogr(const tree::Aerial &t, const math::Point3 &origin)
+{
+    const math::Point3 center(origin + t.center);
+
+    auto cs(makeCircle(center, t.a));
 
     math::Extent verticalExtent;
-    update(verticalExtent, origin(2) + tree.origin(2));
-    update(verticalExtent, center(2) + tree.b);
-    update(verticalExtent, center(2) - tree.b);
+    update(verticalExtent, origin(2));
+    update(verticalExtent, center(2) + t.b);
+    update(verticalExtent, center(2) - t.b);
 
     return { std::move(cs), verticalExtent };
+}
+
+OgrGeometry ogr(const tree::GroundLevel &t, const math::Point3 &origin)
+{
+    // TODO: add trunk as well
+
+    const math::Point3 center(origin + t.crown.center);
+    auto cs(makeCircle(center, t.crown.radius));
+
+    math::Extent verticalExtent;
+    update(verticalExtent, origin(2));
+    update(verticalExtent, center(2) + t.height);
+
+    return { std::move(cs), verticalExtent };
+}
+
+} // namespace
+
+OgrGeometry ogr(const Tree &tree, const math::Point3 &origin)
+{
+    struct Visitor : public boost::static_visitor<OgrGeometry> {
+        const math::Point3 &origin;
+        Visitor(const math::Point3 &origin) : origin(origin) {}
+
+        OgrGeometry operator()(const tree::Aerial &t) const {
+            return ogr(t, origin);
+        }
+        OgrGeometry operator()(const tree::GroundLevel &t) const {
+            return ogr(t, origin);
+        }
+    } v(origin + tree.origin);
+
+    return boost::apply_visitor(v, tree.instance);
 }
 
 } // namespace semantic

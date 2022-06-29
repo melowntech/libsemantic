@@ -12,6 +12,7 @@ define_module(LIBRARY semantic=${semantic_VERSION}
 
 set(semantic_SOURCES
   world.hpp world.cpp
+  tree.hpp tree.cpp
   roof.hpp roof.cpp
 
   io.hpp io.cpp

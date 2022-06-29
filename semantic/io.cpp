@@ -167,22 +167,63 @@ void parse(Building &building, const Json::Value &value)
 {
     parse(static_cast<Entity&>(building), value);
     parse(building.roofs, Json::check(value, "roofs", Json::arrayValue));
-    if(value.isMember("mesh"))
-    {
+    if (value.isMember("mesh")) {
         parse(building.mesh, Json::check(value, "mesh", Json::objectValue));
     }
 }
 
-void parse(Tree &tree, const Json::Value &value)
+void parse(tree::Aerial &t, const Json::Value &value)
 {
-    parse(static_cast<Entity&>(tree), value);
-    parse(tree.center, Json::check(value, "center", Json::arrayValue));
-    Json::get(tree.a, value, "a");
-    if (!Json::getOpt(tree.b, value, "b")) { tree.b = tree.a; }
-    Json::get(tree.harmonics, value, "harmonics");
-    if (!Json::getOpt(tree.type, value, "type")) {
-        tree.type = Tree::Type::deciduous;
+    parse(t.center, Json::check(value, "center", Json::arrayValue));
+    Json::get(t.a, value, "a");
+    if (!Json::getOpt(t.b, value, "b")) { t.b = t.a; }
+    Json::get(t.harmonics, value, "harmonics");
+    if (!Json::getOpt(t.type, value, "type")) {
+        t.type = tree::Aerial::Type::deciduous;
     }
+}
+
+void parse(tree::GroundLevel::Circle &c, const Json::Value &value)
+{
+    parse(c.center, Json::check(value, "center", Json::arrayValue));
+    Json::get(c.radius, value, "radius");
+}
+
+void parse(tree::GroundLevel &t, const Json::Value &value)
+{
+    parse(t.trunk, Json::check(value, "trunk", Json::objectValue));
+    parse(t.crown, Json::check(value, "crown", Json::objectValue));
+    Json::get(t.height, value, "height");
+}
+
+void parse(tree::Instance &t, const Json::Value &value)
+{
+    struct Visitor : public boost::static_visitor<void> {
+        const Json::Value &value;
+        Visitor(const Json::Value &value) : value(value) {}
+        void operator()(tree::Aerial &t) const { parse(t, value); }
+        void operator()(tree::GroundLevel &t) const { parse(t, value); }
+    } v(value);
+    boost::apply_visitor(v, t);
+}
+
+void parse(Tree &t, const Json::Value &value)
+{
+    parse(static_cast<Entity&>(t), value);
+
+    tree::Kind kind;
+    if (!Json::getOpt(kind, value, "kind")) {
+        kind = tree::Kind::aerial;
+    }
+
+    switch (kind) {
+    case tree::Kind::aerial:
+        t.instance = tree::Aerial(); break;
+    case tree::Kind::groundLevel:
+        t.instance = tree::GroundLevel(); break;
+    }
+
+    parse(t.instance, value);
 }
 
 void parse(Railway::Lines &lines, const Json::Value &value)
@@ -378,20 +419,48 @@ void build(Json::Value &value, const Building &building
     build(value["mesh"], building.mesh);
 }
 
-void build(Json::Value &value, const Tree &tree
-           , const math::Point3 &shift)
+void build(Json::Value &value, const tree::Aerial &tree)
 {
-    build(value, static_cast<const Entity&>(tree), shift);
     build(value["center"], tree.center);
     value["a"] = tree.a;
     if (tree.a != tree.b) { value["b"] = tree.b; }
     auto &harmonics(value["harmonics"] = Json::arrayValue);
     for (auto harmonic : tree.harmonics) { harmonics.append(harmonic); }
 
-    if (tree.type != Tree::Type::deciduous) {
+    if (tree.type != tree::Aerial::Type::deciduous) {
         value["type"] = boost::lexical_cast<std::string>(tree.type);
     }
+}
 
+void build(Json::Value &value, const tree::GroundLevel::Circle &c)
+{
+    value = Json::objectValue;
+    build(value["center"], c.center);
+    value["radius"] = c.radius;
+}
+
+void build(Json::Value &value, const tree::GroundLevel &tree)
+{
+    build(value["trunk"], tree.trunk);
+    build(value["crown"], tree.crown);
+    value["height"] = tree.height;
+}
+
+void build(Json::Value &value, const Tree &tree
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(tree), shift);
+
+    // build instance
+    struct Visitor : public boost::static_visitor<void> {
+        Json::Value &value;
+        Visitor(Json::Value &value) : value(value) {}
+        void operator()(const tree::Aerial &t) { build(value, t); }
+        void operator()(const tree::GroundLevel &t) { build(value, t); }
+    } v(value);
+    boost::apply_visitor(v, tree.instance);
+
+    value["kind"] = boost::lexical_cast<std::string>(tree.kind());
 }
 
 void build(Json::Value &value, const Railway::Lines &lines)
