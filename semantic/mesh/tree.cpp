@@ -324,20 +324,46 @@ geometry::Mesh mesh(const tree::Aerial &tree, const MeshConfig &config
     return m;
 }
 
+geometry::Mesh mesh(const tree::GroundLevel &tree, const MeshConfig &config
+                    , const math::Point3 &origin)
+{
+    geometry::Mesh m;
+
+    // FIXME: implement me
+
+    return m;
+
+    (void) tree;
+    (void) config;
+    (void) origin;
+}
+
 } // namespace
 
 geometry::Mesh mesh(const Tree &tree, const MeshConfig &config
                     , const math::Point3 &origin)
 {
-    geometry::Mesh m;
+    auto o(tree.origin);
+    if (!config.worldCrs) { o += origin; }
 
-    auto localOrigin(tree.origin);
-    if (!config.worldCrs) { localOrigin += origin; }
+    struct Visitor : public boost::static_visitor<geometry::Mesh> {
+        const MeshConfig &config;
+        const math::Point3 &origin;
 
-    // TODO: implement me
-    (void) localOrigin;
+        Visitor(const MeshConfig &config
+                , const math::Point3 &origin)
+            : config(config), origin(origin)
+        {}
 
-    return m;
+        geometry::Mesh operator()(const tree::Aerial &t) const {
+            return mesh(t, config, origin);
+        }
+        geometry::Mesh operator()(const tree::GroundLevel &t) const {
+            return mesh(t, config, origin);
+        }
+    } v(config, o);
+
+    return boost::apply_visitor(v, tree.instance);
 }
 
 } // namespace lod2
