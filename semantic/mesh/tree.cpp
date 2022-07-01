@@ -242,6 +242,11 @@ Material treeCrownMaterial(const tree::Aerial &tree)
             : Material::tree_crown_coniferous);
 }
 
+Material treeCrownMaterial(const tree::GroundLevel&)
+{
+    return Material::tree_crown_deciduous;
+}
+
 Material treeTrunkMaterial(const tree::Aerial &tree)
 {
     // if there is ever a need for different trunk material for different tree
@@ -251,17 +256,17 @@ Material treeTrunkMaterial(const tree::Aerial &tree)
             : Material::tree_trunk);
 }
 
-void trunk(geometry::Mesh &out, const tree::Aerial &tree
+Material treeTrunkMaterial(const tree::GroundLevel&)
+{
+    return Material::tree_trunk;
+}
+
+void trunk(geometry::Mesh &out
+           , double r, double top
            , const MeshConfig &config
            , const math::Point3 &origin, Material material)
 {
     geometry::Mesh mesh;
-
-    const auto height(tree.center[2] + tree.b);
-    const auto r(std::sqrt(tree.a) / 6.0
-                 + std::sqrt(height) / 8.0
-                 - 0.25);
-    const auto top(tree.center[2] - tree.b / 2.0);
 
     const auto arcPoints(detail::computeArcPoints(config, r));
 
@@ -303,6 +308,33 @@ void trunk(geometry::Mesh &out, const tree::Aerial &tree
     detail::append(out, mesh);
 }
 
+void trunk(geometry::Mesh &out, const tree::Aerial &tree
+           , const MeshConfig &config
+           , const math::Point3 &origin, Material material)
+{
+    const auto height(tree.center[2] + tree.b);
+    const auto r(std::sqrt(tree.a) / 6.0
+                 + std::sqrt(height) / 8.0
+                 - 0.25);
+    const auto top(tree.center[2] - tree.b / 2.0);
+
+    trunk(out, r, top, config, origin, material);
+}
+
+void trunk(geometry::Mesh &out, const tree::GroundLevel &tree
+           , const MeshConfig &config
+           , const math::Point3 &origin, Material material)
+{
+    const auto r(tree.trunk.radius);
+    const auto top(tree.crown.center[2]);
+
+    const math::Point3 treeOrigin
+        (origin
+         + math::Point3(tree.trunk.center(0), tree.trunk.center(1), 0.0));
+
+    trunk(out, r, top, config, treeOrigin, material);
+}
+
 geometry::Mesh mesh(const tree::Aerial &tree, const MeshConfig &config
                     , const math::Point3 &origin)
 {
@@ -327,15 +359,38 @@ geometry::Mesh mesh(const tree::Aerial &tree, const MeshConfig &config
 geometry::Mesh mesh(const tree::GroundLevel &tree, const MeshConfig &config
                     , const math::Point3 &origin)
 {
-    geometry::Mesh m;
+    // reusable base mesh
+    static const auto meshBase(newMeshSphereRegular(2));
 
-    // FIXME: implement me
+    geometry::Mesh out;
 
-    return m;
+    // crown
+    {
+        geometry::Mesh m(meshBase);
 
-    (void) tree;
+        const auto material(treeCrownMaterial(tree));
+        const auto a(tree.crown.radius);
+        const auto b(tree.height / 2.0);
+        math::Point3 offset(origin + tree.crown.center);
+
+        // scale and shift
+        for (auto &v : m.vertices) {
+            v(0) = v(0) * a + offset(0);
+            v(1) = v(1) * a + offset(1);
+            v(2) = v(2) * b + offset(2);
+        }
+
+        // colorize
+        for (auto &f : m.faces) { f.imageId = +material; }
+
+        detail::append(out, m);
+    }
+
+    trunk(out, tree, config, origin, treeTrunkMaterial(tree));
+
+    return out;
+
     (void) config;
-    (void) origin;
 }
 
 } // namespace

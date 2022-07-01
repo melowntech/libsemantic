@@ -119,10 +119,14 @@ int Semantic2Obj::run()
     // write mtl
     utility::write(mtlPath, semantic2obj::semantic_mtl);
 
-    const auto &setStream([&](std::ostream &os)
+    const auto &setStream([&, srsWritten=false](std::ostream &os)
+        mutable
     {
         os << std::fixed;
-        os << "### SRS: " << srs.value() << "\n\n";
+        if (!srsWritten) {
+            os << "### SRS: " << srs.value() << "\n\n";
+            srsWritten = true;
+        }
         return true;
     });
 
