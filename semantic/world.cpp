@@ -35,6 +35,7 @@ namespace semantic {
 const Class Building::cls;
 const Class Tree::cls;
 const Class Railway::cls;
+const Class LaneLine::cls;
 const Class Pole::cls;
 
 Classes classes(const World &world)
