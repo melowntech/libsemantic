@@ -210,6 +210,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("trees", &semantic::World::trees)
         .def_readwrite("poles", &semantic::World::poles)
         .def_readwrite("railways", &semantic::World::railways)
+        .def_readwrite("laneLines", &semantic::World::laneLines)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -399,6 +400,32 @@ BOOST_PYTHON_MODULE(melown_semantic)
                           >("Line");
         pysupport::vector<semantic::Railway::Lines>("Lines");
     }
+
+    auto LaneLine = class_<semantic::LaneLine>
+        ("LaneLine", init<const semantic::LaneLine&>())
+        .def(init<>())
+
+        .def_readwrite("vertices", &semantic::LaneLine::vertices)
+        .def_readwrite("lines", &semantic::LaneLine::lines)
+        ;
+    py::addCommon(LaneLine);
+
+    {
+        bp::scope scope(LaneLine);
+
+        pysupport::vector<semantic::LaneLine::list>("list");
+        pysupport::vector<semantic::LaneLine::Lines>("Lines");
+
+        auto Line = class_<semantic::LaneLine::Line>
+            ("Line", init<const semantic::LaneLine::Line&>())
+            .def(init<>())
+
+            .def_readwrite("id", &semantic::LaneLine::Line::id)
+            .def_readwrite("polyline", &semantic::LaneLine::Line::polyline)
+            .def_readwrite("dashed", &semantic::LaneLine::Line::dashed)
+            ;
+    }
+
 
     auto Pole = class_<semantic::Pole>("Pole", init<const semantic::Pole&>())
         .def(init<>())

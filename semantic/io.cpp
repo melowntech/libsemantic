@@ -74,6 +74,11 @@ void parse(std::size_t& num, const Json::Value &value)
     num = Json::as<std::size_t>(value);
 }
 
+void parse(int& num, const Json::Value &value)
+{
+    num = Json::as<int>(value);
+}
+
 template<typename T>
 void parse(std::vector<T> &points, const Json::Value &value)
 {
@@ -248,6 +253,27 @@ void parse(Railway &railway, const Json::Value &value)
     parse(railway.lines, Json::check(value, "lines", Json::arrayValue));
 }
 
+void parse(LaneLine::Lines &lines, const Json::Value &value)
+{
+    lines.reserve(value.size());
+    for (const auto &item : value) {
+        lines.emplace_back();
+        LaneLine::Line &line = lines.back();
+
+        Json::get(line.id, item, "id");
+        Json::get(line.dashed, item, "dashed");
+
+        parse(line.polyline, Json::check(item, "polyline", Json::arrayValue));
+    }
+}
+
+void parse(LaneLine &laneLine, const Json::Value &value)
+{
+    parse(static_cast<Entity&>(laneLine), value);
+    parse(laneLine.vertices, Json::check(value, "vertices", Json::arrayValue));
+    parse(laneLine.lines, Json::check(value, "lines", Json::arrayValue));
+}
+
 void parse(Pole &pole, const Json::Value &value)
 {
     parse(static_cast<Entity&>(pole), value);
@@ -283,6 +309,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.buildings, value, "buildings");
     parse(world.trees, value, "trees");
     parse(world.railways, value, "railways");
+    parse(world.laneLines, value, "laneLines");
     parse(world.poles, value, "poles");
 }
 
@@ -483,6 +510,29 @@ void build(Json::Value &value, const Railway &railway
     build(value["lines"], railway.lines);
 }
 
+
+void build(Json::Value &value, const LaneLine::Lines &lines)
+{
+    value = Json::arrayValue;
+    for (const auto &line : lines) {
+        auto &item(value.append(Json::objectValue));
+
+        item["id"] = line.id;
+        item["dashed"] = line.dashed;
+        build(item["polyline"], line.polyline);
+    }
+}
+
+void build(Json::Value &value, const LaneLine &laneLine
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(laneLine), shift);
+
+    build(value["vertices"], laneLine.vertices);
+    build(value["lines"], laneLine.lines);
+}
+
+
 void build(Json::Value &value, const Pole &pole
            , const math::Point3 &shift)
 {
@@ -517,6 +567,7 @@ void build(Json::Value &value, const World &world)
     build(value, "buildings", world.buildings);
     build(value, "trees", world.trees);
     build(value, "railways", world.railways);
+    build(value, "laneLines", world.laneLines);
     build(value, "poles", world.poles);
 }
 
@@ -655,6 +706,7 @@ void save(const World &world, const fs::path &path
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Building)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Tree)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Railway)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(LaneLine)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Pole)
 
 } // namespace semantic

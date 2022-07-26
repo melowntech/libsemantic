@@ -49,6 +49,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((building))
                       ((tree))
                       ((railway))
+                      ((laneLine))
                       ((pole))
                       )
 
@@ -115,6 +116,24 @@ struct Railway : Entity {
     Lines lines;
 };
 
+/** LaneLine
+ */
+struct LaneLine : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::laneLine;
+    typedef std::vector<LaneLine> list;
+
+    math::Points3 vertices;
+
+    struct Line : Entity {
+        std::vector<int> polyline;
+        bool dashed;
+    };
+    typedef std::vector<Line> Lines;
+    Lines lines;
+};
+
 /** Pole
  */
 struct Pole : Entity {
@@ -158,6 +177,10 @@ struct World {
      */
     Railway::list railways;
 
+    /** All lane lines in the world.
+     */
+    LaneLine::list laneLines;
+
     /** All poles in the world.
      */
     Pole::list poles;
@@ -192,6 +215,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
     case Class::railway: op(world.railways); break;
+    case Class::laneLine: op(world.laneLines); break;
     case Class::pole: op(world.poles); break;
     }
 }
@@ -203,6 +227,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
     case Class::railway: op(world.railways); break;
+    case Class::laneLine: op(world.laneLines); break;
     case Class::pole: op(world.poles); break;
     }
 }
