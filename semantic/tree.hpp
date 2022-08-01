@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 Melown Technologies SE
+ * Copyright (c) 2022 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,45 +24,57 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <algorithm>
+#ifndef semantic_tree_hpp_included_
+#define semantic_tree_hpp_included_
 
-#include "dbglog/dbglog.hpp"
+#include <vector>
+#include <array>
 
-#include "world.hpp"
+#include <boost/variant.hpp>
 
-namespace semantic {
+#include "utility/enum-io.hpp"
+#include "math/geometry_core.hpp"
 
-const Class Building::cls;
-const Class Tree::cls;
-const Class Railway::cls;
-const Class LaneLine::cls;
-const Class Pole::cls;
+namespace semantic { namespace tree {
 
-Classes classes(const World &world)
-{
-    Classes classes;
+struct Aerial {
+    enum class Type { deciduous, coniferous };
 
-    // ENTITY: update when adding a new entity
-    if (!world.buildings.empty()) { classes.push_back(Class::building); }
+    Type type = Type::deciduous;
+    math::Point3 center;
+    double a = 0.0;
+    double b = 0.0;
+    std::vector<double> harmonics;
+};
 
-    std::sort(classes.begin(), classes.end());
-    return classes;
-}
+struct GroundLevel {
+    struct Circle {
+        math::Point3 center;
+        double radius = {};
+    };
 
-Classes classes(const Classes &l, const Classes &r)
-{
-    Classes classes;
+    Circle trunk;
+    Circle crown;
+    double height = {};
+};
 
-    std::set_union(l.begin(), l.end(), r.begin(), r.end()
-                   , std::back_inserter(classes));
+typedef boost::variant<Aerial, GroundLevel> Instance;
+enum class Kind { aerial = 0, groundLevel };
 
-    return classes;
-}
+// inline stuff
 
-void localize(World &world)
-{
-    (void) world;
-    LOG(warn3) << "TODO: implement me";
-}
+/** Tree subclasses.
+ */
+UTILITY_GENERATE_ENUM_IO(Aerial::Type,
+                         ((deciduous))
+                         ((coniferous))
+                         )
 
-} // namespace semantic
+UTILITY_GENERATE_ENUM_IO(Kind,
+                         ((aerial))
+                         ((groundLevel)("ground-level"))
+                         )
+
+} } // namespace tree::semantic
+
+#endif // semantic_tree_hpp_included_

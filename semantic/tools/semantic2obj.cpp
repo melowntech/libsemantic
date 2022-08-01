@@ -61,6 +61,10 @@ void Semantic2Obj::configuration(po::options_description &cmdline
          , utility::implicit_value(&meshConfig_.closedSurface, true)
          ->default_value(false)
          , "Generate closed surface.")
+        ("worldCrs"
+         , utility::implicit_value(&meshConfig_.worldCrs, true)
+         ->default_value(false)
+         , "Keep the mesh in world's CRS (i.e. do not shift by world origin).")
         ;
 
     pd.add("output", 1).add("input", -1);
@@ -115,10 +119,14 @@ int Semantic2Obj::run()
     // write mtl
     utility::write(mtlPath, semantic2obj::semantic_mtl);
 
-    const auto &setStream([&](std::ostream &os)
+    const auto &setStream([&, srsWritten=false](std::ostream &os)
+        mutable
     {
         os << std::fixed;
-        os << "### SRS: " << srs.value() << "\n\n";
+        if (!srsWritten) {
+            os << "### SRS: " << srs.value() << "\n\n";
+            srsWritten = true;
+        }
         return true;
     });
 

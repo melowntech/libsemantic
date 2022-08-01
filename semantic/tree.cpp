@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 Melown Technologies SE
+ * Copyright (c) 2022 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,45 +24,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <algorithm>
-
-#include "dbglog/dbglog.hpp"
-
 #include "world.hpp"
 
 namespace semantic {
 
-const Class Building::cls;
-const Class Tree::cls;
-const Class Railway::cls;
-const Class LaneLine::cls;
-const Class Pole::cls;
-
-Classes classes(const World &world)
+bool Tree::operator==(const Tree &r) const
 {
-    Classes classes;
+    if (!Entity::operator==(r)) { return false; }
 
-    // ENTITY: update when adding a new entity
-    if (!world.buildings.empty()) { classes.push_back(Class::building); }
+    if (kind() != r.kind()) { return false; }
 
-    std::sort(classes.begin(), classes.end());
-    return classes;
+    // TODO: call compare on instances
+    return true;
 }
 
-Classes classes(const Classes &l, const Classes &r)
-{
-    Classes classes;
-
-    std::set_union(l.begin(), l.end(), r.begin(), r.end()
-                   , std::back_inserter(classes));
-
-    return classes;
-}
-
-void localize(World &world)
-{
-    (void) world;
-    LOG(warn3) << "TODO: implement me";
-}
-
-} // namespace semantic
+} // namespace tree::semantic

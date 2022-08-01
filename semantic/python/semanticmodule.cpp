@@ -64,8 +64,9 @@ namespace bpc = boost::python::converter;
 
 namespace semantic { namespace py {
 
+// tree variant support
 template <typename T>
-T& instance(semantic::roof::Instance &i)
+T& treeInstance(semantic::tree::Instance &i)
 {
     if (auto *value = boost::get<T>(&i)) {
         return *value;
@@ -76,9 +77,27 @@ T& instance(semantic::roof::Instance &i)
 }
 
 template <typename T>
-T& roofInstance(semantic::roof::Roof &r)
+T& treeInstanceFromTree(semantic::Tree &r)
 {
-    return instance<T>(r.instance);
+    return treeInstance<T>(r.instance);
+}
+
+// roof variant support
+template <typename T>
+T& roofInstance(semantic::roof::Instance &i)
+{
+    if (auto *value = boost::get<T>(&i)) {
+        return *value;
+    }
+
+    i = T();
+    return boost::get<T>(i);
+}
+
+template <typename T>
+T& roofInstanceFromRoof(semantic::roof::Roof &r)
+{
+    return roofInstance<T>(r.instance);
 }
 
 World load(const boost::filesystem::path &path)
@@ -132,9 +151,41 @@ geometry::Mesh meshTree2(const Tree &tree, const MeshConfig &config
     return semantic::lod2::mesh(tree, config, origin);
 }
 
+geometry::Mesh meshPole2(const Pole &pole, const MeshConfig &config
+                         , const math::Point3 &origin)
+{
+    return semantic::lod2::mesh(pole, config, origin);
+}
+
 geometry::Mesh meshWorld2(const World &world, const MeshConfig &config)
 {
     return semantic::mesh(world, config, 2);
+}
+
+template <typename Class>
+std::string classRepr(const Class &c)
+{
+    std::ostringstream os;
+
+    auto s(semantic::serialize(c));
+    if (!s.empty() && (s.back() == '\n')) { s.pop_back(); }
+
+    os << '<' << Class::cls << ": " << s << '>';
+
+    return os.str();
+}
+
+template <typename Class>
+void addCommon(bp::class_<Class> &cls)
+{
+    cls
+        .def_readonly("cls", &Class::cls)
+        .def_readwrite("id", &Class::id)
+        .def_readwrite("descriptor", &Class::descriptor)
+        .def_readwrite("origin", &Class::origin)
+        .def("__repr__", &classRepr<Class>
+             , "Returns class representation")
+        ;
 }
 
 } } // namespace semantic::py
@@ -157,7 +208,9 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("origin", &semantic::World::origin)
         .def_readwrite("buildings", &semantic::World::buildings)
         .def_readwrite("trees", &semantic::World::trees)
+        .def_readwrite("poles", &semantic::World::poles)
         .def_readwrite("railways", &semantic::World::railways)
+        .def_readwrite("laneLines", &semantic::World::laneLines)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -166,36 +219,84 @@ BOOST_PYTHON_MODULE(melown_semantic)
     auto Tree = class_<semantic::Tree>("Tree", init<const semantic::Tree&>())
         .def(init<>())
 
-        .def_readonly("cls", &semantic::Tree::cls)
-        .def_readwrite("id", &semantic::Tree::id)
-        .def_readwrite("descriptor", &semantic::Tree::descriptor)
-        .def_readwrite("origin", &semantic::Tree::origin)
-        .def_readwrite("type", &semantic::Tree::type)
-        .def_readwrite("a", &semantic::Tree::a)
-        .def_readwrite("b", &semantic::Tree::b)
-        .def_readwrite("harmonics", &semantic::Tree::harmonics)
+        .add_property("aerial"
+                      , make_function
+                      (&py::treeInstanceFromTree<semantic::tree::Aerial>
+                       , InternalRef))
+        .add_property("groundLevel"
+                      , bp::make_function
+                      (&py::treeInstanceFromTree<semantic::tree::GroundLevel>
+                       , InternalRef))
+
+        .add_property("kind", bp::make_function(&semantic::Tree::kind
+                                                , ByValue))
         ;
+    py::addCommon(Tree);
 
     {
         bp::scope scope(Tree);
 
-        pysupport::fillEnum<semantic::Tree::Type>
+        auto Aerial = class_<semantic::tree::Aerial>
+            ("Aerial", init<const semantic::tree::Aerial&>())
+            .def(init<>())
+
+            .def_readwrite("type", &semantic::tree::Aerial::type)
+            .def_readwrite("a", &semantic::tree::Aerial::a)
+            .def_readwrite("b", &semantic::tree::Aerial::b)
+            .def_readwrite("harmonics", &semantic::tree::Aerial::harmonics)
+            ;
+
+        pysupport::fillEnum<semantic::tree::Aerial::Type>
             ("Type", "Tree type.");
 
+        auto GroundLevel = class_<semantic::tree::GroundLevel>
+            ("GroundLevel", init<const semantic::tree::GroundLevel&>())
+            .def(init<>())
+
+            .def_readwrite("trunk", &semantic::tree::GroundLevel::trunk)
+            .def_readwrite("crown", &semantic::tree::GroundLevel::crown)
+            .def_readwrite("height", &semantic::tree::GroundLevel::height)
+            ;
+
+        {
+            bp::scope scope(GroundLevel);
+            auto Circle = class_<semantic::tree::GroundLevel::Circle>
+                ("Circle", init<semantic::tree::GroundLevel::Circle&>())
+                .def(init<>())
+                .def_readwrite
+                ("center", &semantic::tree::GroundLevel::Circle::center)
+                .def_readwrite
+                ("radius", &semantic::tree::GroundLevel::Circle::radius)
+                ;
+        }
+
+        auto Instance = class_<semantic::tree::Instance>
+            ("Instance", init<const semantic::tree::Instance&>())
+            .def(init<>())
+
+            .add_property("aerial"
+                          , bp::make_function
+                          (&py::treeInstance<semantic::tree::Aerial>
+                           , bp::return_internal_reference<>()))
+            .add_property("groundLevel"
+                          , bp::make_function
+                          (&py::treeInstance<semantic::tree::GroundLevel>
+                           , bp::return_internal_reference<>()))
+            ;
+
         pysupport::vector<semantic::Tree::list>("list");
+
+        pysupport::fillEnum<semantic::tree::Kind>
+            ("Kind", "Tree kind.");
     }
 
     auto Building = class_<semantic::Building>
         ("Building", init<const semantic::Building&>())
         .def(init<>())
 
-        .def_readonly("cls", &semantic::Building::cls)
-        .def_readwrite("id", &semantic::Building::id)
-        .def_readwrite("descriptor", &semantic::Building::descriptor)
-        .def_readwrite("origin", &semantic::Building::origin)
-
         .def_readwrite("roofs", &semantic::Building::roofs)
         ;
+    py::addCommon(Building);
 
     {
         bp::scope scope(Building);
@@ -211,11 +312,11 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         .add_property("circular"
                       , make_function
-                      (&py::roofInstance<semantic::roof::Circular>
+                      (&py::roofInstanceFromRoof<semantic::roof::Circular>
                        , InternalRef))
         .add_property("rectangular"
                       , bp::make_function
-                      (&py::roofInstance<semantic::roof::Rectangular>
+                      (&py::roofInstanceFromRoof<semantic::roof::Rectangular>
                        , InternalRef))
 
         .add_property("type", bp::make_function(&semantic::roof::Roof::type
@@ -272,11 +373,11 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
             .add_property("circular"
                           , bp::make_function
-                          (&py::instance<semantic::roof::Circular>
+                          (&py::roofInstance<semantic::roof::Circular>
                            , bp::return_internal_reference<>()))
             .add_property("rectangular"
                           , bp::make_function
-                          (&py::instance<semantic::roof::Rectangular>
+                          (&py::roofInstance<semantic::roof::Rectangular>
                            , bp::return_internal_reference<>()))
             ;
     }
@@ -285,13 +386,10 @@ BOOST_PYTHON_MODULE(melown_semantic)
         ("Railway", init<const semantic::Railway&>())
         .def(init<>())
 
-        .def_readonly("cls", &semantic::Railway::cls)
-        .def_readwrite("id", &semantic::Railway::id)
-        .def_readwrite("descriptor", &semantic::Railway::descriptor)
-        .def_readwrite("origin", &semantic::Railway::origin)
         .def_readwrite("vertices", &semantic::Railway::vertices)
         .def_readwrite("lines", &semantic::Railway::lines)
         ;
+    py::addCommon(Railway);
 
     {
         bp::scope scope(Railway);
@@ -301,6 +399,48 @@ BOOST_PYTHON_MODULE(melown_semantic)
                           , return_value_policy<return_by_value>
                           >("Line");
         pysupport::vector<semantic::Railway::Lines>("Lines");
+    }
+
+    auto LaneLine = class_<semantic::LaneLine>
+        ("LaneLine", init<const semantic::LaneLine&>())
+        .def(init<>())
+
+        .def_readwrite("vertices", &semantic::LaneLine::vertices)
+        .def_readwrite("lines", &semantic::LaneLine::lines)
+        ;
+    py::addCommon(LaneLine);
+
+    {
+        bp::scope scope(LaneLine);
+
+        pysupport::vector<semantic::LaneLine::list>("list");
+        pysupport::vector<semantic::LaneLine::Lines>("Lines");
+
+        auto Line = class_<semantic::LaneLine::Line>
+            ("Line", init<const semantic::LaneLine::Line&>())
+            .def(init<>())
+
+            .def_readwrite("id", &semantic::LaneLine::Line::id)
+            .def_readwrite("polyline", &semantic::LaneLine::Line::polyline)
+            .def_readwrite("dashed", &semantic::LaneLine::Line::dashed)
+            ;
+    }
+
+
+    auto Pole = class_<semantic::Pole>("Pole", init<const semantic::Pole&>())
+        .def(init<>())
+
+        .def_readwrite("direction", &semantic::Pole::direction)
+        .def_readwrite("length", &semantic::Pole::length)
+        .def_readwrite("distanceToGround", &semantic::Pole::distanceToGround)
+        .def_readwrite("radius", &semantic::Pole::radius)
+        ;
+    py::addCommon(Pole);
+
+    {
+        bp::scope scope(Pole);
+
+        pysupport::vector<semantic::Pole::list>("list");
     }
 
     // IO
@@ -333,6 +473,10 @@ BOOST_PYTHON_MODULE(melown_semantic)
                        , &semantic::MeshConfig::maxCircleSegment)
         .def_readwrite("minSegmentCount"
                        , &semantic::MeshConfig::minSegmentCount)
+        .def_readwrite("closedSurface"
+                       , &semantic::MeshConfig::closedSurface)
+        .def_readwrite("worldCrs"
+                       , &semantic::MeshConfig::worldCrs)
         ;
 
     pysupport::fillEnum<semantic::Material>
@@ -350,6 +494,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         def("mesh", &py::meshRectangularRoof2);
         def("mesh", &py::meshBuilding2);
         def("mesh", &py::meshTree2);
+        def("mesh", &py::meshPole2);
         def("mesh", &py::meshWorld2);
     }
 }

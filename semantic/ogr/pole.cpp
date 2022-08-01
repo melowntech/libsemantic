@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 Melown Technologies SE
+ * Copyright (c) 2022 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,45 +24,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <algorithm>
+#include <cmath>
 
-#include "dbglog/dbglog.hpp"
-
-#include "world.hpp"
+#include "../ogr.hpp"
+#include "pole.hpp"
 
 namespace semantic {
 
-const Class Building::cls;
-const Class Tree::cls;
-const Class Railway::cls;
-const Class LaneLine::cls;
-const Class Pole::cls;
-
-Classes classes(const World &world)
+OgrGeometry ogr(const Pole &pole, const math::Point3 &origin)
 {
-    Classes classes;
+    auto cs(std::make_unique< ::OGRCircularString>());
 
-    // ENTITY: update when adding a new entity
-    if (!world.buildings.empty()) { classes.push_back(Class::building); }
+    const math::Point3 center(origin + pole.origin);
 
-    std::sort(classes.begin(), classes.end());
-    return classes;
-}
+    /** Just simple circle at pole origin. Not taking direction into account,
+     *  yet.
+     */
+    cs->addPoint(center(0) - pole.radius, center(1), center(2));
+    cs->addPoint(center(0) + pole.radius, center(1), center(2));
+    cs->addPoint(center(0) - pole.radius, center(1), center(2));
 
-Classes classes(const Classes &l, const Classes &r)
-{
-    Classes classes;
+    math::Extent verticalExtent;
+    update(verticalExtent, center(2) + pole.length);
+    update(verticalExtent, center(2) + pole.distanceToGround);
 
-    std::set_union(l.begin(), l.end(), r.begin(), r.end()
-                   , std::back_inserter(classes));
-
-    return classes;
-}
-
-void localize(World &world)
-{
-    (void) world;
-    LOG(warn3) << "TODO: implement me";
+    return { std::move(cs), verticalExtent };
 }
 
 } // namespace semantic

@@ -28,6 +28,7 @@
 
 #include "../mesh.hpp"
 #include "building.hpp"
+#include "pole.hpp"
 #include "multipolymesh.hpp"
 
 namespace semantic {

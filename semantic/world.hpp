@@ -39,6 +39,7 @@
 #include "geometry/multipolymesh.hpp"
 
 #include "roof.hpp"
+#include "tree.hpp"
 
 namespace semantic {
 
@@ -48,6 +49,8 @@ UTILITY_GENERATE_ENUM(Class,
                       ((building))
                       ((tree))
                       ((railway))
+                      ((laneLine))
+                      ((pole))
                       )
 
 typedef std::vector<Class> Classes;
@@ -88,23 +91,17 @@ struct Tree : Entity {
     static const constexpr Class cls = Class::tree;
     typedef std::vector<Tree> list;
 
-    enum class Type { deciduous, coniferous };
+    tree::Instance instance;
 
-    Type type = Type::deciduous;
-    math::Point3 center;
-    double a = 0.0;
-    double b = 0.0;
-    std::vector<double> harmonics;
+    tree::Kind kind() const {
+        return static_cast<tree::Kind>(instance.which());
+    }
+
+    // needed by python bindings
+    bool operator==(const Tree &r) const;
 };
 
-/** Tree subclasses.
- */
-UTILITY_GENERATE_ENUM_IO(Tree::Type,
-                         ((deciduous))
-                         ((coniferous))
-                         )
-
-/** Building. Only roofs so far, facades are implicit.
+/** Railroad
  */
 struct Railway : Entity {
     /** Entity class.
@@ -117,6 +114,39 @@ struct Railway : Entity {
     typedef std::vector<int> Line;
     typedef std::vector<Line> Lines;
     Lines lines;
+};
+
+/** LaneLine
+ */
+struct LaneLine : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::laneLine;
+    typedef std::vector<LaneLine> list;
+
+    math::Points3 vertices;
+
+    struct Line : Entity {
+        std::vector<int> polyline;
+        bool dashed;
+    };
+    typedef std::vector<Line> Lines;
+    Lines lines;
+};
+
+/** Pole
+ */
+struct Pole : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::pole;
+
+    math::Point3 direction = { 0.0, 0.0, 1.0 };
+    double length = 0.0;
+    double distanceToGround = 0.0;
+    double radius = 0.0;
+
+    typedef std::vector<Pole> list;
 };
 
 /** Semantic world.
@@ -146,6 +176,14 @@ struct World {
     /** All railways in the world.
      */
     Railway::list railways;
+
+    /** All lane lines in the world.
+     */
+    LaneLine::list laneLines;
+
+    /** All poles in the world.
+     */
+    Pole::list poles;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -177,6 +215,8 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
     case Class::railway: op(world.railways); break;
+    case Class::laneLine: op(world.laneLines); break;
+    case Class::pole: op(world.poles); break;
     }
 }
 
@@ -187,6 +227,8 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::building: op(world.buildings); break;
     case Class::tree: op(world.trees); break;
     case Class::railway: op(world.railways); break;
+    case Class::laneLine: op(world.laneLines); break;
+    case Class::pole: op(world.poles); break;
     }
 }
 
