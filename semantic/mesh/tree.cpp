@@ -56,10 +56,10 @@ geometry::Mesh newMeshIcosahedronRaw()
     geometry::Mesh mesh;
 
     // https://www.danielsieger.com/blog/2021/01/03/generating-platonic-solids.html
-
-    constexpr double phi = (1.0f + sqrt(5.0f)) * 0.5f; // golden ratio
-    constexpr double a = 1.0f;
-    constexpr double b = 1.0f / phi;
+    
+    const double phi = (1.0 + std::sqrt(5.0)) * 0.5; // golden ratio
+    const double a = 1.0;
+    const double b = 1.0 / phi;
 
     mesh.vertices.emplace_back(math::normalize(math::Point3(0, +b, -a)));
     mesh.vertices.emplace_back(math::normalize(math::Point3(+b, +a, 0)));

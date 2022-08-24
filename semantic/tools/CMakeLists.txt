@@ -16,6 +16,9 @@ target_link_libraries(semantic2obj ${MODULE_LIBRARIES})
 target_compile_definitions(semantic2obj PRIVATE ${MODULE_DEFINITIONS})
 buildsys_binary(semantic2obj)
 
+define_module(BINARY semantic2semantic
+  DEPENDS semantic service utility
+  )
 # Simple format checker, load and saves semantic world file.
 set(semantic2semantic_SOURCES
   semantic2semantic.cpp
@@ -26,6 +29,9 @@ target_link_libraries(semantic2semantic ${MODULE_LIBRARIES})
 target_compile_definitions(semantic2semantic PRIVATE ${MODULE_DEFINITIONS})
 buildsys_binary(semantic2semantic)
 
+define_module(BINARY semantic2gpkg
+  DEPENDS semantic service utility
+  )
 # semantic world to (semantic) GeoPackage
 set(semantic2gpkg_SOURCES
   semantic2gpkg.cpp
@@ -36,6 +42,9 @@ target_link_libraries(semantic2gpkg ${MODULE_LIBRARIES})
 target_compile_definitions(semantic2gpkg PRIVATE ${MODULE_DEFINITIONS})
 buildsys_binary(semantic2gpkg)
 
+define_module(BINARY gpkg2semantic
+  DEPENDS semantic service utility
+  )
 # (semantic) GeoPackage to semantic world
 set(gpkg2semantic_SOURCES
   gpkg2semantic.cpp
