@@ -58,11 +58,11 @@ geometry::Mesh newMeshIcosahedronRaw()
     // https://www.danielsieger.com/blog/2021/01/03/generating-platonic-solids.html
     
 #ifdef _WIN32
-    const double phi = (1.0 + sqrt(5.0)) * 0.5; // golden ratio
+    const double phi = (1.0 + std::sqrt(5.0)) * 0.5; // golden ratio
     const double a = 1.0;
     const double b = 1.0 / phi;
 #else
-    constexpr double phi = (1.0f + sqrt(5.0f)) * 0.5f; // golden ratio
+    constexpr double phi = (1.0f + std::sqrt(5.0)) * 0.5; // golden ratio
     constexpr double a = 1.0f;
     constexpr double b = 1.0f / phi;
 #endif
