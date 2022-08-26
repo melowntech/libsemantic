@@ -52,7 +52,8 @@ public:
     Index point(const math::Point3 &p) {
         auto fcache(cache_.find(p));
         if (fcache == cache_.end()) {
-            fcache = cache_.emplace(p, mesh_.vertices.size()).first;
+            fcache = cache_.emplace(p,
+                static_cast<Index>(mesh_.vertices.size())).first;
             mesh_.vertices.push_back(p);
         }
         last_ = &fcache->first;
