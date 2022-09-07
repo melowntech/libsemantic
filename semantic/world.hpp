@@ -128,7 +128,8 @@ struct LaneLine : Entity {
 
     struct Line : Entity {
         std::vector<int> polyline;
-        bool dashed;
+        bool isDashed;
+        bool isDouble;
     };
     typedef std::vector<Line> Lines;
     Lines lines;

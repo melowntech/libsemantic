@@ -261,7 +261,8 @@ void parse(LaneLine::Lines &lines, const Json::Value &value)
         LaneLine::Line &line = lines.back();
 
         Json::get(line.id, item, "id");
-        Json::get(line.dashed, item, "dashed");
+        Json::get(line.isDashed, item, "isDashed");
+        Json::get(line.isDouble, item, "isDouble");
 
         parse(line.polyline, Json::check(item, "polyline", Json::arrayValue));
     }
@@ -518,7 +519,8 @@ void build(Json::Value &value, const LaneLine::Lines &lines)
         auto &item(value.append(Json::objectValue));
 
         item["id"] = line.id;
-        item["dashed"] = line.dashed;
+        item["isDashed"] = line.isDashed;
+        item["isDouble"] = line.isDouble;
         build(item["polyline"], line.polyline);
     }
 }

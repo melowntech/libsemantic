@@ -422,7 +422,8 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
             .def_readwrite("id", &semantic::LaneLine::Line::id)
             .def_readwrite("polyline", &semantic::LaneLine::Line::polyline)
-            .def_readwrite("dashed", &semantic::LaneLine::Line::dashed)
+            .def_readwrite("isDashed", &semantic::LaneLine::Line::isDashed)
+            .def_readwrite("isDouble", &semantic::LaneLine::Line::isDouble)
             ;
     }
 
