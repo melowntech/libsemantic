@@ -443,6 +443,24 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::Pole::list>("list");
     }
 
+
+    auto TrafficSign = class_<semantic::TrafficSign>("TrafficSign",
+                              init<const semantic::TrafficSign&>())
+        .def(init<>())
+
+        .def_readwrite("normal", &semantic::TrafficSign::normal)
+        .def_readwrite("width", &semantic::TrafficSign::width)
+        .def_readwrite("height", &semantic::TrafficSign::height)
+        .def_readwrite("classId", &semantic::TrafficSign::classId)
+        ;
+    py::addCommon(TrafficSign);
+
+    {
+        bp::scope scope(TrafficSign);
+
+        pysupport::vector<semantic::TrafficSign::list>("list");
+    }
+
     // IO
 
     pysupport::fillEnum<semantic::Format>

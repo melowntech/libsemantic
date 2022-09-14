@@ -51,6 +51,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((railway))
                       ((laneLine))
                       ((pole))
+                      ((trafficSign))
                       )
 
 typedef std::vector<Class> Classes;
@@ -149,6 +150,22 @@ struct Pole : Entity {
     typedef std::vector<Pole> list;
 };
 
+/** TrafficSign
+ */
+struct TrafficSign : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::trafficSign;
+
+    math::Point3 normal = { 1.0, 0.0, 0.0 };
+    double width = 0.0;
+    double height = 0.0;
+    double classId = 0.0;
+
+    typedef std::vector<TrafficSign> list;
+};
+
+
 /** Semantic world.
  *
  * NB: Contains only a list of buildings, so far.
@@ -184,6 +201,10 @@ struct World {
     /** All poles in the world.
      */
     Pole::list poles;
+
+    /** All traffic signs in the world.
+     */
+    TrafficSign::list trafficSigns;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -217,6 +238,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::railway: op(world.railways); break;
     case Class::laneLine: op(world.laneLines); break;
     case Class::pole: op(world.poles); break;
+    case Class::trafficSign: op(world.trafficSigns); break;
     }
 }
 
@@ -229,6 +251,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::railway: op(world.railways); break;
     case Class::laneLine: op(world.laneLines); break;
     case Class::pole: op(world.poles); break;
+    case Class::trafficSign: op(world.trafficSigns); break;
     }
 }
 
