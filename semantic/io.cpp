@@ -289,7 +289,7 @@ void parse(TrafficSign &trafficSign, const Json::Value &value)
     parse(trafficSign.normal, Json::check(value, "normal", Json::arrayValue));
     Json::get(trafficSign.width, value, "width");
     Json::get(trafficSign.height, value, "height");
-    Json::get(trafficSign.classId, value, "classId");
+    parse(trafficSign.classId, Json::check(value, "classId", Json::objectValue));
 }
 
 template <typename EntityType>
@@ -320,7 +320,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.railways, value, "railways");
     parse(world.laneLines, value, "laneLines");
     parse(world.poles, value, "poles");
-    parse(world.trafficSign, value, "trafficSign");
+    parse(world.trafficSigns, value, "trafficSign");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -563,7 +563,7 @@ void build(Json::Value &value, const TrafficSign &trafficSign
     build(value["normal"], trafficSign.normal);
     value["width"] = trafficSign.width;
     value["height"] = trafficSign.height;
-    value["classId"] =  trafficSign.classId;
+    build(value["classId"], trafficSign.classId);
 }
 
 

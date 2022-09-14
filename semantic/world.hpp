@@ -160,7 +160,7 @@ struct TrafficSign : Entity {
     math::Point3 normal = { 1.0, 0.0, 0.0 };
     double width = 0.0;
     double height = 0.0;
-    double classId = 0.0;
+    size_t classId = 0;
 
     typedef std::vector<TrafficSign> list;
 };
