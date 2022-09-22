@@ -283,6 +283,12 @@ void parse(Pole &pole, const Json::Value &value)
     Json::get(pole.radius, value, "radius");
 }
 
+void parse(Lamp &lamp, const Json::Value &value)
+{
+    parse(static_cast<Entity&>(lamp), value);
+    Json::get(lamp.mount, value, "mount");
+}
+
 template <typename EntityType>
 void parse(std::vector<EntityType> &entities, const Json::Value &container
            , const char *name)
@@ -311,6 +317,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.railways, value, "railways");
     parse(world.laneLines, value, "laneLines");
     parse(world.poles, value, "poles");
+    parse(world.lamps, value, "lamps");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -544,6 +551,13 @@ void build(Json::Value &value, const Pole &pole
     value["radius"] =  pole.radius;
 }
 
+void build(Json::Value &value, const Lamp &lamp
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(lamp), shift);
+    value["mount"] = lamp.mount;
+}
+
 template <typename EntityType>
 void build(Json::Value &container, const char *name
            , const std::vector<EntityType> &entities
@@ -569,6 +583,7 @@ void build(Json::Value &value, const World &world)
     build(value, "railways", world.railways);
     build(value, "laneLines", world.laneLines);
     build(value, "poles", world.poles);
+    build(value, "lamps", world.lamps);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -708,5 +723,6 @@ SEMANTIC_DEFINE_ENTITY_IO_PAIR(Tree)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Railway)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(LaneLine)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Pole)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(Lamp)
 
 } // namespace semantic
