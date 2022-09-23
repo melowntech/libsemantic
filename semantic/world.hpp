@@ -51,6 +51,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((railway))
                       ((laneLine))
                       ((pole))
+                      ((lamp))
                       )
 
 typedef std::vector<Class> Classes;
@@ -150,6 +151,17 @@ struct Pole : Entity {
     typedef std::vector<Pole> list;
 };
 
+/** Lamp
+ */
+struct Lamp : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::lamp;
+    typedef std::vector<Lamp> list;
+
+    std::string mount = "pole";
+};
+
 /** Semantic world.
  *
  * NB: Contains only a list of buildings, so far.
@@ -185,6 +197,10 @@ struct World {
     /** All poles in the world.
      */
     Pole::list poles;
+
+    /** All lamps in the world.
+     */
+    Lamp::list lamps;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -218,6 +234,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::railway: op(world.railways); break;
     case Class::laneLine: op(world.laneLines); break;
     case Class::pole: op(world.poles); break;
+    case Class::lamp: op(world.lamps); break;
     }
 }
 
@@ -230,6 +247,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::railway: op(world.railways); break;
     case Class::laneLine: op(world.laneLines); break;
     case Class::pole: op(world.poles); break;
+    case Class::lamp: op(world.lamps); break;
     }
 }
 
