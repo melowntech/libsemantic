@@ -290,6 +290,12 @@ void parse(Lamp &lamp, const Json::Value &value)
     Json::get(lamp.mount, value, "mount");
 }
 
+void parse(Manhole &manhole, const Json::Value &value)
+{
+    parse(static_cast<Entity&>(manhole), value);
+    Json::get(manhole.shape, value, "shape");
+}
+
 template <typename EntityType>
 void parse(std::vector<EntityType> &entities, const Json::Value &container
            , const char *name)
@@ -319,6 +325,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.laneLines, value, "laneLines");
     parse(world.poles, value, "poles");
     parse(world.lamps, value, "lamps");
+    parse(world.manholes, value, "manholes");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -560,6 +567,13 @@ void build(Json::Value &value, const Lamp &lamp
     value["mount"] = lamp.mount;
 }
 
+void build(Json::Value &value, const Manhole &manhole
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(manhole), shift);
+    value["shape"] = manhole.shape;
+}
+
 template <typename EntityType>
 void build(Json::Value &container, const char *name
            , const std::vector<EntityType> &entities
@@ -586,6 +600,7 @@ void build(Json::Value &value, const World &world)
     build(value, "laneLines", world.laneLines);
     build(value, "poles", world.poles);
     build(value, "lamps", world.lamps);
+    build(value, "manholes", world.manholes);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -726,5 +741,6 @@ SEMANTIC_DEFINE_ENTITY_IO_PAIR(Railway)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(LaneLine)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Pole)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Lamp)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(Manhole)
 
 } // namespace semantic

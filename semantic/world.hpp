@@ -52,6 +52,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((laneLine))
                       ((pole))
                       ((lamp))
+                      ((manhole))
                       )
 
 typedef std::vector<Class> Classes;
@@ -162,6 +163,17 @@ struct Lamp : Entity {
     std::string mount = "pole";
 };
 
+/** Manhole
+ */
+struct Manhole : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::manhole;
+    typedef std::vector<Manhole> list;
+
+    std::string shape = "none";
+};
+
 /** Semantic world.
  *
  * NB: Contains only a list of buildings, so far.
@@ -201,6 +213,10 @@ struct World {
     /** All lamps in the world.
      */
     Lamp::list lamps;
+
+    /** All manholes in the world.
+     */
+    Manhole::list manholes;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -235,6 +251,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::laneLine: op(world.laneLines); break;
     case Class::pole: op(world.poles); break;
     case Class::lamp: op(world.lamps); break;
+    case Class::manhole: op(world.manholes); break;
     }
 }
 
@@ -248,6 +265,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::laneLine: op(world.laneLines); break;
     case Class::pole: op(world.poles); break;
     case Class::lamp: op(world.lamps); break;
+    case Class::manhole: op(world.manholes); break;
     }
 }
 
