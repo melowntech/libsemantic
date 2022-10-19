@@ -26,6 +26,7 @@ set(semantic_SOURCES
   mesh/tree.hpp mesh/tree.cpp
   mesh/multipolymesh.hpp mesh/multipolymesh.cpp
   mesh/pole.hpp mesh/pole.cpp
+  mesh/lamp.hpp mesh/lamp.cpp
 
   ogr.hpp
   ogr/ogr.cpp ogr/ogr.incl.hpp
@@ -35,6 +36,7 @@ set(semantic_SOURCES
   ogr/roof/rectangular.cpp
   ogr/tree.hpp ogr/tree.cpp
   ogr/pole.hpp ogr/pole.cpp
+  ogr/lamp.hpp ogr/lamp.cpp
 
   featurelayers.hpp featurelayers.cpp
 

@@ -288,6 +288,7 @@ void parse(Lamp &lamp, const Json::Value &value)
 {
     parse(static_cast<Entity&>(lamp), value);
     Json::get(lamp.mount, value, "mount");
+    parse(lamp.dimensions, Json::check(value, "dimensions", Json::arrayValue));
 }
 
 void parse(Manhole &manhole, const Json::Value &value)
@@ -565,6 +566,7 @@ void build(Json::Value &value, const Lamp &lamp
 {
     build(value, static_cast<const Entity&>(lamp), shift);
     value["mount"] = lamp.mount;
+    build(value["dimensions"], lamp.dimensions);
 }
 
 void build(Json::Value &value, const Manhole &manhole

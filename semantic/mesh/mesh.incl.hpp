@@ -37,6 +37,7 @@
 #include "building.hpp"
 #include "tree.hpp"
 #include "pole.hpp"
+#include "lamp.hpp"
 
 namespace semantic {
 
@@ -69,6 +70,14 @@ void mesh(const Pole &pole, const MeshConfig &config
 }
 
 template <typename MeshCallback>
+void mesh(const Lamp &lamp, const MeshConfig &config
+          , const math::Point3 &origin
+          , const MeshCallback &meshCallback)
+{
+   meshCallback(lamp, mesh(lamp, config, origin));
+}
+
+template <typename MeshCallback>
 void mesh(const World &world, const MeshConfig &config
           , const MeshCallback &meshCallback)
 {
@@ -81,6 +90,7 @@ void mesh(const World &world, const MeshConfig &config
     SEMANTIC_ENTITY_DISTRIBUTE(buildings);
     SEMANTIC_ENTITY_DISTRIBUTE(trees);
     SEMANTIC_ENTITY_DISTRIBUTE(poles);
+    SEMANTIC_ENTITY_DISTRIBUTE(lamps);
 
 #undef SEMANTIC_ENTITY_DISTRIBUTE
 }

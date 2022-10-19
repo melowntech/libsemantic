@@ -160,7 +160,8 @@ struct Lamp : Entity {
     static const constexpr Class cls = Class::lamp;
     typedef std::vector<Lamp> list;
 
-    std::string mount = "pole";
+    std::string mount = "none";
+    math::Points3 dimensions;
 };
 
 /** Manhole
