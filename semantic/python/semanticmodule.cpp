@@ -454,7 +454,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
     auto Lamp = class_<semantic::Lamp>("Lamp", init<const semantic::Lamp&>())
         .def(init<>())
 
-        .def_readwrite("shape", &semantic::Lamp::shape)
+        .def_readwrite("mount", &semantic::Lamp::mount)
         .def_readwrite("dimensions", &semantic::Lamp::dimensions)
         ;
     py::addCommon(Lamp);

@@ -37,6 +37,7 @@ const Class Tree::cls;
 const Class Railway::cls;
 const Class LaneLine::cls;
 const Class Pole::cls;
+const Class Lamp::cls;
 
 Classes classes(const World &world)
 {
