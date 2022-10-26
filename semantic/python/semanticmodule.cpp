@@ -163,6 +163,12 @@ geometry::Mesh meshLamp2(const Lamp &lamp, const MeshConfig &config
     return semantic::lod2::mesh(lamp, config, origin);
 }
 
+geometry::Mesh meshManhole2(const Manhole &manhole, const MeshConfig &config
+                         , const math::Point3 &origin)
+{
+    return semantic::lod2::mesh(manhole, config, origin);
+}
+
 geometry::Mesh meshWorld2(const World &world, const MeshConfig &config)
 {
     return semantic::mesh(world, config, 2);
@@ -218,6 +224,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("railways", &semantic::World::railways)
         .def_readwrite("laneLines", &semantic::World::laneLines)
         .def_readwrite("lamps", &semantic::World::lamps)
+        .def_readwrite("manholes", &semantic::World::manholes)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -465,6 +472,20 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::Lamp::list>("list");
     }
 
+    auto Manhole = class_<semantic::Manhole>("Manhole", init<const semantic::Manhole&>())
+        .def(init<>())
+
+        .def_readwrite("shape", &semantic::Manhole::shape)
+        .def_readwrite("boundingBox", &semantic::Manhole::boundingBox)
+        ;
+    py::addCommon(Manhole);
+
+    {
+        bp::scope scope(Manhole);
+
+        pysupport::vector<semantic::Manhole::list>("list");
+    }
+
     // IO
 
     pysupport::fillEnum<semantic::Format>
@@ -518,6 +539,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         def("mesh", &py::meshTree2);
         def("mesh", &py::meshPole2);
         def("mesh", &py::meshLamp2);
+        def("mesh", &py::meshManhole2);
         def("mesh", &py::meshWorld2);
     }
 }

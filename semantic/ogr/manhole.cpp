@@ -24,47 +24,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <algorithm>
+#include <cmath>
 
-#include "dbglog/dbglog.hpp"
+#include "../ogr.hpp"
+#include "manhole.hpp"
 
-#include "world.hpp"
-
-namespace semantic {
-
-const Class Building::cls;
-const Class Tree::cls;
-const Class Railway::cls;
-const Class LaneLine::cls;
-const Class Pole::cls;
-const Class Lamp::cls;
-const Class Manhole::cls;
-
-Classes classes(const World &world)
+namespace semantic
 {
-    Classes classes;
-
-    // ENTITY: update when adding a new entity
-    if (!world.buildings.empty()) { classes.push_back(Class::building); }
-
-    std::sort(classes.begin(), classes.end());
-    return classes;
-}
-
-Classes classes(const Classes &l, const Classes &r)
+OgrGeometry ogr(const Manhole& manhole, const math::Point3& origin)
 {
-    Classes classes;
+    auto cs(std::make_unique<::OGRLineString>());
 
-    std::set_union(l.begin(), l.end(), r.begin(), r.end()
-                   , std::back_inserter(classes));
+    const math::Point3 center(origin + manhole.origin);
 
-    return classes;
-}
+    for (const auto& corner : manhole.boundingBox)
+    {
+        cs->addPoint(corner(0) + center(0),
+                     corner(1) + center(1),
+                     corner(2) + center(2));
+    }
 
-void localize(World &world)
-{
-    (void) world;
-    LOG(warn3) << "TODO: implement me";
+    math::Extent verticalExtent;
+    update(verticalExtent, center(2) + 0.05);
+
+    return { std::move(cs), verticalExtent };
 }
 
 } // namespace semantic
