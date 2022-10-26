@@ -35,6 +35,9 @@
 
 #include "../mesh.hpp"
 #include "detail.hpp"
+#include "math/math.hpp"
+
+namespace ublas = boost::numeric::ublas;
 
 namespace semantic
 {
@@ -148,23 +151,46 @@ void meshLamp(geometry::Mesh& out,
               Material material)
 {
     // reusable base mesh
-    static const auto meshBase(newMeshSphereRegular(5));
+    static const auto meshBase(newMeshSphereRegular(2));
 
     geometry::Mesh m(meshBase);
 
-    math::Point3 offset(origin + lamp.origin);
+    math::Point3 offset(origin);
 
-    math::Matrix3 sizes(3,3);
-    for (int i = 0; i < 3; ++i)
-        for (int j = 0; j < 3; ++j)
-        {
-            sizes(i, j) = lamp.dimensions[i][j];
-        }
+    math::Matrix4 transformationMatrix(4,4);
 
-    // scale and shift
+    // fetch all 4 columns of transformation matrix
+    auto e1_(ublas::row( transformationMatrix, 0 ));
+    auto e2_(ublas::row( transformationMatrix, 1 ));
+    auto e3_(ublas::row( transformationMatrix, 2 ));
+    auto e4_(ublas::column( transformationMatrix, 3 ));
+
+    auto e1(ublas::subrange(e1_, 0, 3));
+    auto e2(ublas::subrange(e2_, 0, 3));
+    auto e3(ublas::subrange(e3_, 0, 3));
+    auto e4(ublas::subrange(e4_, 0, 3));
+
+    // reset last row to (0, 0, 0, 1)
+    ublas::row(transformationMatrix, 3) = ublas::unit_vector<double>(4, 3);
+
+    // compute the other elements 
+    // use crossProduct to preserve orientation
+    e1 = math::normalize(lamp.dimensions[0]);
+    e2 = math::normalize(math::crossProduct(lamp.dimensions[2], e1));
+    e3 = math::crossProduct( e1, e2);
+
+    // scale according to original length
+    e1 = math::length(lamp.dimensions[0]) * e1;
+    e2 = math::length(lamp.dimensions[1]) * e2;
+    e3 = math::length(lamp.dimensions[2]) * e3;
+
+    // add shift
+    e4 = offset;
+
+    // transform
     for (auto& v : m.vertices)
     {
-        v = math::transform(sizes, v) + offset;
+        v = math::transform(transformationMatrix, v);
     }
 
     // colorize
