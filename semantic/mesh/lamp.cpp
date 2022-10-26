@@ -174,15 +174,12 @@ void meshLamp(geometry::Mesh& out,
     ublas::row(transformationMatrix, 3) = ublas::unit_vector<double>(4, 3);
 
     // compute the other elements 
-    // use crossProduct to preserve orientation
-    e1 = math::normalize(lamp.dimensions[0]);
-    e2 = math::normalize(math::crossProduct(lamp.dimensions[2], e1));
-    e3 = math::crossProduct( e1, e2);
-
-    // scale according to original length
-    e1 = math::length(lamp.dimensions[0]) * e1;
-    e2 = math::length(lamp.dimensions[1]) * e2;
-    e3 = math::length(lamp.dimensions[2]) * e3;
+    e1 = lamp.dimensions[0];
+    e2 = lamp.dimensions[1];
+    e3 = lamp.dimensions[2];
+    
+    // change orientation of vector space
+    if (ublas::inner_prod(math::crossProduct( e1, e2), e3) < 0){e3 = -e3;}
 
     // add shift
     e4 = offset;
