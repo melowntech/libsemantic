@@ -160,9 +160,9 @@ void meshLamp(geometry::Mesh& out,
     math::Matrix4 transformationMatrix(4,4);
 
     // fetch all 4 columns of transformation matrix
-    auto e1_(ublas::row( transformationMatrix, 0 ));
-    auto e2_(ublas::row( transformationMatrix, 1 ));
-    auto e3_(ublas::row( transformationMatrix, 2 ));
+    auto e1_(ublas::column( transformationMatrix, 0 ));
+    auto e2_(ublas::column( transformationMatrix, 1 ));
+    auto e3_(ublas::column( transformationMatrix, 2 ));
     auto e4_(ublas::column( transformationMatrix, 3 ));
 
     auto e1(ublas::subrange(e1_, 0, 3));
