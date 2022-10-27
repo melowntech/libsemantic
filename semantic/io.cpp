@@ -595,7 +595,7 @@ void build(Json::Value &value, const World &world)
 {
     value = Json::objectValue;
 
-    value["srs"] = world.srs.as(geo::SrsDefinition::Type::proj4).toString();
+    value["srs"] = world.srs.as(geo::SrsDefinition::Type::wkt).toString();
 
     build(value["origin"], world.origin);
     build(value, "buildings", world.buildings);
