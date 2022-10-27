@@ -24,47 +24,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <algorithm>
+#ifndef semantic_mesh_manhole_hpp_included_
+#define semantic_mesh_manhole_hpp_included_
 
-#include "dbglog/dbglog.hpp"
+#include "../world.hpp"
 
-#include "world.hpp"
+namespace semantic { namespace lod2 {
 
-namespace semantic {
+geometry::Mesh mesh(const Manhole &manhole, const MeshConfig &config
+                    , const math::Point3 &origin);
 
-const Class Building::cls;
-const Class Tree::cls;
-const Class Railway::cls;
-const Class LaneLine::cls;
-const Class Pole::cls;
-const Class Lamp::cls;
-const Class Manhole::cls;
+} } // namespace semantic::lod2
 
-Classes classes(const World &world)
-{
-    Classes classes;
-
-    // ENTITY: update when adding a new entity
-    if (!world.buildings.empty()) { classes.push_back(Class::building); }
-
-    std::sort(classes.begin(), classes.end());
-    return classes;
-}
-
-Classes classes(const Classes &l, const Classes &r)
-{
-    Classes classes;
-
-    std::set_union(l.begin(), l.end(), r.begin(), r.end()
-                   , std::back_inserter(classes));
-
-    return classes;
-}
-
-void localize(World &world)
-{
-    (void) world;
-    LOG(warn3) << "TODO: implement me";
-}
-
-} // namespace semantic
+#endif // semantic_mesh_manhole_hpp_included_

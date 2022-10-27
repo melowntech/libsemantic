@@ -25,46 +25,72 @@
  */
 
 #include <algorithm>
+#include <cmath>
+#include <map>
+#include <unordered_map>
 
 #include "dbglog/dbglog.hpp"
 
-#include "world.hpp"
+#include "shtools/shtools.hpp"
 
-namespace semantic {
+#include "../mesh.hpp"
+#include "detail.hpp"
 
-const Class Building::cls;
-const Class Tree::cls;
-const Class Railway::cls;
-const Class LaneLine::cls;
-const Class Pole::cls;
-const Class Lamp::cls;
-const Class Manhole::cls;
-
-Classes classes(const World &world)
+namespace semantic
 {
-    Classes classes;
+namespace lod2
+{
+using detail::Index;
+using uint32 = std::uint32_t;
 
-    // ENTITY: update when adding a new entity
-    if (!world.buildings.empty()) { classes.push_back(Class::building); }
+namespace
+{
+void meshManhole(geometry::Mesh& out,
+                 const Manhole& manhole,
+                 const math::Point3& origin,
+                 Material material)
+{
+    geometry::Mesh mesh;
 
-    std::sort(classes.begin(), classes.end());
-    return classes;
+    for (const auto& point : manhole.boundingBox)
+    {
+        mesh.vertices.push_back(point + origin);
+        mesh.vertices.emplace_back(math::Point3(point(0), point(1), -0.005)
+                                   + origin);
+    }
+
+    mesh.faces.emplace_back(0, 2, 1);
+    mesh.faces.emplace_back(3, 1, 2);
+    mesh.faces.emplace_back(6, 0, 7);
+    mesh.faces.emplace_back(1, 7, 0);
+    mesh.faces.emplace_back(4, 6, 5);
+    mesh.faces.emplace_back(7, 5, 6);
+    mesh.faces.emplace_back(2, 4, 3);
+
+    // colorize
+    for (auto& f : mesh.faces)
+    {
+        f.imageId = +material;
+    }
+
+    detail::append(out, mesh);
 }
 
-Classes classes(const Classes &l, const Classes &r)
+} // namespace
+
+geometry::Mesh mesh(const Manhole& manhole,
+                    const MeshConfig& config,
+                    const math::Point3& origin)
 {
-    Classes classes;
+    geometry::Mesh m;
 
-    std::set_union(l.begin(), l.end(), r.begin(), r.end()
-                   , std::back_inserter(classes));
+    math::Point3 manholeOrigin(manhole.origin);
+    if (!config.worldCrs) { manholeOrigin += origin; }
+    meshManhole(m, manhole, manholeOrigin, Material::manhole);
 
-    return classes;
+    return m;
 }
 
-void localize(World &world)
-{
-    (void) world;
-    LOG(warn3) << "TODO: implement me";
-}
+} // namespace lod2
 
 } // namespace semantic

@@ -295,6 +295,7 @@ void parse(Manhole &manhole, const Json::Value &value)
 {
     parse(static_cast<Entity&>(manhole), value);
     Json::get(manhole.shape, value, "shape");
+    parse(manhole.boundingBox, Json::check(value, "boundingBox", Json::arrayValue));
 }
 
 template <typename EntityType>
@@ -574,6 +575,7 @@ void build(Json::Value &value, const Manhole &manhole
 {
     build(value, static_cast<const Entity&>(manhole), shift);
     value["shape"] = manhole.shape;
+    build(value["boundingBox"], manhole.boundingBox);
 }
 
 template <typename EntityType>

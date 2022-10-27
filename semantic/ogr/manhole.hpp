@@ -24,47 +24,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <algorithm>
+#ifndef semantic_ogr_manhole_hpp_included_
+#define semantic_ogr_manhole_hpp_included_
 
-#include "dbglog/dbglog.hpp"
-
-#include "world.hpp"
+#include "../world.hpp"
 
 namespace semantic {
 
-const Class Building::cls;
-const Class Tree::cls;
-const Class Railway::cls;
-const Class LaneLine::cls;
-const Class Pole::cls;
-const Class Lamp::cls;
-const Class Manhole::cls;
-
-Classes classes(const World &world)
-{
-    Classes classes;
-
-    // ENTITY: update when adding a new entity
-    if (!world.buildings.empty()) { classes.push_back(Class::building); }
-
-    std::sort(classes.begin(), classes.end());
-    return classes;
-}
-
-Classes classes(const Classes &l, const Classes &r)
-{
-    Classes classes;
-
-    std::set_union(l.begin(), l.end(), r.begin(), r.end()
-                   , std::back_inserter(classes));
-
-    return classes;
-}
-
-void localize(World &world)
-{
-    (void) world;
-    LOG(warn3) << "TODO: implement me";
-}
+OgrGeometry ogr(const Manhole &manhole, const math::Point3 &origin);
 
 } // namespace semantic
+
+#endif // semantic_ogr_manhole_hpp_included_
