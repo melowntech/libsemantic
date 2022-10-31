@@ -442,7 +442,6 @@ BOOST_PYTHON_MODULE(melown_semantic)
             ;
     }
 
-
     auto Pole = class_<semantic::Pole>("Pole", init<const semantic::Pole&>())
         .def(init<>())
 
@@ -485,6 +484,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         bp::scope scope(Manhole);
 
         pysupport::vector<semantic::Manhole::list>("list");
+    }
 
     auto TrafficSign = class_<semantic::TrafficSign>("TrafficSign",
                               init<const semantic::TrafficSign&>())
