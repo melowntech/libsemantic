@@ -39,6 +39,7 @@ const Class LaneLine::cls;
 const Class Pole::cls;
 const Class Lamp::cls;
 const Class Manhole::cls;
+const Class TrafficSign::cls;
 
 Classes classes(const World &world)
 {

@@ -54,14 +54,23 @@ void parse(math::Size2f &size, const Json::Value &value)
     Json::unpack(value, "Size2f", size.width, size.height);
 }
 
-void parse(math::Point2 &point, const Json::Value &value)
+template<typename T>
+void parse(math::Point2_<T> &point, const Json::Value &value)
 {
     Json::unpack(value, "Point2", point(0), point(1));
 }
 
-void parse(math::Point3 &point, const Json::Value &value)
+template<typename T>
+void parse(math::Point3_<T> &point, const Json::Value &value)
 {
     Json::unpack(value, "Point3", point(0), point(1), point(2));
+}
+
+template<typename T>
+void parse(math::Extents2_<T> &extents, const Json::Value &value)
+{
+    parse(extents.ll, Json::check(value, "ll", Json::arrayValue));
+    parse(extents.ur, Json::check(value, "ur", Json::arrayValue));
 }
 
 void parse(std::string& str, const Json::Value& value)
@@ -296,6 +305,27 @@ void parse(Manhole &manhole, const Json::Value &value)
     parse(static_cast<Entity&>(manhole), value);
     Json::get(manhole.shape, value, "shape");
     parse(manhole.boundingBox, Json::check(value, "boundingBox", Json::arrayValue));
+
+void parse(TrafficSign::Views &views, const Json::Value &value)
+{
+    views.reserve(value.size());
+    for (const auto &item : value) {
+        views.emplace_back();
+        TrafficSign::View &view = views.back();
+
+        parse(view.boundingBox,
+              Json::check(item, "boundingBox", Json::objectValue));
+        Json::get(view.path, item, "path");
+    }
+}
+
+void parse(TrafficSign &trafficSign, const Json::Value &value)
+{
+    parse(static_cast<Entity&>(trafficSign), value);
+    parse(trafficSign.normal, Json::check(value, "normal", Json::arrayValue));
+    parse(trafficSign.views, Json::check(value, "views", Json::arrayValue));
+    parse(trafficSign.size, Json::check(value, "size", Json::arrayValue));
+    Json::get(trafficSign.className, value, "className");
 }
 
 template <typename EntityType>
@@ -328,6 +358,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.poles, value, "poles");
     parse(world.lamps, value, "lamps");
     parse(world.manholes, value, "manholes");
+    parse(world.trafficSigns, value, "trafficSigns");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -341,19 +372,29 @@ void build(Json::Value &value, const math::Size2f &size)
     value.append(size.height);
 }
 
-void build(Json::Value &value, const math::Point2 &point)
+template<typename T>
+void build(Json::Value &value, const math::Point2_<T> &point)
 {
     value = Json::arrayValue;
     value.append(point(0));
     value.append(point(1));
 }
 
-void build(Json::Value &value, const math::Point3 &point)
+template<typename T>
+void build(Json::Value &value, const math::Point3_<T> &point)
 {
     value = Json::arrayValue;
     value.append(point(0));
     value.append(point(1));
     value.append(point(2));
+}
+
+template<typename T>
+void build(Json::Value &value, const math::Extents2_<T> &extents)
+{
+    value = Json::objectValue;
+    build(value["ll"], extents.ll);
+    build(value["ur"], extents.ur);
 }
 
 void build(Json::Value &value, const std::string &s)
@@ -380,6 +421,11 @@ void build(Json::Value &value, const std::array<double, N> &array)
 {
     value = Json::arrayValue;
     for (const auto &item : array) { value.append(item); }
+}
+
+void build(Json::Value &value, const boost::filesystem::path &path)
+{
+    build(value, path.string());
 }
 
 void build(Json::Value &value, const roof::Rectangular &r)
@@ -562,6 +608,7 @@ void build(Json::Value &value, const Pole &pole
     value["radius"] =  pole.radius;
 }
 
+
 void build(Json::Value &value, const Lamp &lamp
            , const math::Point3 &shift)
 {
@@ -570,6 +617,7 @@ void build(Json::Value &value, const Lamp &lamp
     build(value["dimensions"], lamp.dimensions);
 }
 
+
 void build(Json::Value &value, const Manhole &manhole
            , const math::Point3 &shift)
 {
@@ -577,6 +625,30 @@ void build(Json::Value &value, const Manhole &manhole
     value["shape"] = manhole.shape;
     build(value["boundingBox"], manhole.boundingBox);
 }
+
+
+void build(Json::Value &value, const TrafficSign::Views &views)
+{
+    value = Json::arrayValue;
+    for (const auto &view : views) {
+        auto &item(value.append(Json::objectValue));
+
+        build(item["path"], view.path);
+        build(item["boundingBox"], view.boundingBox);
+    }
+}
+
+void build(Json::Value &value, const TrafficSign &trafficSign
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(trafficSign), shift);
+
+    build(value["normal"], trafficSign.normal);
+    build(value["className"], trafficSign.className);
+    build(value["views"], trafficSign.views);
+    build(value["size"], trafficSign.size);
+}
+
 
 template <typename EntityType>
 void build(Json::Value &container, const char *name
@@ -605,6 +677,7 @@ void build(Json::Value &value, const World &world)
     build(value, "poles", world.poles);
     build(value, "lamps", world.lamps);
     build(value, "manholes", world.manholes);
+    build(value, "trafficSigns", world.trafficSigns);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -746,5 +819,6 @@ SEMANTIC_DEFINE_ENTITY_IO_PAIR(LaneLine)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Pole)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Lamp)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Manhole)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(TrafficSign)
 
 } // namespace semantic

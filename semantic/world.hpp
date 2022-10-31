@@ -53,6 +53,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((pole))
                       ((lamp))
                       ((manhole))
+                      ((trafficSign))
                       )
 
 typedef std::vector<Class> Classes;
@@ -176,6 +177,36 @@ struct Manhole : Entity {
     math::Points3 boundingBox;
 };
 
+/** TrafficSign
+ */
+struct TrafficSign : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::trafficSign;
+
+    math::Point3 normal;
+    math::Size2f size;
+    std::string className = "not_defined";
+
+    struct View {
+        boost::filesystem::path path;
+        math::Extents2i boundingBox;
+
+        // needed by python bindings
+        inline bool operator==(const View &r) const
+        {
+            return (path == r.path) && (boundingBox == r.boundingBox);
+        }
+
+        // inline bool View::operator==(const View &v) const
+    };
+    typedef std::vector<View> Views;
+    Views views;
+
+    typedef std::vector<TrafficSign> list;
+};
+
+
 /** Semantic world.
  *
  * NB: Contains only a list of buildings, so far.
@@ -219,6 +250,10 @@ struct World {
     /** All manholes in the world.
      */
     Manhole::list manholes;
+
+    /** All traffic signs in the world.
+     */
+    TrafficSign::list trafficSigns;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -254,6 +289,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::pole: op(world.poles); break;
     case Class::lamp: op(world.lamps); break;
     case Class::manhole: op(world.manholes); break;
+    case Class::trafficSign: op(world.trafficSigns); break;
     }
 }
 
@@ -268,6 +304,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::pole: op(world.poles); break;
     case Class::lamp: op(world.lamps); break;
     case Class::manhole: op(world.manholes); break;
+    case Class::trafficSign: op(world.trafficSigns); break;
     }
 }
 
