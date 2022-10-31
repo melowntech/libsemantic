@@ -157,10 +157,24 @@ struct TrafficSign : Entity {
      */
     static const constexpr Class cls = Class::trafficSign;
 
-    math::Point3 normal = { 1.0, 0.0, 0.0 };
-    double width = 0.0;
-    double height = 0.0;
-    size_t classId = 0;
+    math::Point3 normal;
+    math::Size2f size;
+    std::string className = "not_defined";
+
+    struct View {
+        boost::filesystem::path path;
+        math::Extents2i boundingBox;
+
+        // needed by python bindings
+        inline bool operator==(const View &r) const
+        {
+            return (path == r.path) && (boundingBox == r.boundingBox);
+        }
+
+        // inline bool View::operator==(const View &v) const
+    };
+    typedef std::vector<View> Views;
+    Views views;
 
     typedef std::vector<TrafficSign> list;
 };

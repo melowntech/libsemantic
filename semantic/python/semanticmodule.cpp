@@ -211,6 +211,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("poles", &semantic::World::poles)
         .def_readwrite("railways", &semantic::World::railways)
         .def_readwrite("laneLines", &semantic::World::laneLines)
+        .def_readwrite("trafficSigns", &semantic::World::trafficSigns)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -449,9 +450,8 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def(init<>())
 
         .def_readwrite("normal", &semantic::TrafficSign::normal)
-        .def_readwrite("width", &semantic::TrafficSign::width)
-        .def_readwrite("height", &semantic::TrafficSign::height)
-        .def_readwrite("classId", &semantic::TrafficSign::classId)
+        .def_readwrite("size", &semantic::TrafficSign::size)
+        .def_readwrite("className", &semantic::TrafficSign::className)
         ;
     py::addCommon(TrafficSign);
 
@@ -459,6 +459,16 @@ BOOST_PYTHON_MODULE(melown_semantic)
         bp::scope scope(TrafficSign);
 
         pysupport::vector<semantic::TrafficSign::list>("list");
+        pysupport::vector<semantic::TrafficSign::Views>("Views");
+
+        auto View = class_<semantic::TrafficSign::View>
+            ("View", init<const semantic::TrafficSign::View&>())
+            .def(init<>())
+
+            .def_readwrite("path", &semantic::TrafficSign::View::path)
+            .def_readwrite("boundingBox",
+                          &semantic::TrafficSign::View::boundingBox)
+            ;
     }
 
     // IO
