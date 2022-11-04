@@ -174,7 +174,8 @@ struct Manhole : Entity {
     typedef std::vector<Manhole> list;
 
     std::string shape = "none";
-    math::Points3 boundingBox;
+    double angle;
+    math::Size2f size;
 };
 
 /** TrafficSign

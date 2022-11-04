@@ -48,7 +48,7 @@ namespace
 {
 void meshManhole(geometry::Mesh& out,
                  const Manhole& manhole,
-                 const MeshConfig &config,
+                 const MeshConfig& config,
                  const math::Point3& origin,
                  Material material)
 {
@@ -56,14 +56,24 @@ void meshManhole(geometry::Mesh& out,
 
     // mesh for rectangle
     if (manhole.shape == "rectangle")
-        {
-        for (const auto& point : manhole.boundingBox)
-        {
-            mesh.vertices.emplace_back(point + origin);
-        }
+    {
+        const auto w(manhole.size.width);
+        const auto h(manhole.size.height);
+        mesh.vertices.emplace_back(
+            origin
+            + detail::rotate(math::Point3(w / 2, h / 2, 0), manhole.angle));
+        mesh.vertices.emplace_back(
+            origin
+            + detail::rotate(math::Point3(-w / 2, h / 2, 0), manhole.angle));
+        mesh.vertices.emplace_back(
+            origin
+            + detail::rotate(math::Point3(w / 2, -h / 2, 0), manhole.angle));
+        mesh.vertices.emplace_back(
+            origin
+            + detail::rotate(math::Point3(-w / 2, -h / 2, 0), manhole.angle));
 
-        mesh.faces.emplace_back(0, 2, 1);
-        mesh.faces.emplace_back(0, 3, 2);
+        mesh.faces.emplace_back(0, 1, 2);
+        mesh.faces.emplace_back(2, 1, 3);
 
         // colorize
         for (auto& f : mesh.faces)
@@ -75,8 +85,7 @@ void meshManhole(geometry::Mesh& out,
     // mesh for circle
     if (manhole.shape == "circle")
     {
-        auto radius = (math::length(manhole.boundingBox[0] - manhole.boundingBox[1])
-                    + math::length(manhole.boundingBox[1] - manhole.boundingBox[2]))/2;
+        auto radius = (manhole.size.width/2 + manhole.size.height/2) / 2;
         const auto arcPoints(detail::computeArcPoints(config, radius));
 
         Index center(0);
@@ -84,16 +93,15 @@ void meshManhole(geometry::Mesh& out,
 
         mesh.vertices.emplace_back(origin);
 
-        for (Index i(0); i < arcPoints; ++i) 
+        for (Index i(0); i < arcPoints; ++i)
         {
             const double angle((2 * M_PI * i) / arcPoints);
 
             const auto p(detail::rotate(0, radius, 0.0, angle));
-            
+
             mesh.vertices.emplace_back(p + origin);
 
-            const auto &v([&](Index index) -> Index
-            {
+            const auto& v([&](Index index) -> Index {
                 return perimeterOffset + (index + i) % arcPoints;
             });
 
@@ -102,7 +110,6 @@ void meshManhole(geometry::Mesh& out,
     }
 
     detail::append(out, mesh);
-
 }
 
 } // namespace

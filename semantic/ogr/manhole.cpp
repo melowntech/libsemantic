@@ -37,12 +37,17 @@ OgrGeometry ogr(const Manhole& manhole, const math::Point3& origin)
 
     const math::Point3 center(origin + manhole.origin);
 
-    for (const auto& corner : manhole.boundingBox)
-    {
-        cs->addPoint(corner(0) + center(0),
-                     corner(1) + center(1),
-                     corner(2) + center(2));
-    }
+    const auto w(manhole.size.width);
+    const auto h(manhole.size.height);
+
+    auto ur(center + math::Point3(w / 2, h / 2, 0));
+    auto lr(center + math::Point3(-w / 2, h / 2, 0));
+    auto ll(center + math::Point3(-w / 2, -h / 2, 0));
+    auto ul(center + math::Point3(w / 2, -h / 2, 0));
+    cs->addPoint(ur(0), ur(1), ur(2));
+    cs->addPoint(lr(0), lr(1), lr(2));
+    cs->addPoint(ll(0), ll(1), ll(2));
+    cs->addPoint(ul(0), ul(1), ul(2));
 
     math::Extent verticalExtent;
     update(verticalExtent, center(2) + 0.05);
