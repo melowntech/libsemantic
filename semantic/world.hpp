@@ -176,6 +176,7 @@ struct Manhole : Entity {
     std::string shape = "none";
     double angle;
     math::Size2f size;
+    math::Point3 normal;
 };
 
 /** TrafficSign

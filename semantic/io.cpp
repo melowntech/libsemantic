@@ -306,6 +306,7 @@ void parse(Manhole &manhole, const Json::Value &value)
     Json::get(manhole.shape, value, "shape");
     Json::get(manhole.angle, value, "angle");
     parse(manhole.size, Json::check(value, "size", Json::arrayValue));
+    parse(manhole.normal, Json::check(value, "normal", Json::arrayValue));
 }
 
 void parse(TrafficSign::Views &views, const Json::Value &value)
@@ -627,6 +628,7 @@ void build(Json::Value &value, const Manhole &manhole
     value["shape"] = manhole.shape;
     value["angle"] = manhole.angle;
     build(value["size"], manhole.size);
+    build(value["normal"], manhole.normal);
 }
 
 

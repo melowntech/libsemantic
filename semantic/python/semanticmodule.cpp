@@ -478,6 +478,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("shape", &semantic::Manhole::shape)
         .def_readwrite("angle", &semantic::Manhole::angle)
         .def_readwrite("size", &semantic::Manhole::size)
+        .def_readwrite("normal", &semantic::Manhole::normal)
         ;
     py::addCommon(Manhole);
 

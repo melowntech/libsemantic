@@ -24,18 +24,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <algorithm>
 #include <cmath>
 #include <map>
-#include <unordered_map>
 
 #include "dbglog/dbglog.hpp"
 
-#include "shtools/shtools.hpp"
+#include "math/geometry.hpp"
+#include "math/transform.hpp"
 
 #include "../mesh.hpp"
 #include "detail.hpp"
-#include "math/geometry.hpp"
 
 namespace semantic
 {
@@ -46,6 +44,8 @@ using uint32 = std::uint32_t;
 
 namespace
 {
+namespace ublas = boost::numeric::ublas;
+
 void meshManhole(geometry::Mesh& out,
                  const Manhole& manhole,
                  const MeshConfig& config,
@@ -60,17 +60,13 @@ void meshManhole(geometry::Mesh& out,
         const auto w(manhole.size.width);
         const auto h(manhole.size.height);
         mesh.vertices.emplace_back(
-            origin
-            + detail::rotate(math::Point3(w / 2, h / 2, 0), manhole.angle));
+            detail::rotate(math::Point3(w / 2, h / 2, 0), manhole.angle));
         mesh.vertices.emplace_back(
-            origin
-            + detail::rotate(math::Point3(-w / 2, h / 2, 0), manhole.angle));
+            detail::rotate(math::Point3(-w / 2, h / 2, 0), manhole.angle));
         mesh.vertices.emplace_back(
-            origin
-            + detail::rotate(math::Point3(w / 2, -h / 2, 0), manhole.angle));
+            detail::rotate(math::Point3(w / 2, -h / 2, 0), manhole.angle));
         mesh.vertices.emplace_back(
-            origin
-            + detail::rotate(math::Point3(-w / 2, -h / 2, 0), manhole.angle));
+            detail::rotate(math::Point3(-w / 2, -h / 2, 0), manhole.angle));
 
         mesh.faces.emplace_back(0, 1, 2);
         mesh.faces.emplace_back(2, 1, 3);
@@ -85,13 +81,13 @@ void meshManhole(geometry::Mesh& out,
     // mesh for circle
     if (manhole.shape == "circle")
     {
-        auto radius = (manhole.size.width/2 + manhole.size.height/2) / 2;
+        auto radius = (manhole.size.width + manhole.size.height) / 4;
         const auto arcPoints(detail::computeArcPoints(config, radius));
 
         Index center(0);
         Index perimeterOffset(1);
 
-        mesh.vertices.emplace_back(origin);
+        mesh.vertices.emplace_back(math::Point3(0, 0, 0));
 
         for (Index i(0); i < arcPoints; ++i)
         {
@@ -99,7 +95,7 @@ void meshManhole(geometry::Mesh& out,
 
             const auto p(detail::rotate(0, radius, 0.0, angle));
 
-            mesh.vertices.emplace_back(p + origin);
+            mesh.vertices.emplace_back(p);
 
             const auto& v([&](Index index) -> Index {
                 return perimeterOffset + (index + i) % arcPoints;
@@ -107,6 +103,20 @@ void meshManhole(geometry::Mesh& out,
 
             mesh.faces.emplace_back(center, v(0), v(1), 0, 0, 0, +material);
         }
+    }
+
+    math::Point3 zUV(0, 0, 1);
+    math::Point3 n(manhole.normal);
+    const double angle(std::asin(ublas::norm_2(math::crossProduct(zUV, n))));
+
+    for (auto& v : mesh.vertices)
+    {
+        math::Point3 k(math::crossProduct(zUV, n) / angle);
+        const double c(std::cos(angle));
+        const double s(std::sin(angle));
+
+        v = origin + (v * c) + (s * math::crossProduct(k, v))
+            + (k * (ublas::inner_prod(k, v)) * (1 - c));
     }
 
     detail::append(out, mesh);
