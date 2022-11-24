@@ -191,7 +191,7 @@ struct TrafficSign : Entity {
     std::string className = "not_defined";
 
     struct View {
-        boost::filesystem::path path;
+        std::string path;
         math::Extents2i boundingBox;
 
         // needed by python bindings

@@ -495,6 +495,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("normal", &semantic::TrafficSign::normal)
         .def_readwrite("size", &semantic::TrafficSign::size)
         .def_readwrite("className", &semantic::TrafficSign::className)
+        .def_readwrite("views", &semantic::TrafficSign::views)
         ;
     py::addCommon(TrafficSign);
 
