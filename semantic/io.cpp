@@ -426,11 +426,6 @@ void build(Json::Value &value, const std::array<double, N> &array)
     for (const auto &item : array) { value.append(item); }
 }
 
-void build(Json::Value &value, const boost::filesystem::path &path)
-{
-    build(value, path.string());
-}
-
 void build(Json::Value &value, const roof::Rectangular &r)
 {
     value = Json::objectValue;
