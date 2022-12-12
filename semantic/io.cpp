@@ -303,6 +303,9 @@ void parse(Lamp &lamp, const Json::Value &value)
 void parse(Manhole &manhole, const Json::Value &value)
 {
     parse(static_cast<Entity&>(manhole), value);
+    if (!Json::getOpt(manhole.shape, value, "shape")) {
+        manhole.shape = Manhole::Shape::rectangle;
+    }
     Json::get(manhole.shape, value, "shape");
     Json::get(manhole.angle, value, "angle");
     parse(manhole.size, Json::check(value, "size", Json::arrayValue));
@@ -620,7 +623,7 @@ void build(Json::Value &value, const Manhole &manhole
            , const math::Point3 &shift)
 {
     build(value, static_cast<const Entity&>(manhole), shift);
-    value["shape"] = manhole.shape;
+    value["shape"] = boost::lexical_cast<std::string>(manhole.shape);
     value["angle"] = manhole.angle;
     build(value["size"], manhole.size);
     build(value["normal"], manhole.normal);

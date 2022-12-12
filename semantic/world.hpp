@@ -170,14 +170,21 @@ struct Lamp : Entity {
 struct Manhole : Entity {
     /** Entity class.
      */
+    enum class Shape { rectangle, circle };
+    
     static const constexpr Class cls = Class::manhole;
     typedef std::vector<Manhole> list;
 
-    std::string shape = "none";
+    Shape shape = Shape::rectangle;
     double angle;
     math::Size2f size;
     math::Point3 normal;
 };
+
+UTILITY_GENERATE_ENUM_IO(Manhole::Shape,
+                         ((rectangle))
+                         ((circle))
+                        )
 
 /** TrafficSign
  */
