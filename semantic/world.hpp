@@ -158,12 +158,21 @@ struct Pole : Entity {
 struct Lamp : Entity {
     /** Entity class.
      */
+    enum class Mount { none, pole, wire, building };
+
     static const constexpr Class cls = Class::lamp;
     typedef std::vector<Lamp> list;
 
-    std::string mount = "none";
+    Mount mount = Mount::none;
     math::Points3 dimensions;
 };
+
+UTILITY_GENERATE_ENUM_IO(Lamp::Mount,
+                         ((none))
+                         ((pole))
+                         ((wire))
+                         ((building))
+                        )
 
 /** Manhole
  */

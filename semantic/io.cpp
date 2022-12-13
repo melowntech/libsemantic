@@ -296,6 +296,9 @@ void parse(Pole &pole, const Json::Value &value)
 void parse(Lamp &lamp, const Json::Value &value)
 {
     parse(static_cast<Entity&>(lamp), value);
+    if (!Json::getOpt(lamp.mount, value, "mount")) {
+        lamp.mount = Lamp::Mount::none;
+    }
     Json::get(lamp.mount, value, "mount");
     parse(lamp.dimensions, Json::check(value, "dimensions", Json::arrayValue));
 }
@@ -614,7 +617,7 @@ void build(Json::Value &value, const Lamp &lamp
            , const math::Point3 &shift)
 {
     build(value, static_cast<const Entity&>(lamp), shift);
-    value["mount"] = lamp.mount;
+    value["mount"] = boost::lexical_cast<std::string>(lamp.mount);
     build(value["dimensions"], lamp.dimensions);
 }
 
