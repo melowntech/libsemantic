@@ -458,6 +458,9 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::Pole::list>("list");
     }
 
+    pysupport::fillEnum<semantic::Lamp::Mount>
+            ("Mount", "Mount type.");
+
     auto Lamp = class_<semantic::Lamp>("Lamp", init<const semantic::Lamp&>())
         .def(init<>())
 
@@ -471,6 +474,9 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         pysupport::vector<semantic::Lamp::list>("list");
     }
+
+    pysupport::fillEnum<semantic::Manhole::Shape>
+            ("Shape", "Manhole shape.");
 
     auto Manhole = class_<semantic::Manhole>("Manhole", init<const semantic::Manhole&>())
         .def(init<>())
