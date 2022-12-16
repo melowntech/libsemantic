@@ -53,13 +53,14 @@ namespace fs = boost::filesystem;
 
 namespace {
 
+// Colors in BGR
 const utility::small_map<semantic::Material, cv::Vec3b> materialColors(
     { { semantic::Material::default_, cv::Vec3b(220, 220, 220) },
       { semantic::Material::facade, cv::Vec3b(245, 245, 245) },
       { semantic::Material::roof, cv::Vec3b(91, 114, 226) },
-      { semantic::Material::tree_trunk, cv::Vec3b(83, 53, 10) },
-      { semantic::Material::tree_crown_deciduous, cv::Vec3b(86, 137, 61) },
-      { semantic::Material::tree_crown_coniferous, cv::Vec3b(41, 73, 26) },
+      { semantic::Material::tree_trunk, cv::Vec3b(10, 53, 83) },
+      { semantic::Material::tree_crown_deciduous, cv::Vec3b(61, 137, 86) },
+      { semantic::Material::tree_crown_coniferous, cv::Vec3b(26, 73, 41) },
       { semantic::Material::terrace, cv::Vec3b(71, 164, 233) },
       { semantic::Material::pole, cv::Vec3b(74, 79, 85) }
     });
@@ -187,6 +188,7 @@ int Semantic2Vef::run()
 
     meshConfig_.worldCrs = true;
 
+    std::size_t i = 0;
     geometry::Mesh mesh;
     for (const auto &input : input_) {
         // load world
@@ -202,12 +204,7 @@ int Semantic2Vef::run()
             return EXIT_FAILURE;
         }
 
-        // try to get window name from parent folder
-        boost::optional<std::string> windowName = boost::none;
-        if (!input.parent_path().filename().empty())
-        {
-            windowName = input.parent_path().filename().string();
-        }
+        std::string windowName = (boost::format("%08d") % i).str();
 
         math::Matrix4 worldTf(math::identity4());
         worldTf(0, 3) = world.origin(0);
@@ -232,6 +229,7 @@ int Semantic2Vef::run()
         geometry::saveAsObj(mesh,
                             vefMesh.path,
                             vefMesh.mtlPath().filename().string());
+        ++i;
     }
 
     if (srs) { ar.setSrs(srs.value()); }

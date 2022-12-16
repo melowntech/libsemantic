@@ -792,7 +792,7 @@ void save(const World &world, const fs::path &path
     LOG(info1) << "Saving world to " << path  << ".";
     std::ofstream f;
     f.exceptions(std::ios::badbit | std::ios::failbit);
-    f.open(path.string(), (std::ios_base::out | std::ios_base::trunc));
+    f.open(path.string(), (std::ios_base::out | std::ios_base::trunc | std::ios_base::binary));
 
     if (options.compress) {
         bio::filtering_ostream gz;
