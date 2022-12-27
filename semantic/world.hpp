@@ -54,6 +54,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((lamp))
                       ((manhole))
                       ((trafficSign))
+                      ((trafficLight))
                       )
 
 typedef std::vector<Class> Classes;
@@ -224,6 +225,19 @@ struct TrafficSign : Entity {
     typedef std::vector<TrafficSign> list;
 };
 
+/** TrafficLight
+ */
+struct TrafficLight : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::trafficLight;
+
+    double height = 0.0;
+    double radius = 0.0;
+
+    typedef std::vector<TrafficLight> list;
+};
+
 
 /** Semantic world.
  *
@@ -272,6 +286,10 @@ struct World {
     /** All traffic signs in the world.
      */
     TrafficSign::list trafficSigns;
+
+    /** All traffic lights in the world.
+     */
+    TrafficLight::list trafficLights;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -308,6 +326,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::lamp: op(world.lamps); break;
     case Class::manhole: op(world.manholes); break;
     case Class::trafficSign: op(world.trafficSigns); break;
+    case Class::trafficLight: op(world.trafficLights); break;
     }
 }
 
@@ -323,6 +342,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::lamp: op(world.lamps); break;
     case Class::manhole: op(world.manholes); break;
     case Class::trafficSign: op(world.trafficSigns); break;
+    case Class::trafficLight: op(world.trafficLights); break;
     }
 }
 

@@ -226,6 +226,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("lamps", &semantic::World::lamps)
         .def_readwrite("manholes", &semantic::World::manholes)
         .def_readwrite("trafficSigns", &semantic::World::trafficSigns)
+        .def_readwrite("trafficLights", &semantic::World::trafficLights)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -519,6 +520,21 @@ BOOST_PYTHON_MODULE(melown_semantic)
             .def_readwrite("boundingBox",
                           &semantic::TrafficSign::View::boundingBox)
             ;
+    }
+
+    auto TrafficLight = class_<semantic::TrafficLight>("TrafficLight",
+                               init<const semantic::TrafficLight&>())
+        .def(init<>())
+
+        .def_readwrite("height", &semantic::TrafficLight::height)
+        .def_readwrite("radius", &semantic::TrafficLight::radius)
+        ;
+    py::addCommon(TrafficLight);
+
+    {
+        bp::scope scope(TrafficLight);
+
+        pysupport::vector<semantic::TrafficLight::list>("list");
     }
 
     // IO

@@ -337,6 +337,13 @@ void parse(TrafficSign &trafficSign, const Json::Value &value)
     Json::get(trafficSign.className, value, "className");
 }
 
+void parse(TrafficLight &trafficLight, const Json::Value &value)
+{
+    parse(static_cast<Entity&>(trafficLight), value);
+    Json::get(trafficLight.height, value, "height");
+    Json::get(trafficLight.radius, value, "radius");
+}
+
 template <typename EntityType>
 void parse(std::vector<EntityType> &entities, const Json::Value &container
            , const char *name)
@@ -368,6 +375,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.lamps, value, "lamps");
     parse(world.manholes, value, "manholes");
     parse(world.trafficSigns, value, "trafficSigns");
+    parse(world.trafficLights, value, "trafficLights");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -655,6 +663,15 @@ void build(Json::Value &value, const TrafficSign &trafficSign
     build(value["size"], trafficSign.size);
 }
 
+void build(Json::Value &value, const TrafficLight &trafficLight
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(trafficLight), shift);
+
+    value["height"] = trafficLight.height;
+    value["radius"] =  trafficLight.radius;
+}
+
 
 template <typename EntityType>
 void build(Json::Value &container, const char *name
@@ -684,6 +701,7 @@ void build(Json::Value &value, const World &world)
     build(value, "lamps", world.lamps);
     build(value, "manholes", world.manholes);
     build(value, "trafficSigns", world.trafficSigns);
+    build(value, "trafficLights", world.trafficLights);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -826,5 +844,6 @@ SEMANTIC_DEFINE_ENTITY_IO_PAIR(Pole)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Lamp)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Manhole)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(TrafficSign)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(TrafficLight)
 
 } // namespace semantic
