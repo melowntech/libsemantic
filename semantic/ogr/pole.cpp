@@ -46,7 +46,6 @@ OgrGeometry ogr(const Pole &pole, const math::Point3 &origin)
 
     math::Extent verticalExtent;
     update(verticalExtent, center(2) + pole.length);
-    update(verticalExtent, center(2) + pole.distanceToGround);
 
     return { std::move(cs), verticalExtent };
 }

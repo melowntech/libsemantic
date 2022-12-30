@@ -289,7 +289,6 @@ void parse(Pole &pole, const Json::Value &value)
     parse(static_cast<Entity&>(pole), value);
     parse(pole.direction, Json::check(value, "direction", Json::arrayValue));
     Json::get(pole.length, value, "length");
-    Json::get(pole.distanceToGround, value, "distanceToGround");
     Json::get(pole.radius, value, "radius");
 }
 
@@ -616,7 +615,6 @@ void build(Json::Value &value, const Pole &pole
 
     build(value["direction"], pole.direction);
     value["length"] = pole.length;
-    value["distanceToGround"] = pole.distanceToGround;
     value["radius"] =  pole.radius;
 }
 

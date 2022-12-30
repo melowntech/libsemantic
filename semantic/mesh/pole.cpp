@@ -119,7 +119,7 @@ void meshPole(geometry::Mesh &out, const Pole &pole
     if (config.closedSurface) {
         bottomCenter = 1;
         perimeterOffset += 1;
-        vertex(0, 0, pole.distanceToGround);
+        vertex(0, 0, 0);
     }
 
     for (Index i(0); i < arcPoints; ++i) {
@@ -127,7 +127,7 @@ void meshPole(geometry::Mesh &out, const Pole &pole
 
         const auto p(detail::rotate(0, pole.radius, pole.length, angle));
         vertexPoint(p);
-        vertex(p(0), p(1), pole.distanceToGround);
+        vertex(p(0), p(1), 0);
 
         const auto &v([&](Index index) -> Index
         {

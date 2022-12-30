@@ -448,7 +448,6 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         .def_readwrite("direction", &semantic::Pole::direction)
         .def_readwrite("length", &semantic::Pole::length)
-        .def_readwrite("distanceToGround", &semantic::Pole::distanceToGround)
         .def_readwrite("radius", &semantic::Pole::radius)
         ;
     py::addCommon(Pole);
