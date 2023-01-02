@@ -149,6 +149,9 @@ struct Pole : Entity {
     math::Point3 direction = { 0.0, 0.0, 1.0 };
     double length = 0.0;
     double radius = 0.0;
+    std::vector<std::string> lampIds;
+    std::vector<std::string> trafficLightIds;
+    std::vector<std::string> trafficSignIds;
 
     typedef std::vector<Pole> list;
 };
@@ -165,6 +168,7 @@ struct Lamp : Entity {
 
     Mount mount = Mount::none;
     math::Points3 dimensions;
+    std::string poleId;
 };
 
 UTILITY_GENERATE_ENUM_IO(Lamp::Mount,
@@ -205,6 +209,7 @@ struct TrafficSign : Entity {
     math::Point3 normal;
     math::Size2f size;
     std::string className = "not_defined";
+    std::string poleId;
 
     struct View {
         std::string path;
@@ -233,6 +238,7 @@ struct TrafficLight : Entity {
 
     double height = 0.0;
     double radius = 0.0;
+    std::string poleId;
 
     typedef std::vector<TrafficLight> list;
 };

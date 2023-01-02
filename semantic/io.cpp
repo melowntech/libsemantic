@@ -288,6 +288,13 @@ void parse(Pole &pole, const Json::Value &value)
 {
     parse(static_cast<Entity&>(pole), value);
     parse(pole.direction, Json::check(value, "direction", Json::arrayValue));
+    parse(pole.lampIds, Json::check(value, "lampIds", Json::arrayValue));
+    parse(pole.trafficLightIds, Json::check(value,
+                                            "trafficLightIds",
+                                            Json::arrayValue));
+    parse(pole.trafficSignIds, Json::check(value,
+                                           "trafficSignIds",
+                                           Json::arrayValue));
     Json::get(pole.length, value, "length");
     Json::get(pole.radius, value, "radius");
 }
@@ -295,23 +302,18 @@ void parse(Pole &pole, const Json::Value &value)
 void parse(Lamp &lamp, const Json::Value &value)
 {
     parse(static_cast<Entity&>(lamp), value);
-    if (!Json::getOpt(lamp.mount, value, "mount")) {
-        lamp.mount = Lamp::Mount::none;
-    }
-    Json::get(lamp.mount, value, "mount");
     parse(lamp.dimensions, Json::check(value, "dimensions", Json::arrayValue));
+    Json::get(lamp.mount, value, "mount");
+    Json::get(lamp.poleId, value, "poleId");
 }
 
 void parse(Manhole &manhole, const Json::Value &value)
 {
     parse(static_cast<Entity&>(manhole), value);
-    if (!Json::getOpt(manhole.shape, value, "shape")) {
-        manhole.shape = Manhole::Shape::rectangle;
-    }
-    Json::get(manhole.shape, value, "shape");
-    Json::get(manhole.angle, value, "angle");
     parse(manhole.size, Json::check(value, "size", Json::arrayValue));
     parse(manhole.normal, Json::check(value, "normal", Json::arrayValue));
+    Json::get(manhole.shape, value, "shape");
+    Json::get(manhole.angle, value, "angle");
 }
 
 void parse(TrafficSign::Views &views, const Json::Value &value)
@@ -334,6 +336,7 @@ void parse(TrafficSign &trafficSign, const Json::Value &value)
     parse(trafficSign.views, Json::check(value, "views", Json::arrayValue));
     parse(trafficSign.size, Json::check(value, "size", Json::arrayValue));
     Json::get(trafficSign.className, value, "className");
+    Json::get(trafficSign.poleId, value, "poleId");
 }
 
 void parse(TrafficLight &trafficLight, const Json::Value &value)
@@ -341,6 +344,7 @@ void parse(TrafficLight &trafficLight, const Json::Value &value)
     parse(static_cast<Entity&>(trafficLight), value);
     Json::get(trafficLight.height, value, "height");
     Json::get(trafficLight.radius, value, "radius");
+    Json::get(trafficLight.poleId, value, "poleId");
 }
 
 template <typename EntityType>
@@ -614,6 +618,9 @@ void build(Json::Value &value, const Pole &pole
     build(value, static_cast<const Entity&>(pole), shift);
 
     build(value["direction"], pole.direction);
+    build(value["lampIds"], pole.lampIds);
+    build(value["trafficLightIds"], pole.trafficLightIds);
+    build(value["trafficSignIds"], pole.trafficSignIds);
     value["length"] = pole.length;
     value["radius"] =  pole.radius;
 }
@@ -623,8 +630,10 @@ void build(Json::Value &value, const Lamp &lamp
            , const math::Point3 &shift)
 {
     build(value, static_cast<const Entity&>(lamp), shift);
-    value["mount"] = boost::lexical_cast<std::string>(lamp.mount);
+
     build(value["dimensions"], lamp.dimensions);
+    build(value["poleId"], lamp.poleId);
+    value["mount"] = boost::lexical_cast<std::string>(lamp.mount);
 }
 
 
@@ -632,10 +641,11 @@ void build(Json::Value &value, const Manhole &manhole
            , const math::Point3 &shift)
 {
     build(value, static_cast<const Entity&>(manhole), shift);
-    value["shape"] = boost::lexical_cast<std::string>(manhole.shape);
-    value["angle"] = manhole.angle;
+
     build(value["size"], manhole.size);
     build(value["normal"], manhole.normal);
+    value["shape"] = boost::lexical_cast<std::string>(manhole.shape);
+    value["angle"] = manhole.angle;
 }
 
 
@@ -659,12 +669,15 @@ void build(Json::Value &value, const TrafficSign &trafficSign
     build(value["className"], trafficSign.className);
     build(value["views"], trafficSign.views);
     build(value["size"], trafficSign.size);
+    build(value["poleId"], trafficSign.poleId);
 }
 
 void build(Json::Value &value, const TrafficLight &trafficLight
            , const math::Point3 &shift)
 {
     build(value, static_cast<const Entity&>(trafficLight), shift);
+
+    build(value["poleId"], trafficLight.poleId);
 
     value["height"] = trafficLight.height;
     value["radius"] =  trafficLight.radius;

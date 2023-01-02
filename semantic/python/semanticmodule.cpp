@@ -449,6 +449,9 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("direction", &semantic::Pole::direction)
         .def_readwrite("length", &semantic::Pole::length)
         .def_readwrite("radius", &semantic::Pole::radius)
+        .def_readwrite("lampIds", &semantic::Pole::lampIds)
+        .def_readwrite("trafficLightIds", &semantic::Pole::trafficLightIds)
+        .def_readwrite("trafficSignIds", &semantic::Pole::trafficSignIds)
         ;
     py::addCommon(Pole);
 
@@ -466,6 +469,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         .def_readwrite("mount", &semantic::Lamp::mount)
         .def_readwrite("dimensions", &semantic::Lamp::dimensions)
+        .def_readwrite("poleId", &semantic::Lamp::poleId)
         ;
     py::addCommon(Lamp);
 
@@ -502,6 +506,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("size", &semantic::TrafficSign::size)
         .def_readwrite("className", &semantic::TrafficSign::className)
         .def_readwrite("views", &semantic::TrafficSign::views)
+        .def_readwrite("poleId", &semantic::TrafficSign::poleId)
         ;
     py::addCommon(TrafficSign);
 
@@ -527,6 +532,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         .def_readwrite("height", &semantic::TrafficLight::height)
         .def_readwrite("radius", &semantic::TrafficLight::radius)
+        .def_readwrite("poleId", &semantic::TrafficLight::poleId)
         ;
     py::addCommon(TrafficLight);
 
