@@ -157,6 +157,18 @@ geometry::Mesh meshPole2(const Pole &pole, const MeshConfig &config
     return semantic::lod2::mesh(pole, config, origin);
 }
 
+geometry::Mesh meshLamp2(const Lamp &lamp, const MeshConfig &config
+                         , const math::Point3 &origin)
+{
+    return semantic::lod2::mesh(lamp, config, origin);
+}
+
+geometry::Mesh meshManhole2(const Manhole &manhole, const MeshConfig &config
+                         , const math::Point3 &origin)
+{
+    return semantic::lod2::mesh(manhole, config, origin);
+}
+
 geometry::Mesh meshWorld2(const World &world, const MeshConfig &config)
 {
     return semantic::mesh(world, config, 2);
@@ -211,6 +223,10 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("poles", &semantic::World::poles)
         .def_readwrite("railways", &semantic::World::railways)
         .def_readwrite("laneLines", &semantic::World::laneLines)
+        .def_readwrite("lamps", &semantic::World::lamps)
+        .def_readwrite("manholes", &semantic::World::manholes)
+        .def_readwrite("trafficSigns", &semantic::World::trafficSigns)
+        .def_readwrite("trafficLights", &semantic::World::trafficLights)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -422,17 +438,16 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
             .def_readwrite("id", &semantic::LaneLine::Line::id)
             .def_readwrite("polyline", &semantic::LaneLine::Line::polyline)
-            .def_readwrite("dashed", &semantic::LaneLine::Line::dashed)
+            .def_readwrite("isDashed", &semantic::LaneLine::Line::isDashed)
+            .def_readwrite("isDouble", &semantic::LaneLine::Line::isDouble)
             ;
     }
-
 
     auto Pole = class_<semantic::Pole>("Pole", init<const semantic::Pole&>())
         .def(init<>())
 
         .def_readwrite("direction", &semantic::Pole::direction)
         .def_readwrite("length", &semantic::Pole::length)
-        .def_readwrite("distanceToGround", &semantic::Pole::distanceToGround)
         .def_readwrite("radius", &semantic::Pole::radius)
         ;
     py::addCommon(Pole);
@@ -441,6 +456,84 @@ BOOST_PYTHON_MODULE(melown_semantic)
         bp::scope scope(Pole);
 
         pysupport::vector<semantic::Pole::list>("list");
+    }
+
+    pysupport::fillEnum<semantic::Lamp::Mount>
+            ("Mount", "Mount type.");
+
+    auto Lamp = class_<semantic::Lamp>("Lamp", init<const semantic::Lamp&>())
+        .def(init<>())
+
+        .def_readwrite("mount", &semantic::Lamp::mount)
+        .def_readwrite("dimensions", &semantic::Lamp::dimensions)
+        ;
+    py::addCommon(Lamp);
+
+    {
+        bp::scope scope(Lamp);
+
+        pysupport::vector<semantic::Lamp::list>("list");
+    }
+
+    pysupport::fillEnum<semantic::Manhole::Shape>
+            ("Shape", "Manhole shape.");
+
+    auto Manhole = class_<semantic::Manhole>("Manhole", init<const semantic::Manhole&>())
+        .def(init<>())
+
+        .def_readwrite("shape", &semantic::Manhole::shape)
+        .def_readwrite("angle", &semantic::Manhole::angle)
+        .def_readwrite("size", &semantic::Manhole::size)
+        .def_readwrite("normal", &semantic::Manhole::normal)
+        ;
+    py::addCommon(Manhole);
+
+    {
+        bp::scope scope(Manhole);
+
+        pysupport::vector<semantic::Manhole::list>("list");
+    }
+
+    auto TrafficSign = class_<semantic::TrafficSign>("TrafficSign",
+                              init<const semantic::TrafficSign&>())
+        .def(init<>())
+
+        .def_readwrite("normal", &semantic::TrafficSign::normal)
+        .def_readwrite("size", &semantic::TrafficSign::size)
+        .def_readwrite("className", &semantic::TrafficSign::className)
+        .def_readwrite("views", &semantic::TrafficSign::views)
+        ;
+    py::addCommon(TrafficSign);
+
+    {
+        bp::scope scope(TrafficSign);
+
+        pysupport::vector<semantic::TrafficSign::list>("list");
+        pysupport::vector<semantic::TrafficSign::Views>("Views");
+
+        auto View = class_<semantic::TrafficSign::View>
+            ("View", init<const semantic::TrafficSign::View&>())
+            .def(init<>())
+
+            .def_readwrite("path", &semantic::TrafficSign::View::path)
+            .def_readwrite("boundingBox",
+                          &semantic::TrafficSign::View::boundingBox)
+            ;
+    }
+
+    auto TrafficLight = class_<semantic::TrafficLight>("TrafficLight",
+                               init<const semantic::TrafficLight&>())
+        .def(init<>())
+
+        .def_readwrite("height", &semantic::TrafficLight::height)
+        .def_readwrite("radius", &semantic::TrafficLight::radius)
+        ;
+    py::addCommon(TrafficLight);
+
+    {
+        bp::scope scope(TrafficLight);
+
+        pysupport::vector<semantic::TrafficLight::list>("list");
     }
 
     // IO
@@ -495,6 +588,8 @@ BOOST_PYTHON_MODULE(melown_semantic)
         def("mesh", &py::meshBuilding2);
         def("mesh", &py::meshTree2);
         def("mesh", &py::meshPole2);
+        def("mesh", &py::meshLamp2);
+        def("mesh", &py::meshManhole2);
         def("mesh", &py::meshWorld2);
     }
 }

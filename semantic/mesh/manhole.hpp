@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022 Melown Technologies SE
+ * Copyright (c) 2019 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,30 +24,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cmath>
+#ifndef semantic_mesh_manhole_hpp_included_
+#define semantic_mesh_manhole_hpp_included_
 
-#include "../ogr.hpp"
-#include "pole.hpp"
+#include "../world.hpp"
 
-namespace semantic {
+namespace semantic { namespace lod2 {
 
-OgrGeometry ogr(const Pole &pole, const math::Point3 &origin)
-{
-    auto cs(std::make_unique< ::OGRCircularString>());
+geometry::Mesh mesh(const Manhole &manhole, const MeshConfig &config
+                    , const math::Point3 &origin);
 
-    const math::Point3 center(origin + pole.origin);
+} } // namespace semantic::lod2
 
-    /** Just simple circle at pole origin. Not taking direction into account,
-     *  yet.
-     */
-    cs->addPoint(center(0) - pole.radius, center(1), center(2));
-    cs->addPoint(center(0) + pole.radius, center(1), center(2));
-    cs->addPoint(center(0) - pole.radius, center(1), center(2));
-
-    math::Extent verticalExtent;
-    update(verticalExtent, center(2) + pole.length);
-
-    return { std::move(cs), verticalExtent };
-}
-
-} // namespace semantic
+#endif // semantic_mesh_manhole_hpp_included_

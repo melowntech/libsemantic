@@ -35,6 +35,8 @@
 #include "building.hpp"
 #include "tree.hpp"
 #include "pole.hpp"
+#include "lamp.hpp"
+#include "manhole.hpp"
 
 namespace semantic {
 
@@ -60,6 +62,20 @@ void ogr(const Pole &pole, const math::Point3 &origin
 }
 
 template <typename OgrCallback>
+void ogr(const Lamp &lamp, const math::Point3 &origin
+         , const OgrCallback &ogrCallback)
+{
+    ogrCallback(lamp, ogr(lamp, origin));
+}
+
+template <typename OgrCallback>
+void ogr(const Manhole &manhole, const math::Point3 &origin
+         , const OgrCallback &ogrCallback)
+{
+    ogrCallback(manhole, ogr(manhole, origin));
+}
+
+template <typename OgrCallback>
 void ogr(const World &world, const OgrCallback &ogrCallback)
 {
 #define SEMANTIC_ENTITY_DISTRIBUTE(WHAT)                \
@@ -71,6 +87,8 @@ void ogr(const World &world, const OgrCallback &ogrCallback)
     SEMANTIC_ENTITY_DISTRIBUTE(buildings);
     SEMANTIC_ENTITY_DISTRIBUTE(trees);
     SEMANTIC_ENTITY_DISTRIBUTE(poles);
+    SEMANTIC_ENTITY_DISTRIBUTE(lamps);
+    SEMANTIC_ENTITY_DISTRIBUTE(manholes);
 
 #undef SEMANTIC_ENTITY_DISTRIBUTE
 }
