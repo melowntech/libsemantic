@@ -272,6 +272,7 @@ void parse(LaneLine::Lines &lines, const Json::Value &value)
         Json::get(line.id, item, "id");
         Json::get(line.isDashed, item, "isDashed");
         Json::get(line.isDouble, item, "isDouble");
+        Json::get(line.color, item, "color");
 
         parse(line.polyline, Json::check(item, "polyline", Json::arrayValue));
     }
@@ -593,6 +594,7 @@ void build(Json::Value &value, const LaneLine::Lines &lines)
         item["id"] = line.id;
         item["isDashed"] = line.isDashed;
         item["isDouble"] = line.isDouble;
+        item["color"] = boost::lexical_cast<std::string>(line.color);
         build(item["polyline"], line.polyline);
     }
 }

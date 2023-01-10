@@ -417,6 +417,9 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::Railway::Lines>("Lines");
     }
 
+    pysupport::fillEnum<semantic::LaneLine::Color>
+        ("Color", "Color type.");
+
     auto LaneLine = class_<semantic::LaneLine>
         ("LaneLine", init<const semantic::LaneLine&>())
         .def(init<>())
@@ -440,6 +443,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
             .def_readwrite("polyline", &semantic::LaneLine::Line::polyline)
             .def_readwrite("isDashed", &semantic::LaneLine::Line::isDashed)
             .def_readwrite("isDouble", &semantic::LaneLine::Line::isDouble)
+            .def_readwrite("color", &semantic::LaneLine::Line::color)
             ;
     }
 
