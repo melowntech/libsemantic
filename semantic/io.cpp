@@ -320,8 +320,7 @@ void parse(TrafficSign::Views &views, const Json::Value &value)
 {
     views.reserve(value.size());
     for (const auto &item : value) {
-        views.emplace_back();
-        TrafficSign::View &view = views.back();
+        auto &view((views.emplace_back(), views.back()));
 
         parse(view.boundingBox,
               Json::check(item, "boundingBox", Json::objectValue));
