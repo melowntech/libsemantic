@@ -125,7 +125,7 @@ struct Railway : Entity {
 struct LaneLine : Entity {
     /** Entity class.
      */
-    enum class Color { none, white, yellow, red };
+    enum class Color { none, white, yellow, red, blue };
 
     static const constexpr Class cls = Class::laneLine;
     typedef std::vector<LaneLine> list;
@@ -148,6 +148,7 @@ UTILITY_GENERATE_ENUM_IO(LaneLine::Color,
                          ((white))
                          ((yellow))
                          ((red))
+                         ((blue))
                         )
 
 /** Pole
