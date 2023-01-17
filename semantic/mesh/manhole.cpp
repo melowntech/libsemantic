@@ -55,7 +55,7 @@ void meshManhole(geometry::Mesh& out,
     geometry::Mesh mesh;
 
     // mesh for rectangle
-    if (manhole.shape == "rectangle")
+    if (manhole.shape == Manhole::Shape::rectangle)
     {
         const auto w(manhole.size.width);
         const auto h(manhole.size.height);
@@ -79,7 +79,7 @@ void meshManhole(geometry::Mesh& out,
     }
 
     // mesh for circle
-    if (manhole.shape == "circle")
+    if (manhole.shape == Manhole::Shape::circle)
     {
         auto radius = (manhole.size.width + manhole.size.height) / 4;
         const auto arcPoints(detail::computeArcPoints(config, radius));

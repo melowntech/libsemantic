@@ -226,6 +226,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("lamps", &semantic::World::lamps)
         .def_readwrite("manholes", &semantic::World::manholes)
         .def_readwrite("trafficSigns", &semantic::World::trafficSigns)
+        .def_readwrite("trafficLights", &semantic::World::trafficLights)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -447,7 +448,6 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         .def_readwrite("direction", &semantic::Pole::direction)
         .def_readwrite("length", &semantic::Pole::length)
-        .def_readwrite("distanceToGround", &semantic::Pole::distanceToGround)
         .def_readwrite("radius", &semantic::Pole::radius)
         ;
     py::addCommon(Pole);
@@ -457,6 +457,9 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         pysupport::vector<semantic::Pole::list>("list");
     }
+
+    pysupport::fillEnum<semantic::Lamp::Mount>
+            ("Mount", "Mount type.");
 
     auto Lamp = class_<semantic::Lamp>("Lamp", init<const semantic::Lamp&>())
         .def(init<>())
@@ -471,6 +474,9 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         pysupport::vector<semantic::Lamp::list>("list");
     }
+
+    pysupport::fillEnum<semantic::Manhole::Shape>
+            ("Shape", "Manhole shape.");
 
     auto Manhole = class_<semantic::Manhole>("Manhole", init<const semantic::Manhole&>())
         .def(init<>())
@@ -513,6 +519,21 @@ BOOST_PYTHON_MODULE(melown_semantic)
             .def_readwrite("boundingBox",
                           &semantic::TrafficSign::View::boundingBox)
             ;
+    }
+
+    auto TrafficLight = class_<semantic::TrafficLight>("TrafficLight",
+                               init<const semantic::TrafficLight&>())
+        .def(init<>())
+
+        .def_readwrite("height", &semantic::TrafficLight::height)
+        .def_readwrite("radius", &semantic::TrafficLight::radius)
+        ;
+    py::addCommon(TrafficLight);
+
+    {
+        bp::scope scope(TrafficLight);
+
+        pysupport::vector<semantic::TrafficLight::list>("list");
     }
 
     // IO

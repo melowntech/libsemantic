@@ -54,6 +54,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((lamp))
                       ((manhole))
                       ((trafficSign))
+                      ((trafficLight))
                       )
 
 typedef std::vector<Class> Classes;
@@ -147,7 +148,6 @@ struct Pole : Entity {
 
     math::Point3 direction = { 0.0, 0.0, 1.0 };
     double length = 0.0;
-    double distanceToGround = 0.0;
     double radius = 0.0;
 
     typedef std::vector<Pole> list;
@@ -158,26 +158,42 @@ struct Pole : Entity {
 struct Lamp : Entity {
     /** Entity class.
      */
+    enum class Mount { none, pole, wire, building };
+
     static const constexpr Class cls = Class::lamp;
     typedef std::vector<Lamp> list;
 
-    std::string mount = "none";
+    Mount mount = Mount::none;
     math::Points3 dimensions;
 };
+
+UTILITY_GENERATE_ENUM_IO(Lamp::Mount,
+                         ((none))
+                         ((pole))
+                         ((wire))
+                         ((building))
+                        )
 
 /** Manhole
  */
 struct Manhole : Entity {
     /** Entity class.
      */
+    enum class Shape { rectangle, circle };
+    
     static const constexpr Class cls = Class::manhole;
     typedef std::vector<Manhole> list;
 
-    std::string shape = "none";
+    Shape shape = Shape::rectangle;
     double angle;
     math::Size2f size;
     math::Point3 normal;
 };
+
+UTILITY_GENERATE_ENUM_IO(Manhole::Shape,
+                         ((rectangle))
+                         ((circle))
+                        )
 
 /** TrafficSign
  */
@@ -206,6 +222,19 @@ struct TrafficSign : Entity {
     Views views;
 
     typedef std::vector<TrafficSign> list;
+};
+
+/** TrafficLight
+ */
+struct TrafficLight : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::trafficLight;
+
+    double height = 0.0;
+    double radius = 0.0;
+
+    typedef std::vector<TrafficLight> list;
 };
 
 
@@ -256,6 +285,10 @@ struct World {
     /** All traffic signs in the world.
      */
     TrafficSign::list trafficSigns;
+
+    /** All traffic lights in the world.
+     */
+    TrafficLight::list trafficLights;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -292,6 +325,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::lamp: op(world.lamps); break;
     case Class::manhole: op(world.manholes); break;
     case Class::trafficSign: op(world.trafficSigns); break;
+    case Class::trafficLight: op(world.trafficLights); break;
     }
 }
 
@@ -307,6 +341,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::lamp: op(world.lamps); break;
     case Class::manhole: op(world.manholes); break;
     case Class::trafficSign: op(world.trafficSigns); break;
+    case Class::trafficLight: op(world.trafficLights); break;
     }
 }
 

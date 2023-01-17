@@ -289,13 +289,15 @@ void parse(Pole &pole, const Json::Value &value)
     parse(static_cast<Entity&>(pole), value);
     parse(pole.direction, Json::check(value, "direction", Json::arrayValue));
     Json::get(pole.length, value, "length");
-    Json::get(pole.distanceToGround, value, "distanceToGround");
     Json::get(pole.radius, value, "radius");
 }
 
 void parse(Lamp &lamp, const Json::Value &value)
 {
     parse(static_cast<Entity&>(lamp), value);
+    if (!Json::getOpt(lamp.mount, value, "mount")) {
+        lamp.mount = Lamp::Mount::none;
+    }
     Json::get(lamp.mount, value, "mount");
     parse(lamp.dimensions, Json::check(value, "dimensions", Json::arrayValue));
 }
@@ -303,6 +305,9 @@ void parse(Lamp &lamp, const Json::Value &value)
 void parse(Manhole &manhole, const Json::Value &value)
 {
     parse(static_cast<Entity&>(manhole), value);
+    if (!Json::getOpt(manhole.shape, value, "shape")) {
+        manhole.shape = Manhole::Shape::rectangle;
+    }
     Json::get(manhole.shape, value, "shape");
     Json::get(manhole.angle, value, "angle");
     parse(manhole.size, Json::check(value, "size", Json::arrayValue));
@@ -313,8 +318,7 @@ void parse(TrafficSign::Views &views, const Json::Value &value)
 {
     views.reserve(value.size());
     for (const auto &item : value) {
-        views.emplace_back();
-        TrafficSign::View &view = views.back();
+        auto &view((views.emplace_back(), views.back()));
 
         parse(view.boundingBox,
               Json::check(item, "boundingBox", Json::objectValue));
@@ -329,6 +333,13 @@ void parse(TrafficSign &trafficSign, const Json::Value &value)
     parse(trafficSign.views, Json::check(value, "views", Json::arrayValue));
     parse(trafficSign.size, Json::check(value, "size", Json::arrayValue));
     Json::get(trafficSign.classId, value, "classId");
+}
+
+void parse(TrafficLight &trafficLight, const Json::Value &value)
+{
+    parse(static_cast<Entity&>(trafficLight), value);
+    Json::get(trafficLight.height, value, "height");
+    Json::get(trafficLight.radius, value, "radius");
 }
 
 template <typename EntityType>
@@ -362,6 +373,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.lamps, value, "lamps");
     parse(world.manholes, value, "manholes");
     parse(world.trafficSigns, value, "trafficSigns");
+    parse(world.trafficLights, value, "trafficLights");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -602,7 +614,6 @@ void build(Json::Value &value, const Pole &pole
 
     build(value["direction"], pole.direction);
     value["length"] = pole.length;
-    value["distanceToGround"] = pole.distanceToGround;
     value["radius"] =  pole.radius;
 }
 
@@ -611,7 +622,7 @@ void build(Json::Value &value, const Lamp &lamp
            , const math::Point3 &shift)
 {
     build(value, static_cast<const Entity&>(lamp), shift);
-    value["mount"] = lamp.mount;
+    value["mount"] = boost::lexical_cast<std::string>(lamp.mount);
     build(value["dimensions"], lamp.dimensions);
 }
 
@@ -620,7 +631,7 @@ void build(Json::Value &value, const Manhole &manhole
            , const math::Point3 &shift)
 {
     build(value, static_cast<const Entity&>(manhole), shift);
-    value["shape"] = manhole.shape;
+    value["shape"] = boost::lexical_cast<std::string>(manhole.shape);
     value["angle"] = manhole.angle;
     build(value["size"], manhole.size);
     build(value["normal"], manhole.normal);
@@ -647,6 +658,15 @@ void build(Json::Value &value, const TrafficSign &trafficSign
     build(value["classId"], trafficSign.classId);
     build(value["views"], trafficSign.views);
     build(value["size"], trafficSign.size);
+}
+
+void build(Json::Value &value, const TrafficLight &trafficLight
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(trafficLight), shift);
+
+    value["height"] = trafficLight.height;
+    value["radius"] =  trafficLight.radius;
 }
 
 
@@ -678,6 +698,7 @@ void build(Json::Value &value, const World &world)
     build(value, "lamps", world.lamps);
     build(value, "manholes", world.manholes);
     build(value, "trafficSigns", world.trafficSigns);
+    build(value, "trafficLights", world.trafficLights);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -786,7 +807,7 @@ void save(const World &world, const fs::path &path
     LOG(info1) << "Saving world to " << path  << ".";
     std::ofstream f;
     f.exceptions(std::ios::badbit | std::ios::failbit);
-    f.open(path.string(), (std::ios_base::out | std::ios_base::trunc));
+    f.open(path.string(), (std::ios_base::out | std::ios_base::trunc | std::ios_base::binary));
 
     if (options.compress) {
         bio::filtering_ostream gz;
@@ -820,5 +841,6 @@ SEMANTIC_DEFINE_ENTITY_IO_PAIR(Pole)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Lamp)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Manhole)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(TrafficSign)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(TrafficLight)
 
 } // namespace semantic
