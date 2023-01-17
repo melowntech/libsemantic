@@ -328,7 +328,7 @@ void parse(TrafficSign &trafficSign, const Json::Value &value)
     parse(trafficSign.normal, Json::check(value, "normal", Json::arrayValue));
     parse(trafficSign.views, Json::check(value, "views", Json::arrayValue));
     parse(trafficSign.size, Json::check(value, "size", Json::arrayValue));
-    Json::get(trafficSign.className, value, "className");
+    Json::get(trafficSign.classId, value, "classId");
 }
 
 template <typename EntityType>
@@ -644,7 +644,7 @@ void build(Json::Value &value, const TrafficSign &trafficSign
     build(value, static_cast<const Entity&>(trafficSign), shift);
 
     build(value["normal"], trafficSign.normal);
-    build(value["className"], trafficSign.className);
+    build(value["classId"], trafficSign.classId);
     build(value["views"], trafficSign.views);
     build(value["size"], trafficSign.size);
 }

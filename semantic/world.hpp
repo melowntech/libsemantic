@@ -188,7 +188,7 @@ struct TrafficSign : Entity {
 
     math::Point3 normal;
     math::Size2f size;
-    std::string className = "not_defined";
+    int classId = -1;
 
     struct View {
         std::string path;
