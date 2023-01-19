@@ -160,7 +160,8 @@ struct Pole : Entity {
 
     math::Point3 direction = { 0.0, 0.0, 1.0 };
     double length = 0.0;
-    double radius = 0.0;
+    double radiusTop = 0.0;
+    double radiusBottom = 0.0;
     std::vector<std::string> lampIds;
     std::vector<std::string> trafficLightIds;
     std::vector<std::string> trafficSignIds;

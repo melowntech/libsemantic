@@ -88,7 +88,7 @@ void meshPole(geometry::Mesh &out, const Pole &pole
 {
     geometry::Mesh mesh;
 
-    const auto arcPoints(detail::computeArcPoints(config, pole.radius));
+    const auto arcPoints(detail::computeArcPoints(config, pole.radiusTop));
 
     auto trafo(makeTrafo(pole.direction));
 
@@ -125,9 +125,10 @@ void meshPole(geometry::Mesh &out, const Pole &pole
     for (Index i(0); i < arcPoints; ++i) {
         const double angle((2 * M_PI * i) / arcPoints);
 
-        const auto p(detail::rotate(0, pole.radius, pole.length, angle));
-        vertexPoint(p);
-        vertex(p(0), p(1), 0);
+        const auto pt(detail::rotate(0, pole.radiusTop, pole.length, angle));
+        vertexPoint(pt);
+        const auto pb(detail::rotate(0, pole.radiusBottom, pole.length, angle));
+        vertex(pb(0), pb(1), 0);
 
         const auto &v([&](Index index) -> Index
         {

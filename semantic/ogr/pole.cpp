@@ -40,9 +40,9 @@ OgrGeometry ogr(const Pole &pole, const math::Point3 &origin)
     /** Just simple circle at pole origin. Not taking direction into account,
      *  yet.
      */
-    cs->addPoint(center(0) - pole.radius, center(1), center(2));
-    cs->addPoint(center(0) + pole.radius, center(1), center(2));
-    cs->addPoint(center(0) - pole.radius, center(1), center(2));
+    cs->addPoint(center(0) - pole.radiusBottom, center(1), center(2));
+    cs->addPoint(center(0) + pole.radiusBottom, center(1), center(2));
+    cs->addPoint(center(0) - pole.radiusBottom, center(1), center(2));
 
     math::Extent verticalExtent;
     update(verticalExtent, center(2) + pole.length);

@@ -297,7 +297,8 @@ void parse(Pole &pole, const Json::Value &value)
                                            "trafficSignIds",
                                            Json::arrayValue));
     Json::get(pole.length, value, "length");
-    Json::get(pole.radius, value, "radius");
+    Json::get(pole.radiusTop, value, "radiusTop");
+    Json::get(pole.radiusBottom, value, "radiusBottom");
 }
 
 void parse(Lamp &lamp, const Json::Value &value)
@@ -623,7 +624,8 @@ void build(Json::Value &value, const Pole &pole
     build(value["trafficLightIds"], pole.trafficLightIds);
     build(value["trafficSignIds"], pole.trafficSignIds);
     value["length"] = pole.length;
-    value["radius"] =  pole.radius;
+    value["radiusTop"] =  pole.radiusTop;
+    value["radiusBottom"] =  pole.radiusBottom;
 }
 
 
