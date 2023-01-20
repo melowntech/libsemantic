@@ -227,6 +227,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("manholes", &semantic::World::manholes)
         .def_readwrite("trafficSigns", &semantic::World::trafficSigns)
         .def_readwrite("trafficLights", &semantic::World::trafficLights)
+        .def_readwrite("pedestrianCrossings", &semantic::World::pedestrianCrossings)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -544,6 +545,28 @@ BOOST_PYTHON_MODULE(melown_semantic)
         bp::scope scope(TrafficLight);
 
         pysupport::vector<semantic::TrafficLight::list>("list");
+    }
+
+    pysupport::fillEnum<semantic::PedestrianCrossing::Color>(
+        "Color",
+        "PedestrianCrossing color.");
+
+    auto PedestrianCrossing
+        = class_<semantic::PedestrianCrossing>(
+              "PedestrianCrossing",
+              init<const semantic::PedestrianCrossing&>())
+              .def(init<>())
+
+              .def_readwrite("color", &semantic::PedestrianCrossing::color)
+              .def_readwrite("angle", &semantic::PedestrianCrossing::angle)
+              .def_readwrite("size", &semantic::PedestrianCrossing::size)
+              .def_readwrite("normal", &semantic::PedestrianCrossing::normal);
+    py::addCommon(PedestrianCrossing);
+
+    {
+        bp::scope scope(PedestrianCrossing);
+
+        pysupport::vector<semantic::PedestrianCrossing::list>("list");
     }
 
     // IO

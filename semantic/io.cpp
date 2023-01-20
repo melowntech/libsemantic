@@ -73,6 +73,13 @@ void parse(math::Extents2_<T> &extents, const Json::Value &value)
     parse(extents.ur, Json::check(value, "ur", Json::arrayValue));
 }
 
+template<typename T>
+void parse(math::Extents3_<T> &extents, const Json::Value &value)
+{
+    parse(extents.ll, Json::check(value, "ll", Json::arrayValue));
+    parse(extents.ur, Json::check(value, "ur", Json::arrayValue));
+}
+
 void parse(std::string& str, const Json::Value& value)
 {
     str = Json::as<std::string>(value);
@@ -347,6 +354,18 @@ void parse(TrafficLight &trafficLight, const Json::Value &value)
     Json::get(trafficLight.poleId, value, "poleId");
 }
 
+void parse(PedestrianCrossing& pedestrianCrossing, const Json::Value& value)
+{
+    parse(static_cast<Entity&>(pedestrianCrossing), value);
+
+    Json::get(pedestrianCrossing.color, value, "color");
+    Json::get(pedestrianCrossing.angle, value, "angle");
+    parse(pedestrianCrossing.size,
+          Json::check(value, "size", Json::arrayValue));
+    parse(pedestrianCrossing.normal,
+          Json::check(value, "normal", Json::arrayValue));
+}
+
 template <typename EntityType>
 void parse(std::vector<EntityType> &entities, const Json::Value &container
            , const char *name)
@@ -379,6 +398,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.manholes, value, "manholes");
     parse(world.trafficSigns, value, "trafficSigns");
     parse(world.trafficLights, value, "trafficLights");
+    parse(world.pedestrianCrossings, value, "pedestrianCrossings");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -411,6 +431,14 @@ void build(Json::Value &value, const math::Point3_<T> &point)
 
 template<typename T>
 void build(Json::Value &value, const math::Extents2_<T> &extents)
+{
+    value = Json::objectValue;
+    build(value["ll"], extents.ll);
+    build(value["ur"], extents.ur);
+}
+
+template<typename T>
+void build(Json::Value &value, const math::Extents3_<T> &extents)
 {
     value = Json::objectValue;
     build(value["ll"], extents.ll);
@@ -684,6 +712,16 @@ void build(Json::Value &value, const TrafficLight &trafficLight
     value["radius"] =  trafficLight.radius;
 }
 
+void build(Json::Value &value, const PedestrianCrossing &pedestrianCrossing
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(pedestrianCrossing), shift);
+
+    value["color"] = boost::lexical_cast<std::string>(pedestrianCrossing.color);
+    value["angle"] = pedestrianCrossing.angle;
+    build(value["size"], pedestrianCrossing.size);
+    build(value["normal"], pedestrianCrossing.normal);
+}
 
 template <typename EntityType>
 void build(Json::Value &container, const char *name
@@ -714,6 +752,7 @@ void build(Json::Value &value, const World &world)
     build(value, "manholes", world.manholes);
     build(value, "trafficSigns", world.trafficSigns);
     build(value, "trafficLights", world.trafficLights);
+    build(value, "pedestrianCrossings", world.pedestrianCrossings);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -857,5 +896,6 @@ SEMANTIC_DEFINE_ENTITY_IO_PAIR(Lamp)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(Manhole)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(TrafficSign)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(TrafficLight)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(PedestrianCrossing)
 
 } // namespace semantic

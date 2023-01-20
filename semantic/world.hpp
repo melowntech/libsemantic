@@ -55,6 +55,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((manhole))
                       ((trafficSign))
                       ((trafficLight))
+                      ((pedestrianCrossing))
                       )
 
 typedef std::vector<Class> Classes;
@@ -255,6 +256,27 @@ struct TrafficLight : Entity {
     typedef std::vector<TrafficLight> list;
 };
 
+/** PedestrianCrossing
+ */
+struct PedestrianCrossing : Entity {
+    /** Entity class.
+     */
+    enum class Color { white, yellow };
+
+    static const constexpr Class cls = Class::pedestrianCrossing;
+    typedef std::vector<PedestrianCrossing> list;
+
+    Color color = Color::white;
+    double angle;
+    math::Size2f size;
+    math::Point3 normal;
+};
+
+UTILITY_GENERATE_ENUM_IO(PedestrianCrossing::Color,
+                         ((white))
+                         ((yellow))
+                        )
+
 
 /** Semantic world.
  *
@@ -307,6 +329,10 @@ struct World {
     /** All traffic lights in the world.
      */
     TrafficLight::list trafficLights;
+    
+    /** All pedestrian crossings in the world.
+     */
+    PedestrianCrossing::list pedestrianCrossings;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -344,6 +370,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::manhole: op(world.manholes); break;
     case Class::trafficSign: op(world.trafficSigns); break;
     case Class::trafficLight: op(world.trafficLights); break;
+    case Class::pedestrianCrossing: op(world.pedestrianCrossings); break;
     }
 }
 
@@ -360,6 +387,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::manhole: op(world.manholes); break;
     case Class::trafficSign: op(world.trafficSigns); break;
     case Class::trafficLight: op(world.trafficLights); break;
+    case Class::pedestrianCrossing: op(world.pedestrianCrossings); break;
     }
 }
 

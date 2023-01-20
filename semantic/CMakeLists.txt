@@ -28,6 +28,7 @@ set(semantic_SOURCES
   mesh/pole.hpp mesh/pole.cpp
   mesh/lamp.hpp mesh/lamp.cpp
   mesh/manhole.hpp mesh/manhole.cpp
+  mesh/pedestrian-crossing.hpp mesh/pedestrian-crossing.cpp
 
   ogr.hpp
   ogr/ogr.cpp ogr/ogr.incl.hpp
