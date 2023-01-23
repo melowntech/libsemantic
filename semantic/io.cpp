@@ -417,6 +417,11 @@ void build(Json::Value &value, const std::string &s)
     value = Json::Value(s);
 }
 
+void build(Json::Value &value, const int &n)
+{
+    value = Json::Value::Int(n);
+}
+
 void build(Json::Value &value, const std::size_t &n)
 {
     value = Json::Value::UInt(n);
