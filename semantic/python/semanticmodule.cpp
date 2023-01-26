@@ -227,6 +227,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("manholes", &semantic::World::manholes)
         .def_readwrite("trafficSigns", &semantic::World::trafficSigns)
         .def_readwrite("trafficLights", &semantic::World::trafficLights)
+        .def_readwrite("pedestrianCrossings", &semantic::World::pedestrianCrossings)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -417,6 +418,9 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::Railway::Lines>("Lines");
     }
 
+    pysupport::fillEnum<semantic::LaneLine::Color>
+        ("Color", "Color type.");
+
     auto LaneLine = class_<semantic::LaneLine>
         ("LaneLine", init<const semantic::LaneLine&>())
         .def(init<>())
@@ -440,6 +444,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
             .def_readwrite("polyline", &semantic::LaneLine::Line::polyline)
             .def_readwrite("isDashed", &semantic::LaneLine::Line::isDashed)
             .def_readwrite("isDouble", &semantic::LaneLine::Line::isDouble)
+            .def_readwrite("color", &semantic::LaneLine::Line::color)
             ;
     }
 
@@ -449,6 +454,9 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("direction", &semantic::Pole::direction)
         .def_readwrite("length", &semantic::Pole::length)
         .def_readwrite("radius", &semantic::Pole::radius)
+        .def_readwrite("lampIds", &semantic::Pole::lampIds)
+        .def_readwrite("trafficLightIds", &semantic::Pole::trafficLightIds)
+        .def_readwrite("trafficSignIds", &semantic::Pole::trafficSignIds)
         ;
     py::addCommon(Pole);
 
@@ -466,6 +474,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         .def_readwrite("mount", &semantic::Lamp::mount)
         .def_readwrite("dimensions", &semantic::Lamp::dimensions)
+        .def_readwrite("poleId", &semantic::Lamp::poleId)
         ;
     py::addCommon(Lamp);
 
@@ -502,6 +511,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("size", &semantic::TrafficSign::size)
         .def_readwrite("classId", &semantic::TrafficSign::classId)
         .def_readwrite("views", &semantic::TrafficSign::views)
+        .def_readwrite("poleId", &semantic::TrafficSign::poleId)
         ;
     py::addCommon(TrafficSign);
 
@@ -527,6 +537,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         .def_readwrite("height", &semantic::TrafficLight::height)
         .def_readwrite("radius", &semantic::TrafficLight::radius)
+        .def_readwrite("poleId", &semantic::TrafficLight::poleId)
         ;
     py::addCommon(TrafficLight);
 
@@ -534,6 +545,28 @@ BOOST_PYTHON_MODULE(melown_semantic)
         bp::scope scope(TrafficLight);
 
         pysupport::vector<semantic::TrafficLight::list>("list");
+    }
+
+    pysupport::fillEnum<semantic::PedestrianCrossing::Color>(
+        "Color",
+        "PedestrianCrossing color.");
+
+    auto PedestrianCrossing
+        = class_<semantic::PedestrianCrossing>(
+              "PedestrianCrossing",
+              init<const semantic::PedestrianCrossing&>())
+              .def(init<>())
+
+              .def_readwrite("color", &semantic::PedestrianCrossing::color)
+              .def_readwrite("angle", &semantic::PedestrianCrossing::angle)
+              .def_readwrite("size", &semantic::PedestrianCrossing::size)
+              .def_readwrite("normal", &semantic::PedestrianCrossing::normal);
+    py::addCommon(PedestrianCrossing);
+
+    {
+        bp::scope scope(PedestrianCrossing);
+
+        pysupport::vector<semantic::PedestrianCrossing::list>("list");
     }
 
     // IO

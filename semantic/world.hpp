@@ -55,6 +55,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((manhole))
                       ((trafficSign))
                       ((trafficLight))
+                      ((pedestrianCrossing))
                       )
 
 typedef std::vector<Class> Classes;
@@ -125,6 +126,8 @@ struct Railway : Entity {
 struct LaneLine : Entity {
     /** Entity class.
      */
+    enum class Color { none, white, yellow, red, blue };
+
     static const constexpr Class cls = Class::laneLine;
     typedef std::vector<LaneLine> list;
 
@@ -134,10 +137,20 @@ struct LaneLine : Entity {
         std::vector<int> polyline;
         bool isDashed;
         bool isDouble;
+        Color color = Color::none;
+
     };
     typedef std::vector<Line> Lines;
     Lines lines;
 };
+
+UTILITY_GENERATE_ENUM_IO(LaneLine::Color,
+                         ((none))
+                         ((white))
+                         ((yellow))
+                         ((red))
+                         ((blue))
+                        )
 
 /** Pole
  */
@@ -149,6 +162,9 @@ struct Pole : Entity {
     math::Point3 direction = { 0.0, 0.0, 1.0 };
     double length = 0.0;
     double radius = 0.0;
+    std::vector<std::string> lampIds;
+    std::vector<std::string> trafficLightIds;
+    std::vector<std::string> trafficSignIds;
 
     typedef std::vector<Pole> list;
 };
@@ -165,6 +181,7 @@ struct Lamp : Entity {
 
     Mount mount = Mount::none;
     math::Points3 dimensions;
+    std::string poleId;
 };
 
 UTILITY_GENERATE_ENUM_IO(Lamp::Mount,
@@ -205,6 +222,7 @@ struct TrafficSign : Entity {
     math::Point3 normal;
     math::Size2f size;
     int classId = -1;
+    std::string poleId;
 
     struct View {
         std::string path;
@@ -233,9 +251,31 @@ struct TrafficLight : Entity {
 
     double height = 0.0;
     double radius = 0.0;
+    std::string poleId;
 
     typedef std::vector<TrafficLight> list;
 };
+
+/** PedestrianCrossing
+ */
+struct PedestrianCrossing : Entity {
+    /** Entity class.
+     */
+    enum class Color { white, yellow };
+
+    static const constexpr Class cls = Class::pedestrianCrossing;
+    typedef std::vector<PedestrianCrossing> list;
+
+    Color color = Color::white;
+    double angle;
+    math::Size2f size;
+    math::Point3 normal;
+};
+
+UTILITY_GENERATE_ENUM_IO(PedestrianCrossing::Color,
+                         ((white))
+                         ((yellow))
+                        )
 
 
 /** Semantic world.
@@ -289,6 +329,10 @@ struct World {
     /** All traffic lights in the world.
      */
     TrafficLight::list trafficLights;
+    
+    /** All pedestrian crossings in the world.
+     */
+    PedestrianCrossing::list pedestrianCrossings;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -326,6 +370,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::manhole: op(world.manholes); break;
     case Class::trafficSign: op(world.trafficSigns); break;
     case Class::trafficLight: op(world.trafficLights); break;
+    case Class::pedestrianCrossing: op(world.pedestrianCrossings); break;
     }
 }
 
@@ -342,6 +387,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::manhole: op(world.manholes); break;
     case Class::trafficSign: op(world.trafficSigns); break;
     case Class::trafficLight: op(world.trafficLights); break;
+    case Class::pedestrianCrossing: op(world.pedestrianCrossings); break;
     }
 }
 
