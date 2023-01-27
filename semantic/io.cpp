@@ -366,6 +366,17 @@ void parse(PedestrianCrossing& pedestrianCrossing, const Json::Value& value)
           Json::check(value, "normal", Json::arrayValue));
 }
 
+void parse(RoadArrow& arrow, const Json::Value& value)
+{
+    parse(static_cast<Entity&>(arrow), value);
+
+    parse(arrow.normal, Json::check(value, "normal", Json::arrayValue));
+    parse(arrow.size, Json::check(value, "size", Json::arrayValue));
+    Json::get(arrow.angle, value, "angle");
+    Json::get(arrow.type, value, "type");
+    Json::get(arrow.color, value, "color");
+}
+
 template <typename EntityType>
 void parse(std::vector<EntityType> &entities, const Json::Value &container
            , const char *name)
@@ -399,6 +410,7 @@ void parse(World &world, const Json::Value &value)
     parse(world.trafficSigns, value, "trafficSigns");
     parse(world.trafficLights, value, "trafficLights");
     parse(world.pedestrianCrossings, value, "pedestrianCrossings");
+    parse(world.roadArrows, value, "roadArrows");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -723,6 +735,18 @@ void build(Json::Value &value, const PedestrianCrossing &pedestrianCrossing
     build(value["normal"], pedestrianCrossing.normal);
 }
 
+void build(Json::Value &value, const RoadArrow &arrow
+           , const math::Point3 &shift)
+{
+    build(value, static_cast<const Entity&>(arrow), shift);
+
+    build(value["normal"], arrow.normal);
+    build(value["size"], arrow.size);
+    value["angle"] = arrow.angle;
+    build(value["type"], arrow.type);
+    value["color"] = boost::lexical_cast<std::string>(arrow.color);
+}
+
 template <typename EntityType>
 void build(Json::Value &container, const char *name
            , const std::vector<EntityType> &entities
@@ -753,6 +777,7 @@ void build(Json::Value &value, const World &world)
     build(value, "trafficSigns", world.trafficSigns);
     build(value, "trafficLights", world.trafficLights);
     build(value, "pedestrianCrossings", world.pedestrianCrossings);
+    build(value, "roadArrows", world.roadArrows);
 }
 
 World load(std::istream &is, const fs::path &path)
@@ -897,5 +922,6 @@ SEMANTIC_DEFINE_ENTITY_IO_PAIR(Manhole)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(TrafficSign)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(TrafficLight)
 SEMANTIC_DEFINE_ENTITY_IO_PAIR(PedestrianCrossing)
+SEMANTIC_DEFINE_ENTITY_IO_PAIR(RoadArrow)
 
 } // namespace semantic
