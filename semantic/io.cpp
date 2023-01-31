@@ -333,6 +333,7 @@ void parse(TrafficSign &trafficSign, const Json::Value &value)
     parse(trafficSign.views, Json::check(value, "views", Json::arrayValue));
     parse(trafficSign.size, Json::check(value, "size", Json::arrayValue));
     Json::get(trafficSign.className, value, "className");
+    Json::get(trafficSign.content, value, "content");
 }
 
 void parse(TrafficLight &trafficLight, const Json::Value &value)
