@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022 Melown Technologies SE
+ * Copyright (c) 2019 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,25 +27,29 @@
 #include <cmath>
 
 #include "../ogr.hpp"
-#include "pole.hpp"
+#include "lamp.hpp"
 
-namespace semantic {
-
-OgrGeometry ogr(const Pole &pole, const math::Point3 &origin)
+namespace semantic
 {
-    auto cs(std::make_unique< ::OGRCircularString>());
+OgrGeometry ogr(const Lamp& lamp, const math::Point3& origin)
+{
+    auto cs(std::make_unique<::OGRCircularString>());
 
-    const math::Point3 center(origin + pole.origin);
+    const math::Point3 center(origin + lamp.origin);
 
-    /** Just simple circle at pole origin. Not taking direction into account,
-     *  yet.
-     */
-    cs->addPoint(center(0) - pole.radius, center(1), center(2));
-    cs->addPoint(center(0) + pole.radius, center(1), center(2));
-    cs->addPoint(center(0) - pole.radius, center(1), center(2));
+    for (const auto& dim : lamp.dimensions)
+    {
+        cs->addPoint(center(0) + dim(0),
+                     center(1) + dim(1),
+                     center(2) + dim(2));
+    }
 
     math::Extent verticalExtent;
-    update(verticalExtent, center(2) + pole.length);
+    update(verticalExtent, center(2));
+    for (const auto& dim : lamp.dimensions)
+    {
+        update(verticalExtent, center(2) + dim[2]);
+    }
 
     return { std::move(cs), verticalExtent };
 }

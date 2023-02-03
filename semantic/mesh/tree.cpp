@@ -370,7 +370,7 @@ geometry::Mesh mesh(const tree::GroundLevel &tree, const MeshConfig &config
 
         const auto material(treeCrownMaterial(tree));
         const auto a(tree.crown.radius);
-        const auto b(tree.height / 2.0);
+        const auto b(tree.height - tree.crown.center[2]);
         math::Point3 offset(origin + tree.crown.center);
 
         // scale and shift

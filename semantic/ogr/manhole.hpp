@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022 Melown Technologies SE
+ * Copyright (c) 2019 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,30 +24,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cmath>
+#ifndef semantic_ogr_manhole_hpp_included_
+#define semantic_ogr_manhole_hpp_included_
 
-#include "../ogr.hpp"
-#include "pole.hpp"
+#include "../world.hpp"
 
 namespace semantic {
 
-OgrGeometry ogr(const Pole &pole, const math::Point3 &origin)
-{
-    auto cs(std::make_unique< ::OGRCircularString>());
-
-    const math::Point3 center(origin + pole.origin);
-
-    /** Just simple circle at pole origin. Not taking direction into account,
-     *  yet.
-     */
-    cs->addPoint(center(0) - pole.radius, center(1), center(2));
-    cs->addPoint(center(0) + pole.radius, center(1), center(2));
-    cs->addPoint(center(0) - pole.radius, center(1), center(2));
-
-    math::Extent verticalExtent;
-    update(verticalExtent, center(2) + pole.length);
-
-    return { std::move(cs), verticalExtent };
-}
+OgrGeometry ogr(const Manhole &manhole, const math::Point3 &origin);
 
 } // namespace semantic
+
+#endif // semantic_ogr_manhole_hpp_included_

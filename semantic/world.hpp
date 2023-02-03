@@ -51,6 +51,10 @@ UTILITY_GENERATE_ENUM(Class,
                       ((railway))
                       ((laneLine))
                       ((pole))
+                      ((lamp))
+                      ((manhole))
+                      ((trafficSign))
+                      ((trafficLight))
                       )
 
 typedef std::vector<Class> Classes;
@@ -128,7 +132,8 @@ struct LaneLine : Entity {
 
     struct Line : Entity {
         std::vector<int> polyline;
-        bool dashed;
+        bool isDashed;
+        bool isDouble;
     };
     typedef std::vector<Line> Lines;
     Lines lines;
@@ -143,11 +148,95 @@ struct Pole : Entity {
 
     math::Point3 direction = { 0.0, 0.0, 1.0 };
     double length = 0.0;
-    double distanceToGround = 0.0;
     double radius = 0.0;
 
     typedef std::vector<Pole> list;
 };
+
+/** Lamp
+ */
+struct Lamp : Entity {
+    /** Entity class.
+     */
+    enum class Mount { none, pole, wire, building };
+
+    static const constexpr Class cls = Class::lamp;
+    typedef std::vector<Lamp> list;
+
+    Mount mount = Mount::none;
+    math::Points3 dimensions;
+};
+
+UTILITY_GENERATE_ENUM_IO(Lamp::Mount,
+                         ((none))
+                         ((pole))
+                         ((wire))
+                         ((building))
+                        )
+
+/** Manhole
+ */
+struct Manhole : Entity {
+    /** Entity class.
+     */
+    enum class Shape { rectangle, circle };
+    
+    static const constexpr Class cls = Class::manhole;
+    typedef std::vector<Manhole> list;
+
+    Shape shape = Shape::rectangle;
+    double angle;
+    math::Size2f size;
+    math::Point3 normal;
+};
+
+UTILITY_GENERATE_ENUM_IO(Manhole::Shape,
+                         ((rectangle))
+                         ((circle))
+                        )
+
+/** TrafficSign
+ */
+struct TrafficSign : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::trafficSign;
+
+    math::Point3 normal;
+    math::Size2f size;
+    std::string className = "not_defined";
+
+    struct View {
+        std::string path;
+        math::Extents2i boundingBox;
+
+        // needed by python bindings
+        inline bool operator==(const View &r) const
+        {
+            return (path == r.path) && (boundingBox == r.boundingBox);
+        }
+
+        // inline bool View::operator==(const View &v) const
+    };
+    typedef std::vector<View> Views;
+    Views views;
+
+    typedef std::vector<TrafficSign> list;
+};
+
+/** TrafficLight
+ */
+struct TrafficLight : Entity {
+    /** Entity class.
+     */
+    static const constexpr Class cls = Class::trafficLight;
+
+    double height = 0.0;
+    double radius = 0.0;
+
+    typedef std::vector<TrafficLight> list;
+};
+
 
 /** Semantic world.
  *
@@ -184,6 +273,22 @@ struct World {
     /** All poles in the world.
      */
     Pole::list poles;
+
+    /** All lamps in the world.
+     */
+    Lamp::list lamps;
+
+    /** All manholes in the world.
+     */
+    Manhole::list manholes;
+
+    /** All traffic signs in the world.
+     */
+    TrafficSign::list trafficSigns;
+
+    /** All traffic lights in the world.
+     */
+    TrafficLight::list trafficLights;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -217,6 +322,10 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::railway: op(world.railways); break;
     case Class::laneLine: op(world.laneLines); break;
     case Class::pole: op(world.poles); break;
+    case Class::lamp: op(world.lamps); break;
+    case Class::manhole: op(world.manholes); break;
+    case Class::trafficSign: op(world.trafficSigns); break;
+    case Class::trafficLight: op(world.trafficLights); break;
     }
 }
 
@@ -229,6 +338,10 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::railway: op(world.railways); break;
     case Class::laneLine: op(world.laneLines); break;
     case Class::pole: op(world.poles); break;
+    case Class::lamp: op(world.lamps); break;
+    case Class::manhole: op(world.manholes); break;
+    case Class::trafficSign: op(world.trafficSigns); break;
+    case Class::trafficLight: op(world.trafficLights); break;
     }
 }
 
