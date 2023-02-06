@@ -419,7 +419,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::Railway::Lines>("Lines");
     }
 
-    pysupport::fillEnum<semantic::LaneLine::Color>
+    pysupport::fillEnum<semantic::LineColor>
         ("Color", "Color type.");
 
     auto LaneLine = class_<semantic::LaneLine>
@@ -548,7 +548,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::TrafficLight::list>("list");
     }
 
-    pysupport::fillEnum<semantic::PedestrianCrossing::Color>(
+    pysupport::fillEnum<semantic::LineColor>(
         "Color",
         "PedestrianCrossing color.");
 
@@ -570,10 +570,6 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::PedestrianCrossing::list>("list");
     }
 
-    pysupport::fillEnum<semantic::RoadArrow::Color>(
-        "Color",
-        "RoadArrow color.");
-
     auto RoadArrow
         = class_<semantic::RoadArrow>(
               "RoadArrow",
@@ -588,7 +584,6 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
     {
         bp::scope scope(RoadArrow);
-
         pysupport::vector<semantic::RoadArrow::list>("list");
     }
 

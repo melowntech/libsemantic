@@ -122,12 +122,20 @@ struct Railway : Entity {
     Lines lines;
 };
 
+enum class LineColor { none, white, yellow, blue };
+
+UTILITY_GENERATE_ENUM_IO(LineColor,
+                         ((none))
+                         ((white))
+                         ((yellow))
+                         ((blue))
+                        )
+
 /** LaneLine
  */
 struct LaneLine : Entity {
     /** Entity class.
      */
-    enum class Color { none, white, yellow, red, blue };
 
     static const constexpr Class cls = Class::laneLine;
     typedef std::vector<LaneLine> list;
@@ -138,20 +146,12 @@ struct LaneLine : Entity {
         std::vector<int> polyline;
         bool isDashed;
         bool isDouble;
-        Color color = Color::none;
+        LineColor color = LineColor::none;
 
     };
     typedef std::vector<Line> Lines;
     Lines lines;
 };
-
-UTILITY_GENERATE_ENUM_IO(LaneLine::Color,
-                         ((none))
-                         ((white))
-                         ((yellow))
-                         ((red))
-                         ((blue))
-                        )
 
 /** Pole
  */
@@ -262,21 +262,15 @@ struct TrafficLight : Entity {
 struct PedestrianCrossing : Entity {
     /** Entity class.
      */
-    enum class Color { white, yellow };
 
     static const constexpr Class cls = Class::pedestrianCrossing;
     typedef std::vector<PedestrianCrossing> list;
 
-    Color color = Color::white;
+    LineColor color = LineColor::white;
     double angle;
     math::Size2f size;
     math::Point3 normal;
 };
-
-UTILITY_GENERATE_ENUM_IO(PedestrianCrossing::Color,
-                         ((white))
-                         ((yellow))
-                        )
 
 /** RoadArrow
  */
@@ -290,13 +284,8 @@ struct RoadArrow : Entity {
     math::Size2f size;
     double angle;
     std::string type;
-    Color color = Color::white;
+    LineColor color = LineColor::white;
 };
-
-UTILITY_GENERATE_ENUM_IO(RoadArrow::Color,
-                         ((white))
-                         ((yellow))
-                        )
 
 
 /** Semantic world.
