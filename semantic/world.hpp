@@ -121,9 +121,9 @@ struct Railway : Entity {
     Lines lines;
 };
 
-enum class LineColor { none, white, yellow, blue };
+enum class RoadMarkingColor { none, white, yellow, blue };
 
-UTILITY_GENERATE_ENUM_IO(LineColor,
+UTILITY_GENERATE_ENUM_IO(RoadMarkingColor,
                          ((none))
                          ((white))
                          ((yellow))
@@ -145,7 +145,7 @@ struct LaneLine : Entity {
         std::vector<int> polyline;
         bool isDashed;
         bool isDouble;
-        LineColor color = LineColor::none;
+        RoadMarkingColor color = RoadMarkingColor::none;
 
     };
     typedef std::vector<Line> Lines;
@@ -265,7 +265,7 @@ struct PedestrianCrossing : Entity {
     static const constexpr Class cls = Class::pedestrianCrossing;
     typedef std::vector<PedestrianCrossing> list;
 
-    LineColor color = LineColor::white;
+    RoadMarkingColor color = RoadMarkingColor::white;
     double angle;
     math::Size2f size;
     math::Point3 normal;

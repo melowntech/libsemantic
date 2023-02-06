@@ -418,7 +418,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::Railway::Lines>("Lines");
     }
 
-    pysupport::fillEnum<semantic::LineColor>
+    pysupport::fillEnum<semantic::RoadMarkingColor>
         ("Color", "Color type.");
 
     auto LaneLine = class_<semantic::LaneLine>
@@ -546,10 +546,6 @@ BOOST_PYTHON_MODULE(melown_semantic)
 
         pysupport::vector<semantic::TrafficLight::list>("list");
     }
-
-    pysupport::fillEnum<semantic::LineColor>(
-        "Color",
-        "PedestrianCrossing color.");
 
     auto PedestrianCrossing
         = class_<semantic::PedestrianCrossing>(
