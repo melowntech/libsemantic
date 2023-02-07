@@ -703,6 +703,7 @@ void build(Json::Value &value, const TrafficSign &trafficSign
 
     build(value["normal"], trafficSign.normal);
     build(value["classId"], trafficSign.classId);
+    build(value["content"], trafficSign.content);
     build(value["views"], trafficSign.views);
     build(value["size"], trafficSign.size);
     build(value["poleId"], trafficSign.poleId);
