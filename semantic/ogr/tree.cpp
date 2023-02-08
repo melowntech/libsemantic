@@ -80,7 +80,7 @@ OgrGeometry ogr(const tree::GroundLevel &t, const math::Point3 &origin)
 OgrGeometry ogr(const Tree &tree, const math::Point3 &origin)
 {
     struct Visitor : public boost::static_visitor<OgrGeometry> {
-        const math::Point3 &origin;
+        math::Point3 origin;
         Visitor(const math::Point3 &origin) : origin(origin) {}
 
         OgrGeometry operator()(const tree::Aerial &t) const {
