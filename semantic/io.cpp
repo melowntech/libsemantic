@@ -342,7 +342,7 @@ void parse(TrafficSign &trafficSign, const Json::Value &value)
     parse(trafficSign.normal, Json::check(value, "normal", Json::arrayValue));
     parse(trafficSign.views, Json::check(value, "views", Json::arrayValue));
     parse(trafficSign.size, Json::check(value, "size", Json::arrayValue));
-    Json::get(trafficSign.className, value, "className");
+    Json::get(trafficSign.classId, value, "classId");
     Json::get(trafficSign.poleId, value, "poleId");
 }
 
@@ -460,6 +460,11 @@ void build(Json::Value &value, const math::Extents3_<T> &extents)
 void build(Json::Value &value, const std::string &s)
 {
     value = Json::Value(s);
+}
+
+void build(Json::Value &value, const int &n)
+{
+    value = Json::Value::Int(n);
 }
 
 void build(Json::Value &value, const std::size_t &n)
@@ -707,7 +712,7 @@ void build(Json::Value &value, const TrafficSign &trafficSign
     build(value, static_cast<const Entity&>(trafficSign), shift);
 
     build(value["normal"], trafficSign.normal);
-    build(value["className"], trafficSign.className);
+    build(value["classId"], trafficSign.classId);
     build(value["views"], trafficSign.views);
     build(value["size"], trafficSign.size);
     build(value["poleId"], trafficSign.poleId);
