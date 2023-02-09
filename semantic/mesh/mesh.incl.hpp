@@ -40,6 +40,7 @@
 #include "lamp.hpp"
 #include "manhole.hpp"
 #include "pedestrian-crossing.hpp"
+#include "road-arrow.hpp"
 
 namespace semantic {
 
@@ -96,6 +97,14 @@ void mesh(const PedestrianCrossing &pedestrianCrossing, const MeshConfig &config
 }
 
 template <typename MeshCallback>
+void mesh(const RoadArrow &roadArrow, const MeshConfig &config
+          , const math::Point3 &origin
+          , const MeshCallback &meshCallback)
+{
+   meshCallback(roadArrow, mesh(roadArrow, config, origin));
+}
+
+template <typename MeshCallback>
 void mesh(const World &world, const MeshConfig &config
           , const MeshCallback &meshCallback)
 {
@@ -111,6 +120,7 @@ void mesh(const World &world, const MeshConfig &config
     SEMANTIC_ENTITY_DISTRIBUTE(lamps);
     SEMANTIC_ENTITY_DISTRIBUTE(manholes);
     SEMANTIC_ENTITY_DISTRIBUTE(pedestrianCrossings);
+    SEMANTIC_ENTITY_DISTRIBUTE(roadArrows);
 
 #undef SEMANTIC_ENTITY_DISTRIBUTE
 }

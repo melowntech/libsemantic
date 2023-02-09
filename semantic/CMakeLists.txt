@@ -29,6 +29,7 @@ set(semantic_SOURCES
   mesh/lamp.hpp mesh/lamp.cpp
   mesh/manhole.hpp mesh/manhole.cpp
   mesh/pedestrian-crossing.hpp mesh/pedestrian-crossing.cpp
+  mesh/road-arrow.hpp mesh/road-arrow.cpp
 
   ogr.hpp
   ogr/ogr.cpp ogr/ogr.incl.hpp
