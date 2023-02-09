@@ -342,8 +342,7 @@ void parse(TrafficSign &trafficSign, const Json::Value &value)
     parse(trafficSign.normal, Json::check(value, "normal", Json::arrayValue));
     parse(trafficSign.views, Json::check(value, "views", Json::arrayValue));
     parse(trafficSign.size, Json::check(value, "size", Json::arrayValue));
-    Json::get(trafficSign.className, value, "className");
-    Json::get(trafficSign.content, value, "content");
+    Json::get(trafficSign.text, value, "text");
     Json::get(trafficSign.classId, value, "classId");
     Json::get(trafficSign.poleId, value, "poleId");
 }
@@ -715,7 +714,7 @@ void build(Json::Value &value, const TrafficSign &trafficSign
 
     build(value["normal"], trafficSign.normal);
     build(value["classId"], trafficSign.classId);
-    build(value["content"], trafficSign.content);
+    build(value["text"], trafficSign.text);
     build(value["views"], trafficSign.views);
     build(value["size"], trafficSign.size);
     build(value["poleId"], trafficSign.poleId);
