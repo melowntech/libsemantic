@@ -222,6 +222,7 @@ struct TrafficSign : Entity {
 
     math::Point3 normal;
     math::Size2f size;
+    std::string text;
     int classId = -1;
     std::string poleId;
 
