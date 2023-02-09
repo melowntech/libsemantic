@@ -283,7 +283,7 @@ struct RoadArrow : Entity {
     math::Point3 normal;
     math::Size2f size;
     double angle;
-    std::string type;
+    std::string arrowType;
     RoadMarkingColor color = RoadMarkingColor::white;
 };
 

@@ -373,7 +373,7 @@ void parse(RoadArrow& arrow, const Json::Value& value)
     parse(arrow.normal, Json::check(value, "normal", Json::arrayValue));
     parse(arrow.size, Json::check(value, "size", Json::arrayValue));
     Json::get(arrow.angle, value, "angle");
-    Json::get(arrow.type, value, "type");
+    Json::get(arrow.arrowType, value, "arrowType");
     Json::get(arrow.color, value, "color");
 }
 
@@ -743,7 +743,7 @@ void build(Json::Value &value, const RoadArrow &arrow
     build(value["normal"], arrow.normal);
     build(value["size"], arrow.size);
     value["angle"] = arrow.angle;
-    build(value["type"], arrow.type);
+    build(value["arrowType"], arrow.arrowType);
     value["color"] = boost::lexical_cast<std::string>(arrow.color);
 }
 
