@@ -578,7 +578,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
               .def_readwrite("normal", &semantic::RoadArrow::normal)
               .def_readwrite("size", &semantic::RoadArrow::size)
               .def_readwrite("angle", &semantic::RoadArrow::angle)
-              .def_readwrite("type", &semantic::RoadArrow::type)
+              .def_readwrite("arrowType", &semantic::RoadArrow::arrowType)
               .def_readwrite("color", &semantic::RoadArrow::color);
     py::addCommon(RoadArrow);
 
