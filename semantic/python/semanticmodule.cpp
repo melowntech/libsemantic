@@ -228,6 +228,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         .def_readwrite("trafficSigns", &semantic::World::trafficSigns)
         .def_readwrite("trafficLights", &semantic::World::trafficLights)
         .def_readwrite("pedestrianCrossings", &semantic::World::pedestrianCrossings)
+        .def_readwrite("roadArrows", &semantic::World::roadArrows)
         ;
 
     pysupport::fillEnum<semantic::Class>
@@ -418,7 +419,7 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::Railway::Lines>("Lines");
     }
 
-    pysupport::fillEnum<semantic::LaneLine::Color>
+    pysupport::fillEnum<semantic::RoadMarkingColor>
         ("Color", "Color type.");
 
     auto LaneLine = class_<semantic::LaneLine>
@@ -549,10 +550,6 @@ BOOST_PYTHON_MODULE(melown_semantic)
         pysupport::vector<semantic::TrafficLight::list>("list");
     }
 
-    pysupport::fillEnum<semantic::PedestrianCrossing::Color>(
-        "Color",
-        "PedestrianCrossing color.");
-
     auto PedestrianCrossing
         = class_<semantic::PedestrianCrossing>(
               "PedestrianCrossing",
@@ -569,6 +566,23 @@ BOOST_PYTHON_MODULE(melown_semantic)
         bp::scope scope(PedestrianCrossing);
 
         pysupport::vector<semantic::PedestrianCrossing::list>("list");
+    }
+
+    auto RoadArrow
+        = class_<semantic::RoadArrow>(
+              "RoadArrow",
+              init<const semantic::RoadArrow&>())
+              .def(init<>())
+              .def_readwrite("normal", &semantic::RoadArrow::normal)
+              .def_readwrite("size", &semantic::RoadArrow::size)
+              .def_readwrite("angle", &semantic::RoadArrow::angle)
+              .def_readwrite("arrowType", &semantic::RoadArrow::arrowType)
+              .def_readwrite("color", &semantic::RoadArrow::color);
+    py::addCommon(RoadArrow);
+
+    {
+        bp::scope scope(RoadArrow);
+        pysupport::vector<semantic::RoadArrow::list>("list");
     }
 
     // IO

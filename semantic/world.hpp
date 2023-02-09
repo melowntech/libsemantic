@@ -56,6 +56,7 @@ UTILITY_GENERATE_ENUM(Class,
                       ((trafficSign))
                       ((trafficLight))
                       ((pedestrianCrossing))
+                      ((roadArrow))
                       )
 
 typedef std::vector<Class> Classes;
@@ -121,12 +122,20 @@ struct Railway : Entity {
     Lines lines;
 };
 
+enum class RoadMarkingColor { none, white, yellow, blue };
+
+UTILITY_GENERATE_ENUM_IO(RoadMarkingColor,
+                         ((none))
+                         ((white))
+                         ((yellow))
+                         ((blue))
+                        )
+
 /** LaneLine
  */
 struct LaneLine : Entity {
     /** Entity class.
      */
-    enum class Color { none, white, yellow, red, blue };
 
     static const constexpr Class cls = Class::laneLine;
     typedef std::vector<LaneLine> list;
@@ -137,20 +146,12 @@ struct LaneLine : Entity {
         std::vector<int> polyline;
         bool isDashed;
         bool isDouble;
-        Color color = Color::none;
+        RoadMarkingColor color = RoadMarkingColor::none;
 
     };
     typedef std::vector<Line> Lines;
     Lines lines;
 };
-
-UTILITY_GENERATE_ENUM_IO(LaneLine::Color,
-                         ((none))
-                         ((white))
-                         ((yellow))
-                         ((red))
-                         ((blue))
-                        )
 
 /** Pole
  */
@@ -263,21 +264,30 @@ struct TrafficLight : Entity {
 struct PedestrianCrossing : Entity {
     /** Entity class.
      */
-    enum class Color { white, yellow };
 
     static const constexpr Class cls = Class::pedestrianCrossing;
     typedef std::vector<PedestrianCrossing> list;
 
-    Color color = Color::white;
+    RoadMarkingColor color = RoadMarkingColor::white;
     double angle;
     math::Size2f size;
     math::Point3 normal;
 };
 
-UTILITY_GENERATE_ENUM_IO(PedestrianCrossing::Color,
-                         ((white))
-                         ((yellow))
-                        )
+/** RoadArrow
+ */
+struct RoadArrow : Entity {
+    enum class Color { white, yellow };
+
+    static const constexpr Class cls = Class::roadArrow;
+    typedef std::vector<RoadArrow> list;
+
+    math::Point3 normal;
+    math::Size2f size;
+    double angle;
+    std::string arrowType;
+    RoadMarkingColor color = RoadMarkingColor::white;
+};
 
 
 /** Semantic world.
@@ -335,6 +345,10 @@ struct World {
     /** All pedestrian crossings in the world.
      */
     PedestrianCrossing::list pedestrianCrossings;
+
+    /** All road arrows in the world. 
+     */
+    RoadArrow::list roadArrows;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -373,6 +387,7 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::trafficSign: op(world.trafficSigns); break;
     case Class::trafficLight: op(world.trafficLights); break;
     case Class::pedestrianCrossing: op(world.pedestrianCrossings); break;
+    case Class::roadArrow: op(world.roadArrows); break;
     }
 }
 
@@ -390,6 +405,7 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::trafficSign: op(world.trafficSigns); break;
     case Class::trafficLight: op(world.trafficLights); break;
     case Class::pedestrianCrossing: op(world.pedestrianCrossings); break;
+    case Class::roadArrow: op(world.roadArrows); break;
     }
 }
 
