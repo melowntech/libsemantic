@@ -30,10 +30,12 @@
 #include "dbglog/dbglog.hpp"
 
 #include "math/geometry.hpp"
+#include "math/math.hpp"
 #include "math/transform.hpp"
 
 #include "../mesh.hpp"
 #include "detail.hpp"
+#include <math.h>
 
 namespace semantic
 {
@@ -46,46 +48,78 @@ namespace
 {
 namespace ublas = boost::numeric::ublas;
 
+inline math::Matrix4 rotZ(double angle)
+{
+    math::Matrix4 r { math::identity4() };
+    double c = std::cos(angle);
+    r(0, 0) = c;
+    r(1, 1) = c;
+    double s = std::sin(angle);
+    r(1, 0) = s;
+    r(0, 1) = -s;
+    return r;
+}
+
+inline math::Matrix4 rotY(double angle)
+{
+    math::Matrix4 r { math::identity4() };
+    double c = std::cos(angle);
+    r(0, 0) = c;
+    r(2, 2) = c;
+    double s = std::sin(angle);
+    r(0, 2) = s;
+    r(2, 0) = -s;
+    return r;
+}
+
+inline math::Matrix4 rotAlignZwithNormal(const math::Point3& normal)
+{
+    // decompose normal to euler angles: z1-y-z2 (z1 = -z2)
+    auto normtf { normal };
+
+    // rotate in z (~ set azimuth)
+    auto z1 { -std::atan2(normtf(1), normtf(0)) };
+    auto rmatZ1 { rotZ(z1) };
+    normtf = math::transform(rmatZ1, normtf);
+
+    // rotate in y (~ set elevation)
+    auto rmatY { rotY(-M_PI_2 + std::atan2(normtf(2), normtf(0))) };
+    math::Matrix4 tf { ublas::prod(rmatY, rmatZ1) };
+    return ublas::prod(rotZ(-z1), tf); // rotate back in z
+}
+
+inline math::Matrix4 global2FeatureCrs(const math::Point3& normal,
+                                       const double angle,
+                                       const math::Point3& origin)
+{
+    auto tf { rotAlignZwithNormal(normal) };
+    tf = ublas::prod(rotZ(-angle), tf);
+    return ublas::prod(tf, math::translate(math::Point3(-1.0 * origin)));
+}
+
 void meshArrow(geometry::Mesh& out,
                const RoadArrow& arrow,
-               const MeshConfig& /* config */,
                const math::Point3& origin,
                Material material)
 {
-    geometry::Mesh mesh;
-
     const auto w(arrow.size.width);
     const auto h(arrow.size.height);
-    mesh.vertices.emplace_back(
-        detail::rotate(math::Point3(w / 2, h / 2, 0), arrow.angle));
-    mesh.vertices.emplace_back(
-        detail::rotate(math::Point3(-w / 2, h / 2, 0), arrow.angle));
-    mesh.vertices.emplace_back(
-        detail::rotate(math::Point3(w / 2, -h / 2, 0), arrow.angle));
-    mesh.vertices.emplace_back(
-        detail::rotate(math::Point3(-w / 2, -h / 2, 0), arrow.angle));
-
+    geometry::Mesh mesh;
+    mesh.vertices.push_back(math::Point3(w / 2, h / 2, 0));
+    mesh.vertices.push_back(math::Point3(-w / 2, h / 2, 0));
+    mesh.vertices.push_back(math::Point3(-w / 2, -h / 2, 0));
+    mesh.vertices.push_back(math::Point3(w / 2, -h / 2, 0));
     mesh.faces.emplace_back(0, 1, 2);
-    mesh.faces.emplace_back(2, 1, 3);
+    mesh.faces.emplace_back(0, 2, 3);
+
+    math::transform(math::matrixInvert(
+                        global2FeatureCrs(arrow.normal, arrow.angle, origin)),
+                    mesh.vertices);
 
     // colorize
     for (auto& f : mesh.faces)
     {
         f.imageId = +material;
-    }
-
-    math::Point3 zUV(0, 0, 1);
-    math::Point3 n(arrow.normal);
-    const double angle(std::asin(ublas::norm_2(math::crossProduct(zUV, n))));
-
-    for (auto& v : mesh.vertices)
-    {
-        math::Point3 k(math::crossProduct(zUV, n) / angle);
-        const double c(std::cos(angle));
-        const double s(std::sin(angle));
-
-        v = origin + (v * c) + (s * math::crossProduct(k, v))
-            + (k * (ublas::inner_prod(k, v)) * (1 - c));
     }
 
     detail::append(out, mesh);
@@ -101,7 +135,7 @@ geometry::Mesh mesh(const RoadArrow& arrow,
 
     math::Point3 arrowOrigin(arrow.origin);
     if (!config.worldCrs) { arrowOrigin += origin; }
-    meshArrow(m, arrow, config, arrowOrigin, Material::facade);
+    meshArrow(m, arrow, arrowOrigin, Material::facade);
 
     return m;
 }
