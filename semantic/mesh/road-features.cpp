@@ -97,47 +97,67 @@ inline math::Matrix4 global2FeatureCrs(const math::Point3& normal,
     return ublas::prod(tf, math::translate(math::Point3(-1.0 * origin)));
 }
 
-void meshArrow(geometry::Mesh& out,
-               const RoadArrow& arrow,
-               const math::Point3& origin,
-               Material material)
+geometry::Mesh rectangleMesh(const math::Size2f& sz, const Material& material)
 {
-    const auto w(arrow.size.width);
-    const auto h(arrow.size.height);
+    const auto w(sz.width);
+    const auto h(sz.height);
     geometry::Mesh mesh;
-    mesh.vertices.push_back(math::Point3(w / 2, h / 2, 0));
-    mesh.vertices.push_back(math::Point3(-w / 2, h / 2, 0));
-    mesh.vertices.push_back(math::Point3(-w / 2, -h / 2, 0));
-    mesh.vertices.push_back(math::Point3(w / 2, -h / 2, 0));
+    mesh.vertices.emplace_back(w / 2.0, h / 2.0, 0.0);
+    mesh.vertices.emplace_back(-w / 2.0, h / 2.0, 0.0);
+    mesh.vertices.emplace_back(-w / 2.0, -h / 2.0, 0.0);
+    mesh.vertices.emplace_back(w / 2.0, -h / 2.0, 0.0);
     mesh.faces.emplace_back(0, 1, 2);
     mesh.faces.emplace_back(0, 2, 3);
-
-    math::transform(math::matrixInvert(
-                        global2FeatureCrs(arrow.normal, arrow.angle, origin)),
-                    mesh.vertices);
 
     // colorize
     for (auto& f : mesh.faces)
     {
         f.imageId = +material;
     }
+    return mesh;
+}
 
-    detail::append(out, mesh);
+void tfToGlobal(geometry::Mesh& mesh,
+                const math::Point3& normal,
+                const double angle,
+                const math::Point3& origin)
+{
+    math::transform(
+        math::matrixInvert(global2FeatureCrs(normal, angle, origin)),
+        mesh.vertices);
 }
 
 } // namespace
+
+geometry::Mesh mesh(const PedestrianCrossing& pedestrianCrossing,
+                    const MeshConfig& config,
+                    const math::Point3& origin)
+{
+    math::Point3 pedestrianCrossingOrigin(pedestrianCrossing.origin);
+    if (!config.worldCrs) { pedestrianCrossingOrigin += origin; }
+
+    auto mesh { rectangleMesh(pedestrianCrossing.size,
+                              Material::pedestrianCrossing) };
+    tfToGlobal(mesh,
+               pedestrianCrossing.normal,
+               pedestrianCrossing.angle,
+               pedestrianCrossingOrigin);
+
+    return mesh;
+}
+
 
 geometry::Mesh mesh(const RoadArrow& arrow,
                     const MeshConfig& config,
                     const math::Point3& origin)
 {
-    geometry::Mesh m;
-
     math::Point3 arrowOrigin(arrow.origin);
     if (!config.worldCrs) { arrowOrigin += origin; }
-    meshArrow(m, arrow, arrowOrigin, Material::facade);
 
-    return m;
+    auto mesh { rectangleMesh(arrow.size, Material::roadArrow) };
+    tfToGlobal(mesh, arrow.normal, arrow.angle, arrowOrigin);
+
+    return mesh;
 }
 
 } // namespace lod2

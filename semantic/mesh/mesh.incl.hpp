@@ -39,8 +39,7 @@
 #include "pole.hpp"
 #include "lamp.hpp"
 #include "manhole.hpp"
-#include "pedestrian-crossing.hpp"
-#include "road-arrow.hpp"
+#include "road-features.hpp"
 
 namespace semantic {
 
