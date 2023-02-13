@@ -113,7 +113,7 @@ int Semantic2Obj::run()
 
     const auto mtlPath(utility::addExtension(output_, ".mtl"));
 
-    geometry::ObjMaterial mtl(mtlPath.filename().string());
+    geometry::ObjMaterial mtl(mtlPath.filename().generic_string());
     mtl.names = semantic::materials();
 
     // write mtl
