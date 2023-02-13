@@ -72,6 +72,8 @@ inline math::Matrix4 rotY(double angle)
     return r;
 }
 
+/// Get a transformation matrix to a CRS linked to plane defined by normal +
+/// origin (0,0,0) = normal becomes the z-axis
 inline math::Matrix4 rotAlignZwithNormal(const math::Point3& normal)
 {
     // decompose normal to euler angles: z1-y-z2 (z1 = -z2)
@@ -88,6 +90,14 @@ inline math::Matrix4 rotAlignZwithNormal(const math::Point3& normal)
     return ublas::prod(rotZ(-z1), tf); // rotate back in z
 }
 
+/**
+ * Get transformation matrix from global CRS to local feature CRS
+ * 
+ * @param[in] normal plane normal
+ * @param[in] angle rotation along the normal (ccw)
+ * @param[in] origin feature origin
+ * @returns tf matrix
+ */
 inline math::Matrix4 global2FeatureCrs(const math::Point3& normal,
                                        const double angle,
                                        const math::Point3& origin)
@@ -103,37 +113,16 @@ geometry::Mesh rectangleMesh(const math::Size2f& sz, const Material& material)
     const auto h2(sz.height / 2.0);
     geometry::Mesh mesh;
 
-    // mesh.vertices.emplace_back(w2, h2, 0.0);  // simple rectangle = boredom
-    // mesh.vertices.emplace_back(-w2, h2, 0.0);
-    // mesh.vertices.emplace_back(-w2, -h2, 0.0);
-    // mesh.vertices.emplace_back(w2, -h2, 0.0);
-    // mesh.faces.emplace_back(0, 1, 2);
-    // mesh.faces.emplace_back(0, 2, 3);
-
-    // draw arrow from wireframe in the direction of Y axis
+    // draw a triangle from wireframe in the direction of Y axis
     mesh.vertices.emplace_back(0, h2, 0.0);
     mesh.vertices.emplace_back(-w2, h2, 0.0);
-    mesh.vertices.emplace_back(-w2, 0.0, 0.0);
     mesh.vertices.emplace_back(-w2, -h2, 0.0);
-    mesh.vertices.emplace_back(-w2 / 2.0, 0.0, 0.0);
-    mesh.vertices.emplace_back(-w2 / 2.0, -h2, 0.0); // 5
-    mesh.vertices.emplace_back(w2 / 2.0, -h2, 0.0);
-    mesh.vertices.emplace_back(w2 / 2.0, 0.0, 0.0);
     mesh.vertices.emplace_back(w2, -h2, 0.0);
-    mesh.vertices.emplace_back(w2, 0.0, 0.0);
     mesh.vertices.emplace_back(w2, h2, 0.0);
 
     mesh.faces.emplace_back(0, 1, 2);
-    mesh.faces.emplace_back(0, 2, 4);
-    mesh.faces.emplace_back(0, 4, 5);
-    mesh.faces.emplace_back(0, 5, 6);
-    mesh.faces.emplace_back(0, 6, 7);
-    mesh.faces.emplace_back(0, 7, 9);
-    mesh.faces.emplace_back(0, 9, 10);
-    mesh.faces.emplace_back(4, 2, 3);
-    mesh.faces.emplace_back(4, 3, 5);
-    mesh.faces.emplace_back(7, 6, 8);
-    mesh.faces.emplace_back(7, 8, 9);
+    mesh.faces.emplace_back(0, 2, 3);
+    mesh.faces.emplace_back(0, 3, 4);
 
     // colorize
     for (auto& f : mesh.faces)
