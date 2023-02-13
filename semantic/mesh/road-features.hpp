@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 Melown Technologies SE
+ * Copyright (c) 2023 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,6 +38,10 @@ geometry::Mesh mesh(const RoadArrow& arrow,
                     const math::Point3& origin);
 
 geometry::Mesh mesh(const PedestrianCrossing& pedestrianCrossing,
+                    const MeshConfig& config,
+                    const math::Point3& origin);
+
+geometry::Mesh mesh(const Manhole& mahole,
                     const MeshConfig& config,
                     const math::Point3& origin);
 

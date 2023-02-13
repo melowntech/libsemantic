@@ -38,7 +38,6 @@
 #include "tree.hpp"
 #include "pole.hpp"
 #include "lamp.hpp"
-#include "manhole.hpp"
 #include "road-features.hpp"
 
 namespace semantic {

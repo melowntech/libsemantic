@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 Melown Technologies SE
+ * Copyright (c) 2023 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -143,6 +143,35 @@ geometry::Mesh rectangleMesh(const math::Size2f& sz, const Material& material)
     return mesh;
 }
 
+geometry::Mesh circleMesh(const math::Size2f& sz,
+                          const Material& material,
+                          const MeshConfig& config)
+{
+    auto radius = (sz.width + sz.height) / 4;
+    const auto arcPoints(detail::computeArcPoints(config, radius));
+
+    geometry::Mesh mesh;
+    mesh.vertices.emplace_back(math::Point3(0, 0, 0));
+
+    for (std::size_t i = 0; i < arcPoints; ++i)
+    {
+        const double angle((2 * M_PI * i) / arcPoints);
+        const auto p(detail::rotate(0, radius, 0.0, angle));
+        mesh.vertices.emplace_back(p);
+
+        std::size_t va = 1 + i % arcPoints;
+        std::size_t vb = 1 + (i + 1) % arcPoints;
+        mesh.faces.emplace_back(0, va, vb);
+    }
+
+    // colorize
+    for (auto& f : mesh.faces)
+    {
+        f.imageId = +material;
+    }
+    return mesh;
+}
+
 void tfToGlobal(geometry::Mesh& mesh,
                 const math::Point3& normal,
                 const double angle,
@@ -183,6 +212,32 @@ geometry::Mesh mesh(const RoadArrow& arrow,
     auto mesh { rectangleMesh(arrow.size, Material::roadArrow) };
     tfToGlobal(mesh, arrow.normal, arrow.angle, arrowOrigin);
 
+    return mesh;
+}
+
+geometry::Mesh mesh(const Manhole& manhole,
+                    const MeshConfig& config,
+                    const math::Point3& origin)
+{
+    math::Point3 manholeOrigin(manhole.origin);
+    if (!config.worldCrs) { manholeOrigin += origin; }
+
+    geometry::Mesh mesh;
+    if (manhole.shape == Manhole::Shape::rectangle)
+    {
+        mesh = rectangleMesh(manhole.size, Material::manhole);
+    }
+    else if (manhole.shape == Manhole::Shape::circle)
+    {
+        mesh = circleMesh(manhole.size, Material::manhole, config);
+    }
+    else
+    {
+        LOGTHROW(err4, std::runtime_error)
+            << "Unknown manhole shape: " << manhole.shape;
+    }
+
+    tfToGlobal(mesh, manhole.normal, manhole.angle, manholeOrigin);
     return mesh;
 }
 
