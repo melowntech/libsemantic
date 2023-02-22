@@ -228,7 +228,7 @@ int Semantic2Vef::run()
 
         geometry::saveAsObj(mesh,
                             vefMesh.path,
-                            vefMesh.mtlPath().filename().string());
+                            vefMesh.mtlPath().filename().generic_string());
         ++i;
     }
 
