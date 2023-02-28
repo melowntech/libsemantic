@@ -55,6 +55,8 @@ UTILITY_GENERATE_ENUM(Class,
                       ((manhole))
                       ((trafficSign))
                       ((trafficLight))
+                      ((pedestrianCrossing))
+                      ((roadArrow))
                       )
 
 typedef std::vector<Class> Classes;
@@ -120,11 +122,21 @@ struct Railway : Entity {
     Lines lines;
 };
 
+enum class RoadMarkingColor { none, white, yellow, blue };
+
+UTILITY_GENERATE_ENUM_IO(RoadMarkingColor,
+                         ((none))
+                         ((white))
+                         ((yellow))
+                         ((blue))
+                        )
+
 /** LaneLine
  */
 struct LaneLine : Entity {
     /** Entity class.
      */
+
     static const constexpr Class cls = Class::laneLine;
     typedef std::vector<LaneLine> list;
 
@@ -134,6 +146,8 @@ struct LaneLine : Entity {
         std::vector<int> polyline;
         bool isDashed;
         bool isDouble;
+        RoadMarkingColor color = RoadMarkingColor::none;
+
     };
     typedef std::vector<Line> Lines;
     Lines lines;
@@ -149,6 +163,9 @@ struct Pole : Entity {
     math::Point3 direction = { 0.0, 0.0, 1.0 };
     double length = 0.0;
     double radius = 0.0;
+    std::vector<std::string> lampIds;
+    std::vector<std::string> trafficLightIds;
+    std::vector<std::string> trafficSignIds;
 
     typedef std::vector<Pole> list;
 };
@@ -165,6 +182,7 @@ struct Lamp : Entity {
 
     Mount mount = Mount::none;
     math::Points3 dimensions;
+    std::string poleId;
 };
 
 UTILITY_GENERATE_ENUM_IO(Lamp::Mount,
@@ -204,7 +222,9 @@ struct TrafficSign : Entity {
 
     math::Point3 normal;
     math::Size2f size;
-    std::string className = "not_defined";
+    std::string text;
+    int classId = -1;
+    std::string poleId;
 
     struct View {
         std::string path;
@@ -233,8 +253,39 @@ struct TrafficLight : Entity {
 
     double height = 0.0;
     double radius = 0.0;
+    std::string poleId;
 
     typedef std::vector<TrafficLight> list;
+};
+
+/** PedestrianCrossing
+ */
+struct PedestrianCrossing : Entity {
+    /** Entity class.
+     */
+
+    static const constexpr Class cls = Class::pedestrianCrossing;
+    typedef std::vector<PedestrianCrossing> list;
+
+    RoadMarkingColor color = RoadMarkingColor::white;
+    double angle;
+    math::Size2f size;
+    math::Point3 normal;
+};
+
+/** RoadArrow
+ */
+struct RoadArrow : Entity {
+    enum class Color { white, yellow };
+
+    static const constexpr Class cls = Class::roadArrow;
+    typedef std::vector<RoadArrow> list;
+
+    math::Point3 normal;
+    math::Size2f size;
+    double angle;
+    std::string arrowType;
+    RoadMarkingColor color = RoadMarkingColor::white;
 };
 
 
@@ -289,6 +340,14 @@ struct World {
     /** All traffic lights in the world.
      */
     TrafficLight::list trafficLights;
+    
+    /** All pedestrian crossings in the world.
+     */
+    PedestrianCrossing::list pedestrianCrossings;
+
+    /** All road arrows in the world. 
+     */
+    RoadArrow::list roadArrows;
 };
 
 /** Localizes world. Sets world origin center of all world bounding box.
@@ -326,6 +385,8 @@ void distribute(Class cls, const World &world, const Op &op)
     case Class::manhole: op(world.manholes); break;
     case Class::trafficSign: op(world.trafficSigns); break;
     case Class::trafficLight: op(world.trafficLights); break;
+    case Class::pedestrianCrossing: op(world.pedestrianCrossings); break;
+    case Class::roadArrow: op(world.roadArrows); break;
     }
 }
 
@@ -342,6 +403,8 @@ void distribute(Class cls, World &world, const Op &op)
     case Class::manhole: op(world.manholes); break;
     case Class::trafficSign: op(world.trafficSigns); break;
     case Class::trafficLight: op(world.trafficLights); break;
+    case Class::pedestrianCrossing: op(world.pedestrianCrossings); break;
+    case Class::roadArrow: op(world.roadArrows); break;
     }
 }
 

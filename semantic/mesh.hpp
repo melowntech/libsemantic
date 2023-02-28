@@ -48,6 +48,8 @@ enum class Material : int {
     , pole = 7
     , lamp = 8
     , manhole = 9
+    , pedestrianCrossing = 10
+    , roadArrow = 11
 };
 
 /** Helper for material-enum--to-number converion.
@@ -106,6 +108,8 @@ UTILITY_GENERATE_ENUM_IO(Material,
                          ((pole))
                          ((lamp))
                          ((manhole))
+                         ((pedestrianCrossing))
+                         ((roadArrow))
                          )
 
 } // namespace semantic

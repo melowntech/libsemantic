@@ -41,6 +41,7 @@ const Class Lamp::cls;
 const Class Manhole::cls;
 const Class TrafficSign::cls;
 const Class TrafficLight::cls;
+const Class PedestrianCrossing::cls;
 
 Classes classes(const World &world)
 {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 Melown Technologies SE
+ * Copyright (c) 2023 Melown Technologies SE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,16 +24,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef semantic_mesh_manhole_hpp_included_
-#define semantic_mesh_manhole_hpp_included_
+#ifndef semantic_mesh_road_arrow_hpp_included_
+#define semantic_mesh_road_arrow_hpp_included_
 
 #include "../world.hpp"
 
-namespace semantic { namespace lod2 {
+namespace semantic
+{
+namespace lod2
+{
+geometry::Mesh mesh(const RoadArrow& arrow,
+                    const MeshConfig& config,
+                    const math::Point3& origin);
 
-geometry::Mesh mesh(const Manhole &manhole, const MeshConfig &config
-                    , const math::Point3 &origin);
+geometry::Mesh mesh(const PedestrianCrossing& pedestrianCrossing,
+                    const MeshConfig& config,
+                    const math::Point3& origin);
 
-} } // namespace semantic::lod2
+geometry::Mesh mesh(const Manhole& mahole,
+                    const MeshConfig& config,
+                    const math::Point3& origin);
 
-#endif // semantic_mesh_manhole_hpp_included_
+} // namespace lod2
+} // namespace semantic
+
+#endif // semantic_mesh_road_arrow_hpp_included_
