@@ -27,8 +27,8 @@ set(semantic_SOURCES
   mesh/multipolymesh.hpp mesh/multipolymesh.cpp
   mesh/pole.hpp mesh/pole.cpp
   mesh/lamp.hpp mesh/lamp.cpp
-  mesh/manhole.hpp mesh/manhole.cpp
-  mesh/pedestrian-crossing.hpp mesh/pedestrian-crossing.cpp
+  # mesh/manhole.hpp mesh/manhole.cpp
+  mesh/road-features.hpp mesh/road-features.cpp
 
   ogr.hpp
   ogr/ogr.cpp ogr/ogr.incl.hpp
