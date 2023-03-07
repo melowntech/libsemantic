@@ -48,30 +48,6 @@ namespace
 {
 namespace ublas = boost::numeric::ublas;
 
-inline math::Matrix4 rotZ(double angle)
-{
-    math::Matrix4 r { math::identity4() };
-    double c = std::cos(angle);
-    r(0, 0) = c;
-    r(1, 1) = c;
-    double s = std::sin(angle);
-    r(1, 0) = s;
-    r(0, 1) = -s;
-    return r;
-}
-
-inline math::Matrix4 rotY(double angle)
-{
-    math::Matrix4 r { math::identity4() };
-    double c = std::cos(angle);
-    r(0, 0) = c;
-    r(2, 2) = c;
-    double s = std::sin(angle);
-    r(0, 2) = s;
-    r(2, 0) = -s;
-    return r;
-}
-
 /// Get a transformation matrix to a CRS linked to plane defined by normal +
 /// origin (0,0,0) = normal becomes the z-axis
 inline math::Matrix4 rotAlignZwithNormal(const math::Point3& normal)
@@ -81,13 +57,13 @@ inline math::Matrix4 rotAlignZwithNormal(const math::Point3& normal)
 
     // rotate in z (~ set azimuth)
     auto z1 { -std::atan2(normtf(1), normtf(0)) };
-    auto rmatZ1 { rotZ(z1) };
+    auto rmatZ1 { math::rotateZ(z1) };
     normtf = math::transform(rmatZ1, normtf);
 
     // rotate in y (~ set elevation)
-    auto rmatY { rotY(-M_PI_2 + std::atan2(normtf(2), normtf(0))) };
+    auto rmatY { math::rotateY(-M_PI_2 + std::atan2(normtf(2), normtf(0))) };
     math::Matrix4 tf { ublas::prod(rmatY, rmatZ1) };
-    return ublas::prod(rotZ(-z1), tf); // rotate back in z
+    return ublas::prod(math::rotateZ(-z1), tf); // rotate back in z
 }
 
 /**
@@ -103,7 +79,7 @@ inline math::Matrix4 global2FeatureCrs(const math::Point3& normal,
                                        const math::Point3& origin)
 {
     auto tf { rotAlignZwithNormal(normal) };
-    tf = ublas::prod(rotZ(-angle), tf);
+    tf = ublas::prod(math::rotateZ(-angle), tf);
     return ublas::prod(tf, math::translate(math::Point3(-1.0 * origin)));
 }
 
