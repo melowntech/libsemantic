@@ -73,7 +73,7 @@ inline math::Point3 rotate(const math::Point3 &p, double angle)
 inline bool colinear(double a, double b, double c, double t)
 {
     // Interpolate expected height on line from a to c
-    const auto expected(t * a + (1 - t) * c);
+    const auto expected((1 - t) * a + t * c);
 
     // Compare with provided height b
     return (std::abs(expected - b) < 1e-5);
