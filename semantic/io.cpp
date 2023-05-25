@@ -38,6 +38,8 @@
 
 #include "io.hpp"
 
+#include "data/semantic.mtl.hpp"
+
 namespace fs = boost::filesystem;
 namespace bio = boost::iostreams;
 
@@ -906,6 +908,11 @@ void save(const World &world, const fs::path &path
     }
 
     f.close();
+}
+
+void writeMtl(boost::filesystem::path mtlPath)
+{
+    utility::write(mtlPath, semantic::semantic_mtl);
 }
 
 #define SEMANTIC_DEFINE_ENTITY_IO_PAIR(ENTITY)              \
