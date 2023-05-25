@@ -72,6 +72,12 @@ struct MeshConfig {
     /** Keep the mesh in world's CRS (i.e. do not shift by world origin)
      */
     bool worldCrs = false;
+
+    /** Min distance between two distinct verticies (vertices are merged
+     * otherwise). Used in rectangular buildings. Set to zero to disable
+     * merging.
+     */
+    double vertexMergeDist = 0.0;
 };
 
 /** Generate mesh in given LOD.
