@@ -92,6 +92,8 @@ std::string serialize(const T &entity
 template <typename T>
 void deserialize(const T &entity, const void *data, std::size_t size);
 
+void writeMtl(const boost::filesystem::path &mtlPath);
+
 // inlines
 
 template <typename T>
