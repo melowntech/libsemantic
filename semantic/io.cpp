@@ -910,7 +910,7 @@ void save(const World &world, const fs::path &path
     f.close();
 }
 
-void writeMtl(boost::filesystem::path mtlPath)
+void writeMtl(const boost::filesystem::path &mtlPath)
 {
     utility::write(mtlPath, semantic::semantic_mtl);
 }
