@@ -25,6 +25,7 @@
  */
 
 #include "geometry/mesh.hpp"
+#include "geometry/meshop.hpp"
 #include "dbglog/dbglog.hpp"
 
 /**
@@ -37,7 +38,7 @@ namespace semantic { namespace lod2 {
 namespace {
 
 using Mesh = geometry::Mesh;
-using FFTable = bs::SegMesh::FaceFaceTable;
+using FFTable = geometry::FaceFaceTable;
 using Face = geometry::Face;
 using FIdx = std::size_t;
 using VIdx = geometry::Face::index_type;
@@ -73,7 +74,7 @@ void edgeFlip(Mesh& mesh,
 {
     // find the opposite face
     FIdx fI2;
-    bool found = false;
+    bool found { false };
     for (auto& n : ffTable[fI1])
     {
         if (hasEdge(mesh.faces[n], v2, v1))
@@ -91,8 +92,8 @@ void edgeFlip(Mesh& mesh,
     }
 
     // flip edge
-    auto a = theOtherVertex(mesh.faces[fI1], v1, v2);
-    auto b = theOtherVertex(mesh.faces[fI2], v2, v1);
+    auto a { theOtherVertex(mesh.faces[fI1], v1, v2) };
+    auto b { theOtherVertex(mesh.faces[fI2], v2, v1) };
     mesh.faces[fI1] = Face(a, b, v2);
     mesh.faces[fI2] = Face(b, a, v1);
 }
@@ -100,12 +101,12 @@ void edgeFlip(Mesh& mesh,
 /// Flip the longest edge - works in our case
 void removeNullFaceByEdgeFlip(Mesh& mesh, const FFTable& ffTable, const FIdx fI)
 {
-    auto& f = mesh.faces[fI];
+    auto& f { mesh.faces[fI] };
 
     // flip the longest edge
-    auto lab = math::length(mesh.vertices[f.a] - mesh.vertices[f.b]);
-    auto lbc = math::length(mesh.vertices[f.b] - mesh.vertices[f.c]);
-    auto lca = math::length(mesh.vertices[f.c] - mesh.vertices[f.a]);
+    auto lab { math::length(mesh.vertices[f.a] - mesh.vertices[f.b]) };
+    auto lbc { math::length(mesh.vertices[f.b] - mesh.vertices[f.c]) };
+    auto lca { math::length(mesh.vertices[f.c] - mesh.vertices[f.a]) };
 
     if (lab > lbc && lab > lca) { edgeFlip(mesh, ffTable, fI, f.a, f.b); }
     else
@@ -116,7 +117,7 @@ void removeNullFaceByEdgeFlip(Mesh& mesh, const FFTable& ffTable, const FIdx fI)
 }
 
 /// Check null face = vertices almost on one line
-bool isNullFace(const Mesh& mesh, const FaceIdx fI)
+bool isNullFace(const Mesh& mesh, const FIdx fI)
 {
     auto& f { mesh.faces[fI] };
     auto& a { mesh.vertices[f.a] };
@@ -128,14 +129,13 @@ bool isNullFace(const Mesh& mesh, const FaceIdx fI)
 bool attemptToRemoveNullFacesByEdgeFlip(Mesh& mesh)
 {
     std::size_t flipped { 0 };
-    auto ffTable = bs::ffTableNonManifold(mesh);
+    auto ffTable { geometry::getFaceFaceTableNonManifold(mesh) };
     for (FIdx fI = 0; fI < mesh.faces.size(); fI++)
     {
         if (isNullFace(mesh, fI))
         {
-            auto& f = mesh.faces[fI];
             removeNullFaceByEdgeFlip(mesh, ffTable, fI);
-            ffTable = bs::ffTableNonManifold(mesh);
+            ffTable = geometry::getFaceFaceTableNonManifold(mesh);
             ++flipped;
         }
     }
@@ -147,7 +147,7 @@ bool attemptToRemoveNullFacesByEdgeFlip(Mesh& mesh)
 /// Remove faces that are adjacent to each other on all three sides
 void removeSplicedFaces(Mesh& mesh)
 {
-    auto ffTable { bs::ffTableNonManifold(mesh) };
+    auto ffTable { geometry::getFaceFaceTableNonManifold(mesh) };
     std::vector<bool> removeFace(mesh.faces.size(), false);
     for (FIdx fI = 0; fI < mesh.faces.size(); fI++)
     {
