@@ -69,7 +69,8 @@ public:
                          .first;
             pointStorage_.push_back(p);
         }
-        return std::make_pair(&fcache->first, fcache->second);
+        auto idx { fcache->second };
+        return std::make_pair(&pointStorage_[idx], idx);
     }
 
 private:
@@ -109,37 +110,27 @@ class Composer
 public:
     Composer(geometry::Mesh& mesh, const MeshConfig& cfg)
         : mesh_(mesh),
-          cache_(cfg.vertexMergeDist <= 0
-                     ? std::unique_ptr<PointCache>(new ExactPointCache(mesh.vertices))
-                     : std::unique_ptr<PointCache>(new EpsPointCache(mesh.vertices, cfg.vertexMergeDist))),
-            last_(nullptr)
+          cache_(cfg.vertexMergeEps <= 0
+                     ? std::unique_ptr<PointCache>(
+                         new ExactPointCache(mesh.vertices))
+                     : std::unique_ptr<PointCache>(
+                         new EpsPointCache(mesh.vertices, cfg.vertexMergeEps))),
+          last_(nullptr)
     { }
 
     /** Returns index to p.
      *
      *  Updates last point to point to the retuned point.
      */
-    Index point(const math::Point3 &p) {
+    Index point(const math::Point3& p)
+    {
+        if (!cache_)
+        {
+            LOGTHROW(err4, std::runtime_error) << "Point cache not initialized";
+        }
         Index idx;
         std::tie(last_, idx) = cache_->point(p);
         return idx;
-
-        // auto fcache { cache_.end() };
-        // for (auto it { cache_.begin() }; it != cache_.end(); it++)
-        // {
-        //     if (math::length(it->first - p) < CACHE_EPS)
-        //     {
-        //         fcache = it;
-        //         break;
-        //     }
-        // }
-        // if (fcache == cache_.end()) {
-        //     cache_.emplace_back(p, static_cast<Index>(mesh_.vertices.size()));
-        //     fcache = cache_.end() - 1;
-        //     mesh_.vertices.push_back(p);
-        // }
-        // last_ = &fcache->first;
-        // return fcache->second;
     }
 
     /** Returns index to (last point + p).

@@ -65,6 +65,10 @@ void Semantic2Obj::configuration(po::options_description &cmdline
          , utility::implicit_value(&meshConfig_.worldCrs, true)
          ->default_value(false)
          , "Keep the mesh in world's CRS (i.e. do not shift by world origin).")
+        ("vertexMergeEps", po::value(&meshConfig_.vertexMergeEps)
+         ->default_value(meshConfig_.vertexMergeEps)
+         , "Minimal distance between two distinct vertices when creating mesh "
+           "of lod2 buildings. Prevents creation of duplicate vertices.")
         ;
 
     pd.add("output", 1).add("input", -1);

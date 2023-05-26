@@ -108,6 +108,10 @@ void Semantic2Vef::configuration(po::options_description &cmdline
         ("txtColorWidth", po::value(&txtColorWidth_)
          ->default_value(txtColorWidth_)
          , "Width of individual color squares in generated texture image.")
+        ("vertexMergeEps", po::value(&meshConfig_.vertexMergeEps)
+         ->default_value(meshConfig_.vertexMergeEps)
+         , "Minimal distance between two distinct vertices when creating mesh "
+           "of lod2 buildings. Prevents creation of duplicate vertices.")
         ;
 
     pd.add("output", 1).add("input", -1);

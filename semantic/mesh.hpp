@@ -77,7 +77,7 @@ struct MeshConfig {
      * otherwise). Used in rectangular buildings. Set to zero to disable
      * merging.
      */
-    double vertexMergeDist = 0.0;
+    double vertexMergeEps = 0.0;
 };
 
 /** Generate mesh in given LOD.
