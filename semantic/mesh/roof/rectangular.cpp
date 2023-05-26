@@ -39,9 +39,6 @@ namespace lod2 {
 
 using detail::Index;
 
-constexpr double CACHE_EPS { 1e-6 };
-
-
 class PointCache
 {
 public:
