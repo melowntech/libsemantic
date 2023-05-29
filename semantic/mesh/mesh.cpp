@@ -52,7 +52,9 @@ geometry::Mesh mesh(const roof::Roof &roof
             return mesh(r, config, origin);
         }
     } v(config, origin);
-    return boost::apply_visitor(v, roof.instance);
+    auto mesh { boost::apply_visitor(v, roof.instance) };
+    if (config.repairMesh) { repairRoofMesh(mesh); }
+    return mesh;
 }
 
 geometry::Mesh mesh(const Building &building, const MeshConfig &config

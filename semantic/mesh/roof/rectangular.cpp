@@ -39,6 +39,8 @@ namespace lod2 {
 
 using detail::Index;
 
+constexpr double VERTEX_MERGE_EPS_ON_REPAIR { 1e-3 };
+
 class PointCache
 {
 public:
@@ -107,13 +109,27 @@ class Composer
 public:
     Composer(geometry::Mesh& mesh, const MeshConfig& cfg)
         : mesh_(mesh),
-          cache_(cfg.vertexMergeEps <= 0
-                     ? std::unique_ptr<PointCache>(
-                         new ExactPointCache(mesh.vertices))
-                     : std::unique_ptr<PointCache>(
-                         new EpsPointCache(mesh.vertices, cfg.vertexMergeEps))),
+          cache_(nullptr),
           last_(nullptr)
-    { }
+    {
+        auto eps { cfg.vertexMergeEps };
+        if (cfg.repairMesh && eps == 0.0)
+        {
+            eps = VERTEX_MERGE_EPS_ON_REPAIR;
+            LOG(info1) << "Setting vertex merge eps to " << eps;
+        }
+
+        if (eps > 0.0)
+        {
+            cache_ = std::unique_ptr<PointCache>(
+                new EpsPointCache(mesh.vertices, eps));
+        }
+        else
+        {
+            cache_ = std::unique_ptr<PointCache>(
+                new ExactPointCache(mesh.vertices));
+        }
+    }
 
     /** Returns index to p.
      *

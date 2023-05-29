@@ -135,6 +135,7 @@ bool attemptToRemoveNullFacesByEdgeFlip(Mesh& mesh)
         if (isNullFace(mesh, fI))
         {
             removeNullFaceByEdgeFlip(mesh, ffTable, fI);
+            // meshes are small, OK to just recompute it all
             ffTable = geometry::getFaceFaceTableNonManifold(mesh);
             ++flipped;
         }
@@ -204,9 +205,9 @@ Mesh removeUnusedVertices(Mesh& mesh)
 } // namespace
 
 /**
- * Repairs mesh produced by circular/rectangular mesh generators so that the
- * topology is correct
- * 
+ * Repairs mesh produced by circular/rectangular roof mesh generators so that
+ * the topology is correct
+ *
  * - removes faces that are adjacent to each other from all three sides
  * - removes null faces (collinear vertices) by flipping their longest edge
  * - removes unused vertices
