@@ -91,11 +91,14 @@ void edgeFlip(Mesh& mesh,
             << "Cannot find edge in any neighbouring faces.";
     }
 
+    auto& f1 { mesh.faces[fI1] };
+    auto& f2 { mesh.faces[fI2] };
+
     // flip edge
-    auto a { theOtherVertex(mesh.faces[fI1], v1, v2) };
-    auto b { theOtherVertex(mesh.faces[fI2], v2, v1) };
-    mesh.faces[fI1] = Face(a, b, v2);
-    mesh.faces[fI2] = Face(b, a, v1);
+    auto a { theOtherVertex(f1, v1, v2) };
+    auto b { theOtherVertex(f2, v2, v1) };
+    mesh.faces[fI1] = Face(a, b, v2, f2.imageId);
+    mesh.faces[fI2] = Face(b, a, v1, f2.imageId);
 }
 
 /// Flip the longest edge - works in our case
@@ -194,7 +197,10 @@ Mesh removeUnusedVertices(Mesh& mesh)
 
     for (auto& f : mesh.faces)
     {
-        res.faces.emplace_back(getNewIdx(f.a), getNewIdx(f.b), getNewIdx(f.c));
+        res.faces.emplace_back(getNewIdx(f.a),
+                               getNewIdx(f.b),
+                               getNewIdx(f.c),
+                               f.imageId);
     }
     LOG(info1) << "Removed " << mesh.vertices.size() - res.vertices.size()
                << " unused vertices";
