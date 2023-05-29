@@ -108,10 +108,15 @@ void Semantic2Vef::configuration(po::options_description &cmdline
         ("txtColorWidth", po::value(&txtColorWidth_)
          ->default_value(txtColorWidth_)
          , "Width of individual color squares in generated texture image.")
+        ("repairMesh", po::value(&meshConfig_.repairMesh)
+         ->default_value(meshConfig_.repairMesh)
+         , "Remove zero-area and non-manifold faces from building roof meshes. "
+           "Also sets `vertexMergeEps` to some non-zero value if it's zero (to "
+           "merge very close vertices).")
         ("vertexMergeEps", po::value(&meshConfig_.vertexMergeEps)
          ->default_value(meshConfig_.vertexMergeEps)
-         , "Minimal distance between two distinct vertices when creating mesh "
-           "of lod2 buildings. Prevents creation of duplicate vertices.")
+         ,"Min distance between two distinct verticies (vertices are merged "
+          "otherwise). Used in building roofs. Set to zero to disable merging.")
         ;
 
     pd.add("output", 1).add("input", -1);
