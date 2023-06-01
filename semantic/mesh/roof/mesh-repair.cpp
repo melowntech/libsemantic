@@ -24,18 +24,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <algorithm>
+
+#include "dbglog/dbglog.hpp"
 #include "geometry/mesh.hpp"
 #include "geometry/meshop.hpp"
-#include "dbglog/dbglog.hpp"
+
+#include "math/geometry.hpp"
 
 /**
- * Remove null faces while preserving topology. Written specifically for the
- * case of lod2 roofs.
+ * Remove null (zero-area) faces while preserving topology. Written specifically
+ * for the case of lod2 roofs.
  */
 
-namespace semantic { namespace lod2 {
+namespace semantic
+{
+namespace lod2
+{
 
-namespace {
+namespace
+{
 
 using Mesh = geometry::Mesh;
 using FFTable = geometry::FaceFaceTable;
@@ -43,14 +51,17 @@ using Face = geometry::Face;
 using FIdx = std::size_t;
 using VIdx = geometry::Face::index_type;
 
-constexpr double NULL_FACE_THRESH { 1e-2 };
+/// Min vertex distance from a line formed by two other vertices; should be
+/// lower than vertexMergeEps
+constexpr double NULL_FACE_THRESH { 1e-4 };
+
+/// Max number of passes to remove null faces
 constexpr std::size_t MAX_EDGEFLIP_ITERS { 100 };
 
 /// Checks if face contains edge v1-v2 (in this order)
 bool hasEdge(const Face& f, const VIdx v1, const VIdx v2)
 {
-    return (f.a == v1 && f.b == v2)
-           || (f.b == v1 && f.c == v2)
+    return (f.a == v1 && f.b == v2) || (f.b == v1 && f.c == v2)
            || (f.c == v1 && f.a == v2);
 }
 
@@ -65,8 +76,17 @@ VIdx theOtherVertex(const Face& f, const VIdx v1, const VIdx v2)
     throw;
 }
 
+/// Check null face = vertices almost on one line
+bool isNullFace(const Mesh& mesh, const Face& f)
+{
+    auto& a { mesh.vertices[f.a] };
+    auto& b { mesh.vertices[f.b] };
+    auto& c { mesh.vertices[f.c] };
+    return math::pointLineDistance(c, math::Line3(a, b - a)) < NULL_FACE_THRESH;
+}
+
 /// Flip edge v1-v2 incident with face fI1
-void edgeFlip(Mesh& mesh,
+bool edgeFlip(Mesh& mesh,
               const FFTable& ffTable,
               const FIdx fI1,
               const VIdx v1,
@@ -91,18 +111,43 @@ void edgeFlip(Mesh& mesh,
             << "Cannot find edge in any neighbouring faces.";
     }
 
+    if (std::count(ffTable[fI1].begin(), ffTable[fI1].end(), fI2) > 1)
+    {
+        // the triangles share multiple edges (should not happen)
+        return false;
+    }
+
+    // Verify that there are not any common neighbours between the two faces
+    auto neigh1 { ffTable[fI1] };
+    std::sort(neigh1.begin(), neigh1.end());
+    auto neigh2 { ffTable[fI2] };
+    std::sort(neigh2.begin(), neigh2.end());
+    std::vector<std::size_t> commonNeighbours;
+    std::set_intersection(neigh1.begin(),
+                          neigh1.end(),
+                          neigh2.begin(),
+                          neigh2.end(),
+                          std::back_inserter(commonNeighbours));
+    if (commonNeighbours.size() > 0) { return false; }
+
+    // Construct the new faces
     auto& f1 { mesh.faces[fI1] };
     auto& f2 { mesh.faces[fI2] };
-
-    // flip edge
     auto a { theOtherVertex(f1, v1, v2) };
     auto b { theOtherVertex(f2, v2, v1) };
-    mesh.faces[fI1] = Face(a, b, v2, f2.imageId);
-    mesh.faces[fI2] = Face(b, a, v1, f2.imageId);
+    auto nf1 { Face(a, b, v2, f2.imageId) };
+    auto nf2 { Face(b, a, v1, f2.imageId) };
+
+    // Check they are not null
+    if (isNullFace(mesh, nf1) || isNullFace(mesh, nf2)) { return false; }
+
+    mesh.faces[fI1] = nf1;
+    mesh.faces[fI2] = nf2;
+    return true;
 }
 
 /// Flip the longest edge - works in our case
-void removeNullFaceByEdgeFlip(Mesh& mesh, const FFTable& ffTable, const FIdx fI)
+bool removeNullFaceByEdgeFlip(Mesh& mesh, const FFTable& ffTable, const FIdx fI)
 {
     auto& f { mesh.faces[fI] };
 
@@ -111,23 +156,17 @@ void removeNullFaceByEdgeFlip(Mesh& mesh, const FFTable& ffTable, const FIdx fI)
     auto lbc { math::length(mesh.vertices[f.b] - mesh.vertices[f.c]) };
     auto lca { math::length(mesh.vertices[f.c] - mesh.vertices[f.a]) };
 
-    if (lab > lbc && lab > lca) { edgeFlip(mesh, ffTable, fI, f.a, f.b); }
+    if (lab > lbc && lab > lca)
+    {
+        return edgeFlip(mesh, ffTable, fI, f.a, f.b);
+    }
     else
     {
-        if (lbc > lca) { edgeFlip(mesh, ffTable, fI, f.b, f.c); }
-        else { edgeFlip(mesh, ffTable, fI, f.c, f.a); }
+        if (lbc > lca) { return edgeFlip(mesh, ffTable, fI, f.b, f.c); }
+        else { return edgeFlip(mesh, ffTable, fI, f.c, f.a); }
     }
 }
 
-/// Check null face = vertices almost on one line
-bool isNullFace(const Mesh& mesh, const FIdx fI)
-{
-    auto& f { mesh.faces[fI] };
-    auto& a { mesh.vertices[f.a] };
-    auto& b { mesh.vertices[f.b] };
-    auto& c { mesh.vertices[f.c] };
-    return math::pointLineDistance(c, math::Line3(a, b - a)) < NULL_FACE_THRESH;
-}
 
 bool attemptToRemoveNullFacesByEdgeFlip(Mesh& mesh)
 {
@@ -135,12 +174,14 @@ bool attemptToRemoveNullFacesByEdgeFlip(Mesh& mesh)
     auto ffTable { geometry::getFaceFaceTableNonManifold(mesh) };
     for (FIdx fI = 0; fI < mesh.faces.size(); fI++)
     {
-        if (isNullFace(mesh, fI))
+        if (isNullFace(mesh, mesh.faces[fI]))
         {
-            removeNullFaceByEdgeFlip(mesh, ffTable, fI);
-            // meshes are small, OK to just recompute it all
-            ffTable = geometry::getFaceFaceTableNonManifold(mesh);
-            ++flipped;
+            if (removeNullFaceByEdgeFlip(mesh, ffTable, fI))
+            {
+                // meshes are small, OK to just recompute it all
+                ffTable = geometry::getFaceFaceTableNonManifold(mesh);
+                ++flipped;
+            }
         }
     }
     LOG(info1) << "Flipped " << flipped
@@ -232,7 +273,6 @@ void repairRoofMesh(geometry::Mesh& mesh)
         {
             LOG(warn4) << "Unable to remove null faces by edge flipping - "
                           "might cause problems later.";
-            break;
         }
     }
     LOG(info1) << "Removed null faces in " << iter << " iterations.";
@@ -240,5 +280,5 @@ void repairRoofMesh(geometry::Mesh& mesh)
     mesh = removeUnusedVertices(mesh);
 }
 
-} } // namespace semantic::lod2
-
+} // namespace lod2
+} // namespace semantic
