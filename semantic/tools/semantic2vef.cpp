@@ -108,8 +108,7 @@ void Semantic2Vef::configuration(po::options_description &cmdline
         ("txtColorWidth", po::value(&txtColorWidth_)
          ->default_value(txtColorWidth_)
          , "Width of individual color squares in generated texture image.")
-        ("repairMesh", po::value(&meshConfig_.repairMesh)
-         ->default_value(meshConfig_.repairMesh)
+        ("repairMesh", utility::implicit_value(&meshConfig_.repairMesh, true)
          , "Remove zero-area and non-manifold faces from building roof meshes. "
            "Also sets `vertexMergeEps` to some non-zero value if it's zero (to "
            "merge very close vertices).")

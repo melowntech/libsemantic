@@ -65,8 +65,7 @@ void Semantic2Obj::configuration(po::options_description &cmdline
          , utility::implicit_value(&meshConfig_.worldCrs, true)
          ->default_value(false)
          , "Keep the mesh in world's CRS (i.e. do not shift by world origin).")
-        ("repairMesh", po::value(&meshConfig_.repairMesh)
-         ->default_value(meshConfig_.repairMesh)
+        ("repairMesh", utility::implicit_value(&meshConfig_.repairMesh, true)
          , "Remove zero-area and non-manifold faces from building roof meshes. "
            "Also sets `vertexMergeEps` to some non-zero value if it's zero (to "
            "merge very close vertices).")
