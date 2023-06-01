@@ -41,19 +41,20 @@ geometry::Mesh mesh(const roof::Roof &roof
 {
     struct Visitor : public boost::static_visitor<geometry::Mesh> {
         const MeshConfig &config;
-        const math::Point3 &origin;
-        Visitor(const MeshConfig &config, const math::Point3 &origin)
-            : config(config), origin(origin)
+        Visitor(const MeshConfig &config)
+            : config(config)
         {}
         geometry::Mesh operator()(const roof::Rectangular &r) const {
-            return mesh(r, config, origin);
+            return mesh(r, config, math::Point3(0, 0, 0));
         }
         geometry::Mesh operator()(const roof::Circular &r) const {
-            return mesh(r, config, origin);
+            return mesh(r, config, math::Point3(0, 0, 0));
         }
-    } v(config, origin);
+    } v(config);
     auto mesh { boost::apply_visitor(v, roof.instance) };
     if (config.repairMesh) { repairRoofMesh(mesh); }
+    // shift after repair to avoid errors caused by rounding
+    for (auto& pt : mesh.vertices) { pt += origin; }
     return mesh;
 }
 
