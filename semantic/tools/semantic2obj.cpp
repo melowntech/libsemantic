@@ -15,7 +15,6 @@
 
 #include "semantic/io.hpp"
 #include "semantic/mesh.hpp"
-#include "data/semantic.mtl.hpp"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -126,7 +125,7 @@ int Semantic2Obj::run()
     mtl.names = semantic::materials();
 
     // write mtl
-    utility::write(mtlPath, semantic2obj::semantic_mtl);
+    semantic::writeMtl(mtlPath);
 
     const auto &setStream([&, srsWritten=false](std::ostream &os)
         mutable

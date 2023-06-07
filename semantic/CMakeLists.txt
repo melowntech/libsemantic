@@ -10,12 +10,18 @@ define_module(LIBRARY semantic=${semantic_VERSION}
   Boost_IOSTREAMS
   )
 
+file_to_cpp(semantic_SOURCES
+  semantic::semantic_mtl
+  data/semantic.mtl)
+
 set(semantic_SOURCES
   world.hpp world.cpp
   tree.hpp tree.cpp
   roof.hpp roof.cpp
 
   io.hpp io.cpp
+
+  data/semantic.mtl.hpp data/semantic.mtl.cpp
 
   mesh.hpp
   mesh/mesh.cpp mesh/mesh.incl.hpp

@@ -7,10 +7,6 @@ set(semantic2obj_SOURCES
   semantic2obj.cpp
   )
 
-file_to_cpp(semantic2obj_SOURCES
-  semantic2obj::semantic_mtl
-  data/semantic.mtl)
-
 add_executable(semantic2obj ${semantic2obj_SOURCES})
 target_link_libraries(semantic2obj ${MODULE_LIBRARIES})
 target_compile_definitions(semantic2obj PRIVATE ${MODULE_DEFINITIONS})
