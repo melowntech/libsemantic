@@ -39,7 +39,7 @@ namespace lod2 {
 
 using detail::Index;
 
-constexpr double VERTEX_MERGE_EPS_ON_REPAIR { 1e-3 };
+constexpr double VertexMergeEpsOnRepair { 1e-3 };
 
 class PointCache
 {
@@ -62,8 +62,7 @@ public:
     PointIndexPair point(const math::Point3& p)
     {
         auto fcache(cache_.find(p));
-        if (fcache == cache_.end())
-        {
+        if (fcache == cache_.end()) {
             fcache = cache_.emplace(p, static_cast<Index>(pointStorage_.size()))
                          .first;
             pointStorage_.push_back(p);
@@ -87,12 +86,10 @@ public:
     PointIndexPair point(const math::Point3& p)
     {
         std::size_t idx { 0 };
-        for (; idx < pointStorage_.size(); idx++)
-        {
+        for (; idx < pointStorage_.size(); idx++) {
             if (math::length(pointStorage_[idx] - p) < eps_) { break; }
         }
-        if (idx >= pointStorage_.size())
-        {
+        if (idx >= pointStorage_.size()) {
             idx = pointStorage_.size();
             pointStorage_.push_back(p);
         }
@@ -113,19 +110,15 @@ public:
           last_(nullptr)
     {
         auto eps { cfg.vertexMergeEps };
-        if (cfg.repairMesh && eps == 0.0)
-        {
-            eps = VERTEX_MERGE_EPS_ON_REPAIR;
+        if (cfg.repairMesh && eps == 0.0) {
+            eps = VertexMergeEpsOnRepair;
             LOG(info1) << "Setting vertex merge eps to " << eps;
         }
 
-        if (eps > 0.0)
-        {
+        if (eps > 0.0) {
             cache_ = std::unique_ptr<PointCache>(
                 new EpsPointCache(mesh.vertices, eps));
-        }
-        else
-        {
+        } else {
             cache_ = std::unique_ptr<PointCache>(
                 new ExactPointCache(mesh.vertices));
         }
@@ -137,8 +130,7 @@ public:
      */
     Index point(const math::Point3& p)
     {
-        if (!cache_)
-        {
+        if (!cache_) {
             LOGTHROW(err4, std::runtime_error) << "Point cache not initialized";
         }
         Index idx;

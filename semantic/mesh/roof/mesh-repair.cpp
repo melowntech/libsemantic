@@ -53,10 +53,10 @@ using VIdx = geometry::Face::index_type;
 
 /// Min vertex distance from a line formed by two other vertices; should be
 /// lower than vertexMergeEps
-constexpr double NULL_FACE_THRESH { 1e-4 };
+constexpr double NullFaceThresh { 1e-4 };
 
 /// Max number of passes to remove null faces
-constexpr std::size_t MAX_EDGEFLIP_ITERS { 100 };
+constexpr std::size_t MaxEdgeflipIters { 100 };
 
 /// Checks if face contains edge v1-v2 (in this order)
 bool hasEdge(const Face& f, const VIdx v1, const VIdx v2)
@@ -82,7 +82,7 @@ bool isNullFace(const Mesh& mesh, const Face& f)
     auto& a { mesh.vertices[f.a] };
     auto& b { mesh.vertices[f.b] };
     auto& c { mesh.vertices[f.c] };
-    return math::pointLineDistance(c, math::Line3(a, b - a)) < NULL_FACE_THRESH;
+    return math::pointLineDistance(c, math::Line3(a, b - a)) < NullFaceThresh;
 }
 
 /// Flip edge v1-v2 incident with face fI1
@@ -95,24 +95,20 @@ bool edgeFlip(Mesh& mesh,
     // find the opposite face
     FIdx fI2;
     bool found { false };
-    for (auto& n : ffTable[fI1])
-    {
-        if (hasEdge(mesh.faces[n], v2, v1))
-        {
+    for (auto& n : ffTable[fI1]) {
+        if (hasEdge(mesh.faces[n], v2, v1)) {
             fI2 = n;
             found = true;
             break;
         }
     }
 
-    if (!found)
-    {
+    if (!found) {
         LOGTHROW(err4, std::runtime_error)
             << "Cannot find edge in any neighbouring faces.";
     }
 
-    if (std::count(ffTable[fI1].begin(), ffTable[fI1].end(), fI2) > 1)
-    {
+    if (std::count(ffTable[fI1].begin(), ffTable[fI1].end(), fI2) > 1) {
         // the triangles share multiple edges (should not happen)
         return false;
     }
@@ -156,12 +152,9 @@ bool removeNullFaceByEdgeFlip(Mesh& mesh, const FFTable& ffTable, const FIdx fI)
     auto lbc { math::length(mesh.vertices[f.b] - mesh.vertices[f.c]) };
     auto lca { math::length(mesh.vertices[f.c] - mesh.vertices[f.a]) };
 
-    if (lab > lbc && lab > lca)
-    {
+    if (lab > lbc && lab > lca) {
         return edgeFlip(mesh, ffTable, fI, f.a, f.b);
-    }
-    else
-    {
+    } else {
         if (lbc > lca) { return edgeFlip(mesh, ffTable, fI, f.b, f.c); }
         else { return edgeFlip(mesh, ffTable, fI, f.c, f.a); }
     }
@@ -172,12 +165,9 @@ bool attemptToRemoveNullFacesByEdgeFlip(Mesh& mesh)
 {
     std::size_t flipped { 0 };
     auto ffTable { geometry::getFaceFaceTableNonManifold(mesh) };
-    for (FIdx fI = 0; fI < mesh.faces.size(); fI++)
-    {
-        if (isNullFace(mesh, mesh.faces[fI]))
-        {
-            if (removeNullFaceByEdgeFlip(mesh, ffTable, fI))
-            {
+    for (FIdx fI = 0; fI < mesh.faces.size(); fI++) {
+        if (isNullFace(mesh, mesh.faces[fI])) {
+            if (removeNullFaceByEdgeFlip(mesh, ffTable, fI)) {
                 // meshes are small, OK to just recompute it all
                 ffTable = geometry::getFaceFaceTableNonManifold(mesh);
                 ++flipped;
@@ -194,19 +184,15 @@ void removeSplicedFaces(Mesh& mesh)
 {
     auto ffTable { geometry::getFaceFaceTableNonManifold(mesh) };
     std::vector<bool> removeFace(mesh.faces.size(), false);
-    for (FIdx fI = 0; fI < mesh.faces.size(); fI++)
-    {
+    for (FIdx fI = 0; fI < mesh.faces.size(); fI++) {
         std::map<FIdx, std::size_t> neighCnt;
-        for (auto n : ffTable[fI])
-        {
+        for (auto n : ffTable[fI]) {
             if (neighCnt.count(n)) { neighCnt[n]++; }
             else { neighCnt[n] = 1; }
         }
 
-        for (auto nc : neighCnt)
-        {
-            if (nc.second >= 3)
-            {
+        for (auto nc : neighCnt) {
+            if (nc.second >= 3) {
                 removeFace[fI] = true;
                 removeFace[nc.first] = true;
             }
@@ -215,8 +201,7 @@ void removeSplicedFaces(Mesh& mesh)
 
     Face::list newFaces;
     std::size_t count { 0 };
-    for (FIdx fI = 0; fI < mesh.faces.size(); fI++)
-    {
+    for (FIdx fI = 0; fI < mesh.faces.size(); fI++) {
         if (!removeFace[fI]) { newFaces.push_back(mesh.faces[fI]); }
         else { ++count; }
     }
@@ -236,8 +221,7 @@ Mesh removeUnusedVertices(Mesh& mesh)
         return old2new[oldIdx];
     };
 
-    for (auto& f : mesh.faces)
-    {
+    for (auto& f : mesh.faces) {
         res.faces.emplace_back(getNewIdx(f.a),
                                getNewIdx(f.b),
                                getNewIdx(f.c),
@@ -266,11 +250,9 @@ void repairRoofMesh(geometry::Mesh& mesh)
     removeSplicedFaces(mesh);
 
     std::size_t iter { 0 };
-    while (attemptToRemoveNullFacesByEdgeFlip(mesh))
-    {
+    while (attemptToRemoveNullFacesByEdgeFlip(mesh)) {
         ++iter;
-        if (iter > MAX_EDGEFLIP_ITERS)
-        {
+        if (iter > MaxEdgeflipIters) {
             LOG(warn4) << "Unable to remove null faces by edge flipping - "
                           "might cause problems later.";
         }
