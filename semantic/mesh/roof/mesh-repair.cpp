@@ -95,7 +95,7 @@ bool edgeFlip(Mesh& mesh,
     // find the opposite face
     FIdx fI2;
     bool found { false };
-    for (auto& n : ffTable[fI1]) {
+    for (const auto& n : ffTable[fI1]) {
         if (hasEdge(mesh.faces[n], v2, v1)) {
             fI2 = n;
             found = true;
@@ -175,7 +175,7 @@ bool attemptToRemoveNullFacesByEdgeFlip(Mesh& mesh)
         }
     }
     LOG(info1) << "Flipped " << flipped
-               << " edges while attemping to remove null faces.";
+               << " edges while attempting to remove null faces.";
     return flipped > 0;
 }
 
@@ -186,12 +186,12 @@ void removeSplicedFaces(Mesh& mesh)
     std::vector<bool> removeFace(mesh.faces.size(), false);
     for (FIdx fI = 0; fI < mesh.faces.size(); fI++) {
         std::map<FIdx, std::size_t> neighCnt;
-        for (auto n : ffTable[fI]) {
+        for (const auto& n : ffTable[fI]) {
             if (neighCnt.count(n)) { neighCnt[n]++; }
             else { neighCnt[n] = 1; }
         }
 
-        for (auto nc : neighCnt) {
+        for (const auto& nc : neighCnt) {
             if (nc.second >= 3) {
                 removeFace[fI] = true;
                 removeFace[nc.first] = true;
@@ -221,7 +221,7 @@ Mesh removeUnusedVertices(Mesh& mesh)
         return old2new[oldIdx];
     };
 
-    for (auto& f : mesh.faces) {
+    for (const auto& f : mesh.faces) {
         res.faces.emplace_back(getNewIdx(f.a),
                                getNewIdx(f.b),
                                getNewIdx(f.c),
