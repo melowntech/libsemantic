@@ -39,25 +39,103 @@ namespace lod2 {
 
 using detail::Index;
 
-class Composer {
+constexpr double VertexMergeEpsOnRepair { 1e-3 };
+
+class PointCache
+{
 public:
-    Composer(geometry::Mesh &mesh)
-        : mesh_(mesh), last_(nullptr)
-    {}
+    PointCache(math::Points3& pointStorage) : pointStorage_(pointStorage) { }
+    virtual ~PointCache() = default;
+
+    typedef std::pair<const math::Point3*, Index> PointIndexPair;
+    virtual PointIndexPair point(const math::Point3& p) = 0;
+
+protected:
+    math::Points3& pointStorage_;
+};
+
+class ExactPointCache : public PointCache
+{
+public:
+    ExactPointCache(math::Points3& pointStorage) : PointCache(pointStorage) {}
+    
+    PointIndexPair point(const math::Point3& p)
+    {
+        auto fcache(cache_.find(p));
+        if (fcache == cache_.end()) {
+            fcache = cache_.emplace(p, static_cast<Index>(pointStorage_.size()))
+                         .first;
+            pointStorage_.push_back(p);
+        }
+        auto idx { fcache->second };
+        return std::make_pair(&pointStorage_[idx], idx);
+    }
+
+private:
+    std::map<math::Point3, Index> cache_;
+};
+
+class EpsPointCache : public PointCache
+{
+public:
+    EpsPointCache(math::Points3& pointStorage, const double eps)
+        : PointCache(pointStorage),
+          eps_(eps)
+    { }
+
+    PointIndexPair point(const math::Point3& p)
+    {
+        std::size_t idx { 0 };
+        for (; idx < pointStorage_.size(); idx++) {
+            if (math::length(pointStorage_[idx] - p) < eps_) { break; }
+        }
+        if (idx >= pointStorage_.size()) {
+            idx = pointStorage_.size();
+            pointStorage_.push_back(p);
+        }
+        return std::make_pair(&pointStorage_[idx], idx);
+    }
+
+private:
+    const double eps_;
+};
+
+
+class Composer
+{
+public:
+    Composer(geometry::Mesh& mesh, const MeshConfig& cfg)
+        : mesh_(mesh),
+          cache_(nullptr),
+          last_(nullptr)
+    {
+        auto eps { cfg.vertexMergeEps };
+        if (cfg.repairMesh && eps == 0.0) {
+            eps = VertexMergeEpsOnRepair;
+            LOG(info1) << "Setting vertex merge eps to " << eps;
+        }
+
+        if (eps > 0.0) {
+            cache_ = std::unique_ptr<PointCache>(
+                new EpsPointCache(mesh.vertices, eps));
+        } else {
+            cache_ = std::unique_ptr<PointCache>(
+                new ExactPointCache(mesh.vertices));
+        }
+    }
 
     /** Returns index to p.
      *
      *  Updates last point to point to the retuned point.
      */
-    Index point(const math::Point3 &p) {
-        auto fcache(cache_.find(p));
-        if (fcache == cache_.end()) {
-            fcache = cache_.emplace(p,
-                static_cast<Index>(mesh_.vertices.size())).first;
-            mesh_.vertices.push_back(p);
+    Index point(const math::Point3& p)
+    {
+        if (!cache_) {
+            LOGTHROW(err4, std::runtime_error) << "Point cache not initialized";
         }
-        last_ = &fcache->first;
-        return fcache->second;
+        Index idx;
+        std::tie(last_, idx) = cache_->point(p);
+        return idx;
     }
 
     /** Returns index to (last point + p).
@@ -120,8 +198,9 @@ public:
 private:
     geometry::Mesh &mesh_;
 
-    typedef std::map<math::Point3, Index> PointCache;
-    PointCache cache_;
+    // typedef std::map<math::Point3, Index> PointCache;
+    // typedef std::vector<std::pair<math::Point3, Index>> PointCache;
+    std::unique_ptr<PointCache> cache_;
     const math::Point3 *last_;
 };
 
@@ -167,7 +246,7 @@ geometry::Mesh mesh(const roof::Rectangular &r, const MeshConfig &config
     using Key = roof::Rectangular::Key;
     geometry::Mesh m;
 
-    Composer c(m);
+    Composer c(m, config);
 
     const auto curbLeft(r.curb[+Key::left]);
     const auto curbRight(r.curb[+Key::right]);

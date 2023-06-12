@@ -72,6 +72,17 @@ struct MeshConfig {
     /** Keep the mesh in world's CRS (i.e. do not shift by world origin)
      */
     bool worldCrs = false;
+
+    /** Remove zero-area and non-manifold faces from building roof meshes. Also
+     * sets `vertexMergeEps` to some non-zero value if it's zero (to merge very
+     * close vertices).
+     */
+    bool repairMesh = false;
+
+    /** Min distance between two distinct verticies (vertices are merged
+     * otherwise). Used in building roofs. Set to zero to disable merging.
+     */
+    double vertexMergeEps = 0.0;
 };
 
 /** Generate mesh in given LOD.

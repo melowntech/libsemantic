@@ -28,6 +28,7 @@ set(semantic_SOURCES
   mesh/building.hpp
   mesh/roof.hpp
   mesh/roof/circular.cpp
+  mesh/roof/mesh-repair.cpp
   mesh/roof/rectangular.cpp
   mesh/tree.hpp mesh/tree.cpp
   mesh/multipolymesh.hpp mesh/multipolymesh.cpp

@@ -44,6 +44,8 @@ geometry::Mesh mesh(const roof::Rectangular &roof, const MeshConfig &config
 geometry::Mesh mesh(const roof::Circular &roof, const MeshConfig &config
                     , const math::Point3 &origin);
 
+void repairRoofMesh(geometry::Mesh& mesh);
+
 } } // namespace semantic::lod2
 
 #endif // semantic_mesh_roof_hpp_included_
