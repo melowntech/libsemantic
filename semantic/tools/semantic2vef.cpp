@@ -235,6 +235,9 @@ int Semantic2Vef::run()
         geometry::Mesh mesh = semantic::mesh(world, meshConfig_);
         addTextureCoords(mesh, txtColorWidth_);
 
+        auto ext3 { math::transform(worldTf, math::extents(mesh.vertices)) };
+        ar.setExtents(winId, ext3);
+
         geometry::saveAsObj(mesh,
                             vefMesh.path,
                             vefMesh.mtlPath().filename().generic_string());
