@@ -255,6 +255,7 @@ void repairRoofMesh(geometry::Mesh& mesh)
         if (iter > MaxEdgeflipIters) {
             LOG(warn4) << "Unable to remove null faces by edge flipping - "
                           "might cause problems later.";
+            break;
         }
     }
     LOG(info1) << "Removed null faces in " << iter << " iterations.";
