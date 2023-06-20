@@ -350,9 +350,9 @@ geometry::Mesh constructMeshPart(const geometry::Mesh& mesh,
 }
 
 
-geometry::Mesh getValidComponents(geometry::Mesh& mesh,
-                                  std::vector<int>& regions,
-                                  std::vector<int>& validRegions)
+geometry::Mesh getValidComponents(const geometry::Mesh& mesh,
+                                  const std::vector<int>& regions,
+                                  const std::vector<int>& validRegions)
 {
     geometry::Mesh validMesh;
     for (int regionId : validRegions)
@@ -369,7 +369,7 @@ geometry::Mesh getValidComponents(geometry::Mesh& mesh,
 }
 
 
-geometry::Mesh removeNon2ManifoldParts(geometry::Mesh& mesh)
+geometry::Mesh removeNon2ManifoldParts(const geometry::Mesh& mesh)
 {
     geometry::EdgeMap edgeMap = getNonManifoldEdgeMap(mesh);
 
@@ -391,17 +391,15 @@ geometry::Mesh removeNon2ManifoldParts(geometry::Mesh& mesh)
         return mesh;
     }
 
-    int origNumFaces = mesh.faces.size();
-
     std::vector<int> regions;
     std::vector<int> validRegions;
     connectedFaces(mesh, edgeMap, nonManifoldfaces, regions, validRegions);
-    mesh = getValidComponents(mesh, regions, validRegions);
+    geometry::Mesh validMesh = getValidComponents(mesh, regions, validRegions);
 
-    LOG(info1) << "Removed " << origNumFaces -  mesh.faces.size() << " faces "
+    LOG(info1) << "Removed " << mesh.faces.size() - validMesh.faces.size() << " faces "
     << "from non-manifold parts of mesh";
 
-    return mesh;
+    return validMesh;
 }
 
 } // namespace
