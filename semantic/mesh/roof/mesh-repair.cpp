@@ -25,12 +25,17 @@
  */
 
 #include <algorithm>
+#include <queue>
 
 #include "dbglog/dbglog.hpp"
 #include "geometry/mesh.hpp"
 #include "geometry/meshop.hpp"
 
+#include "../../mesh.hpp"
+#include "../detail.hpp"
+
 #include "math/geometry.hpp"
+#include "vadstena-libs/meshio.hpp"
 
 /**
  * Remove null (zero-area) faces while preserving topology. Written specifically
@@ -233,6 +238,165 @@ Mesh removeUnusedVertices(Mesh& mesh)
     return res;
 }
 
+
+void connectedFaces(const geometry::Mesh& mesh,
+                    const geometry::EdgeMap& edgeMap,
+                    const std::set<Face::index_type>& nonManifoldfaces,
+                    std::vector<int>& regions,
+                    std::vector<int>& validRegions)
+{
+
+    regions.resize(mesh.faces.size());
+    std::fill(regions.begin(), regions.end(), -1);
+
+    int comp { 0 };
+    for (Face::index_type seed : nonManifoldfaces)
+    {
+        bool isValid = true;
+        if (regions[seed] != -1) { continue; } // skip assigned
+        regions[seed] = comp;                  // mark seed
+
+        std::queue<Face::index_type> q; // faces added to comp in last round
+        q.push(seed);
+
+        while (!q.empty())
+        {
+            auto fI { q.front() };
+            q.pop();
+
+            auto& face { mesh.faces[fI] };
+
+            std::array<geometry::EdgeKey, 3> triEdges = { geometry::EdgeKey(face.a, face.b),
+                                                geometry::EdgeKey(face.b, face.c),
+                                                geometry::EdgeKey(face.c, face.a) };
+            for (const auto& e : triEdges)
+            {
+                // skip non-manifold edges
+                if (edgeMap.at(e).size() > 2) { continue; }
+
+                if (edgeMap.at(e).size() < 2)
+                {
+                    LOG(info1) << "Edge has only one face."
+                    << " Marking component " << comp << " as non-manifold.";
+                    isValid = false;
+                }
+
+                for (const auto& nI : edgeMap.at(e))
+                {
+                    if (nI == fI) { continue; }
+                    if (regions[nI] != -1) { continue; } // skip enqueued
+
+                    // Add neighbor to component & enqueue it
+                    regions[nI] = comp;
+                    q.push(nI);
+                }
+            }
+        }
+        if (isValid) { validRegions.push_back(comp); }
+        // no new faces to add
+        ++comp;
+    }
+}
+
+
+geometry::Mesh constructMeshPart(const geometry::Mesh& mesh, 
+                                 const std::vector<int>& regions, 
+                                 const int regionId)
+{
+
+    geometry::Mesh meshPart;
+    math::Points3::size_type vertexId = 0;
+    std::map<math::Point3, math::Points3::size_type> vertexIndexMap;
+
+    for (int id = 0; id < (int)regions.size(); ++id)
+    {
+        if (regions[id] != regionId) { continue; }
+
+        geometry::Face face = mesh.faces[id];
+
+        math::Point3 a = mesh.a(face);
+        if (!vertexIndexMap.count(a))
+        {
+            meshPart.vertices.push_back(a);
+            vertexIndexMap[a] = vertexId;
+            vertexId += 1;
+        }
+
+        math::Point3 b = mesh.b(face);
+        if (!vertexIndexMap.count(b))
+        {
+            meshPart.vertices.push_back(b);
+            vertexIndexMap[b] = vertexId;
+            vertexId += 1;
+        }
+
+        math::Point3 c = mesh.c(face);
+        if (!vertexIndexMap.count(c))
+        {
+            meshPart.vertices.push_back(c);
+            vertexIndexMap[c] = vertexId;
+            vertexId += 1;
+        }
+
+        meshPart.addFace(vertexIndexMap[a], vertexIndexMap[b], vertexIndexMap[c], face.imageId);
+    }
+
+    return meshPart;
+}
+
+
+geometry::Mesh getValidComponents(geometry::Mesh& mesh, std::vector<int>& regions, std::vector<int>& validRegions)
+{
+    geometry::Mesh validMesh;
+    for (int regionId : validRegions)
+    {
+        geometry::Mesh meshPart(constructMeshPart(mesh, regions, regionId));
+        if (meshPart.volume() < 0.0001)
+        {
+            LOG(info1) << "Mesh part " << regionId << " has zero volume. Removing.";
+            continue;
+        }
+        detail::append(validMesh, meshPart);
+    }
+    return validMesh;
+}
+
+
+geometry::Mesh removeNon2ManifoldParts(geometry::Mesh& mesh)
+{
+    geometry::EdgeMap edgeMap = getNonManifoldEdgeMap(mesh);
+
+    // collect faces incident with non-manifold edge
+    std::set<Face::index_type> nonManifoldfaces;
+    for (auto& edge : edgeMap)
+    {
+        if (edge.second.size() > 2)
+        {
+            for (auto& fi : edge.second)
+            {
+                nonManifoldfaces.insert(fi);
+            }
+        }
+    }
+
+    if ((int)nonManifoldfaces.size() == 0)
+    {
+        return mesh;
+    }
+
+    int origNumFaces = mesh.faces.size();
+
+    std::vector<int> regions;
+    std::vector<int> validRegions;
+    connectedFaces(mesh, edgeMap, nonManifoldfaces, regions, validRegions);
+    mesh = getValidComponents(mesh, regions, validRegions);
+
+    LOG(info1) << "Removed " << origNumFaces -  mesh.faces.size() << " faces "
+    << "from non-manifold parts of mesh";
+
+    return mesh;
+}
+
 } // namespace
 
 /**
@@ -242,6 +406,7 @@ Mesh removeUnusedVertices(Mesh& mesh)
  * - removes faces that are adjacent to each other from all three sides
  * - removes null faces (collinear vertices) by flipping their longest edge
  * - removes unused vertices
+ * - removes non 2-manifold parts
  *
  * @param[in,out] mesh
  */
@@ -261,6 +426,7 @@ void repairRoofMesh(geometry::Mesh& mesh)
     LOG(info1) << "Removed null faces in " << iter << " iterations.";
 
     mesh = removeUnusedVertices(mesh);
+    mesh = removeNon2ManifoldParts(mesh);
 }
 
 } // namespace lod2
