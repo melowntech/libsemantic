@@ -266,9 +266,11 @@ void connectedFaces(const geometry::Mesh& mesh,
 
             auto& face { mesh.faces[fI] };
 
-            std::array<geometry::EdgeKey, 3> triEdges = { geometry::EdgeKey(face.a, face.b),
-                                                geometry::EdgeKey(face.b, face.c),
-                                                geometry::EdgeKey(face.c, face.a) };
+            std::array<geometry::EdgeKey, 3> triEdges 
+                = { geometry::EdgeKey(face.a, face.b),
+                    geometry::EdgeKey(face.b, face.c),
+                    geometry::EdgeKey(face.c, face.a) };
+
             for (const auto& e : triEdges)
             {
                 // skip non-manifold edges
@@ -338,14 +340,19 @@ geometry::Mesh constructMeshPart(const geometry::Mesh& mesh,
             vertexId += 1;
         }
 
-        meshPart.addFace(vertexIndexMap[a], vertexIndexMap[b], vertexIndexMap[c], face.imageId);
+        meshPart.addFace(vertexIndexMap[a],
+                         vertexIndexMap[b],
+                         vertexIndexMap[c],
+                         face.imageId);
     }
 
     return meshPart;
 }
 
 
-geometry::Mesh getValidComponents(geometry::Mesh& mesh, std::vector<int>& regions, std::vector<int>& validRegions)
+geometry::Mesh getValidComponents(geometry::Mesh& mesh,
+                                  std::vector<int>& regions,
+                                  std::vector<int>& validRegions)
 {
     geometry::Mesh validMesh;
     for (int regionId : validRegions)
