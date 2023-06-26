@@ -250,8 +250,7 @@ void connectedFaces(const geometry::Mesh& mesh,
     std::fill(regions.begin(), regions.end(), -1);
 
     int comp { 0 };
-    for (Face::index_type seed : nonManifoldfaces)
-    {
+    for (Face::index_type seed : nonManifoldfaces) {
         bool isValid = true;
         if (regions[seed] != -1) { continue; } // skip assigned
         regions[seed] = comp;                  // mark seed
@@ -259,8 +258,7 @@ void connectedFaces(const geometry::Mesh& mesh,
         std::queue<Face::index_type> q; // faces added to comp in last round
         q.push(seed);
 
-        while (!q.empty())
-        {
+        while (!q.empty()) {
             auto fI { q.front() };
             q.pop();
 
@@ -271,20 +269,17 @@ void connectedFaces(const geometry::Mesh& mesh,
                     geometry::EdgeKey(face.b, face.c),
                     geometry::EdgeKey(face.c, face.a) };
 
-            for (const auto& e : triEdges)
-            {
+            for (const auto& e : triEdges) {
                 // skip non-manifold edges
                 if (edgeMap.at(e).size() > 2) { continue; }
 
-                if (edgeMap.at(e).size() < 2)
-                {
+                if (edgeMap.at(e).size() < 2) {
                     LOG(info1) << "Edge has only one face."
                     << " Marking component " << comp << " as non-manifold.";
                     isValid = false;
                 }
 
-                for (const auto& nI : edgeMap.at(e))
-                {
+                for (const auto& nI : edgeMap.at(e)) {
                     if (nI == fI) { continue; }
                     if (regions[nI] != -1) { continue; } // skip enqueued
 
@@ -310,31 +305,27 @@ geometry::Mesh constructMeshPart(const geometry::Mesh& mesh,
     math::Points3::size_type vertexId = 0;
     std::map<math::Point3, math::Points3::size_type> vertexIndexMap;
 
-    for (int id = 0; id < (int)regions.size(); ++id)
-    {
+    for (int id = 0; id < (int)regions.size(); ++id) {
         if (regions[id] != regionId) { continue; }
 
         geometry::Face face = mesh.faces[id];
 
         math::Point3 a = mesh.a(face);
-        if (!vertexIndexMap.count(a))
-        {
+        if (!vertexIndexMap.count(a)) {
             meshPart.vertices.push_back(a);
             vertexIndexMap[a] = vertexId;
             vertexId += 1;
         }
 
         math::Point3 b = mesh.b(face);
-        if (!vertexIndexMap.count(b))
-        {
+        if (!vertexIndexMap.count(b)) {
             meshPart.vertices.push_back(b);
             vertexIndexMap[b] = vertexId;
             vertexId += 1;
         }
 
         math::Point3 c = mesh.c(face);
-        if (!vertexIndexMap.count(c))
-        {
+        if (!vertexIndexMap.count(c)) {
             meshPart.vertices.push_back(c);
             vertexIndexMap[c] = vertexId;
             vertexId += 1;
@@ -355,11 +346,9 @@ geometry::Mesh getValidComponents(const geometry::Mesh& mesh,
                                   const std::vector<int>& validRegions)
 {
     geometry::Mesh validMesh;
-    for (int regionId : validRegions)
-    {
+    for (int regionId : validRegions) {
         geometry::Mesh meshPart(constructMeshPart(mesh, regions, regionId));
-        if (meshPart.volume() < 0.0001)
-        {
+        if (meshPart.volume() < 0.0001) {
             LOG(info1) << "Mesh part " << regionId << " has zero volume. Removing.";
             continue;
         }
@@ -375,21 +364,15 @@ geometry::Mesh removeNon2ManifoldParts(const geometry::Mesh& mesh)
 
     // collect faces incident with non-manifold edge
     std::set<Face::index_type> nonManifoldfaces;
-    for (auto& edge : edgeMap)
-    {
-        if (edge.second.size() > 2)
-        {
-            for (auto& fi : edge.second)
-            {
+    for (auto& edge : edgeMap) {
+        if (edge.second.size() > 2) {
+            for (auto& fi : edge.second) {
                 nonManifoldfaces.insert(fi);
             }
         }
     }
 
-    if ((int)nonManifoldfaces.size() == 0)
-    {
-        return mesh;
-    }
+    if ((int)nonManifoldfaces.size() == 0) { return mesh; }
 
     std::vector<int> regions;
     std::vector<int> validRegions;
