@@ -63,6 +63,8 @@ constexpr double NullFaceThresh { 1e-4 };
 /// Max number of passes to remove null faces
 constexpr std::size_t MaxEdgeflipIters { 100 };
 
+constexpr double ZeroVolumeThresh { 1e-4 };
+
 /// Checks if face contains edge v1-v2 (in this order)
 bool hasEdge(const Face& f, const VIdx v1, const VIdx v2)
 {
@@ -274,8 +276,8 @@ void connectedFaces(const geometry::Mesh& mesh,
                 if (edgeMap.at(e).size() > 2) { continue; }
 
                 if (edgeMap.at(e).size() < 2) {
-                    LOG(info1) << "Edge has only one face."
-                    << " Marking component " << comp << " as non-manifold.";
+                    LOG(warn1) << "Edge has only one face."
+                    << " Marking component " << comp << " as not watertight.";
                     isValid = false;
                 }
 
@@ -310,30 +312,21 @@ geometry::Mesh constructMeshPart(const geometry::Mesh& mesh,
 
         geometry::Face face = mesh.faces[id];
 
+        auto getPtIdx = [&](const math::Point3& a){
+            if (!vertexIndexMap.count(a)) {
+                meshPart.vertices.push_back(a);
+                vertexIndexMap[a] = vertexId;
+                vertexId += 1;
+            }
+            return vertexIndexMap[a];
+        };
+
         math::Point3 a = mesh.a(face);
-        if (!vertexIndexMap.count(a)) {
-            meshPart.vertices.push_back(a);
-            vertexIndexMap[a] = vertexId;
-            vertexId += 1;
-        }
-
         math::Point3 b = mesh.b(face);
-        if (!vertexIndexMap.count(b)) {
-            meshPart.vertices.push_back(b);
-            vertexIndexMap[b] = vertexId;
-            vertexId += 1;
-        }
-
         math::Point3 c = mesh.c(face);
-        if (!vertexIndexMap.count(c)) {
-            meshPart.vertices.push_back(c);
-            vertexIndexMap[c] = vertexId;
-            vertexId += 1;
-        }
-
-        meshPart.addFace(vertexIndexMap[a],
-                         vertexIndexMap[b],
-                         vertexIndexMap[c],
+        meshPart.addFace(getPtIdx(a), 
+                         getPtIdx(b), 
+                         getPtIdx(c), 
                          face.imageId);
     }
 
@@ -348,7 +341,7 @@ geometry::Mesh getValidComponents(const geometry::Mesh& mesh,
     geometry::Mesh validMesh;
     for (int regionId : validRegions) {
         geometry::Mesh meshPart(constructMeshPart(mesh, regions, regionId));
-        if (meshPart.volume() < 0.0001) {
+        if (meshPart.volume() < ZeroVolumeThresh) {
             LOG(info1) << "Mesh part " << regionId << " has zero volume. Removing.";
             continue;
         }
@@ -364,15 +357,15 @@ geometry::Mesh removeNon2ManifoldParts(const geometry::Mesh& mesh)
 
     // collect faces incident with non-manifold edge
     std::set<Face::index_type> nonManifoldfaces;
-    for (auto& edge : edgeMap) {
+    for (const auto& edge : edgeMap) {
         if (edge.second.size() > 2) {
-            for (auto& fi : edge.second) {
+            for (const auto& fi : edge.second) {
                 nonManifoldfaces.insert(fi);
             }
         }
     }
 
-    if ((int)nonManifoldfaces.size() == 0) { return mesh; }
+    if (nonManifoldfaces.empty()) { return mesh; }
 
     std::vector<int> regions;
     std::vector<int> validRegions;
