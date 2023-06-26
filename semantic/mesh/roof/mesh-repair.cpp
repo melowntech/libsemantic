@@ -247,7 +247,6 @@ void connectedFaces(const geometry::Mesh& mesh,
                     std::vector<int>& regions,
                     std::vector<int>& validRegions)
 {
-
     regions.resize(mesh.faces.size());
     std::fill(regions.begin(), regions.end(), -1);
 
