@@ -381,7 +381,7 @@ geometry::Mesh removeNon2ManifoldParts(const geometry::Mesh& mesh)
 
 /**
  * Repairs mesh produced by circular/rectangular roof mesh generators so that
- * the topology is correct
+ * the topology is correct. Watertight mesh is required.
  *
  * - removes faces that are adjacent to each other from all three sides
  * - removes null faces (collinear vertices) by flipping their longest edge
