@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <queue>
 
 #include "utility/buildsys.hpp"
 #include "utility/gccversion.hpp"
@@ -12,6 +13,7 @@
 #include "service/cmdline.hpp"
 
 #include "geometry/meshop.hpp"
+#include "geometry/mesh-polygonization.hpp"
 
 #include "semantic/io.hpp"
 #include "semantic/mesh.hpp"
@@ -45,6 +47,7 @@ private:
     semantic::MeshConfig meshConfig_;
     std::vector<fs::path> input_;
     fs::path output_;
+    bool multipolygonal_;
 };
 
 void Semantic2Obj::configuration(po::options_description &cmdline
@@ -73,6 +76,9 @@ void Semantic2Obj::configuration(po::options_description &cmdline
          ->default_value(meshConfig_.vertexMergeEps)
          ,"Min distance between two distinct verticies (vertices are merged "
           "otherwise). Used in building roofs. Set to zero to disable merging.")
+        ("multipolygonal", utility::implicit_value(&multipolygonal_, true)
+         ->default_value(false)
+         , "Save mesh in multipolygonal format.")
         ;
 
     pd.add("output", 1).add("input", -1);
@@ -99,6 +105,66 @@ If multiple input files are used their SRS must be the same.
     return false;
 }
 
+
+/**
+ * Find connected components of faces with the same angle.
+ */
+void classifyFaces(const geometry::Mesh& mesh,
+                   std::vector<int>& regions,
+                   std::vector<semantic::Material>& regionMaterials) {
+
+    auto ffTable = geometry::getFaceFaceTableNonManifold(mesh);
+
+    regions.resize(mesh.faces.size());
+    std::fill(regions.begin(), regions.end(), -1);
+
+    int comp { 0 };
+    for (std::size_t seed = 0; seed < mesh.faces.size(); ++seed) {
+        if (regions[seed] != -1) { continue; } // skip assigned
+        regions[seed] = comp;                  // mark seed
+        regionMaterials.push_back(
+            static_cast<semantic::Material>(mesh.faces[seed].imageId));
+
+        std::queue<int> q; // faces added to comp in last round
+        q.push(seed);
+
+        while (!q.empty()) {
+            auto fI { q.front() };
+            q.pop();
+
+            // check neighbors
+            for (const auto& nI : ffTable[fI]) {
+                //if (nI < 0) { continue; }
+                if (regions[nI] != -1) { continue; } // skip enqueued
+
+                // different materials (colors)
+                if (mesh.faces[fI].imageId != mesh.faces[nI].imageId) {
+                    continue;
+                }
+
+                auto faceNormal { mesh.normal(mesh.faces[seed]) };
+                auto neighborNormal { mesh.normal(mesh.faces[nI]) };
+                auto angle { math::angle(faceNormal, neighborNormal) };
+
+                if (!std::isfinite(angle)) {
+                    LOGTHROW(err4, std::runtime_error)
+                        << "Angle between faces not finite";
+                }
+
+                if (std::abs(angle) < 1e-8) { // should be OK for buildings <10km
+                    // Add neighbor to component & enqueue it
+                    regions[nI] = comp;
+                    q.push(nI);
+                }
+            }
+        }
+
+        // no new faces to add
+        ++comp;
+    }
+}
+
+
 int Semantic2Obj::run()
 {
     boost::optional<geo::SrsDefinition> srs;
@@ -116,8 +182,11 @@ int Semantic2Obj::run()
             return EXIT_FAILURE;
         }
 
+        meshConfig_.repairMesh = true; // required for polygonization
         append(mesh, semantic::mesh(world, meshConfig_));
     }
+
+    LOG(info3) << "Saving triangulated mesh.";
 
     const auto mtlPath(utility::addExtension(output_, ".mtl"));
 
@@ -139,6 +208,31 @@ int Semantic2Obj::run()
     });
 
     geometry::saveAsObj(mesh, output_, mtl, setStream);
+
+    if (multipolygonal_) {
+        std::vector<int> regions;
+        std::vector<semantic::Material> regionMaterials;
+        classifyFaces(mesh, regions, regionMaterials);
+
+        LOG(info3) << "Creating multipolygonal mesh from triangular mesh.";
+        auto polyMesh { geometry::polygonizeMesh(mesh, regions) };
+
+        // translate region idx to material idx
+        for (auto& idx : polyMesh.faceLabels) {
+            idx = +regionMaterials[idx];
+        }
+
+        LOG(info3) << "Saving multipolygonal mesh.";
+        // Save multipoly mesh
+        auto polyFn { utility::addFilenameSuffix(output_, "-multipolygonal") };
+        const auto polyMtlPath(utility::replaceOrAddExtension(polyFn, ".mtl"));
+        geometry::ObjMaterial polyMtl(polyMtlPath.filename().generic_string());
+        polyMtl.names = semantic::materials();
+
+        // write mtl
+        semantic::writeMtl(polyMtlPath);
+        geometry::saveAsObj(polyMesh, polyFn, polyMtl, setStream);
+    }
 
     return EXIT_SUCCESS;
 }
