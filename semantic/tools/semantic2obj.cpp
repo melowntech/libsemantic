@@ -186,16 +186,6 @@ int Semantic2Obj::run()
         append(mesh, semantic::mesh(world, meshConfig_));
     }
 
-    LOG(info3) << "Saving triangulated mesh.";
-
-    const auto mtlPath(utility::addExtension(output_, ".mtl"));
-
-    geometry::ObjMaterial mtl(mtlPath.filename().generic_string());
-    mtl.names = semantic::materials();
-
-    // write mtl
-    semantic::writeMtl(mtlPath);
-
     const auto &setStream([&, srsWritten=false](std::ostream &os)
         mutable
     {
@@ -207,9 +197,20 @@ int Semantic2Obj::run()
         return true;
     });
 
-    geometry::saveAsObj(mesh, output_, mtl, setStream);
+    const auto mtlPath(utility::addExtension(output_, ".mtl"));
+    geometry::ObjMaterial mtl(mtlPath.filename().generic_string());
+    mtl.names = semantic::materials();
 
-    if (multipolygonal_) {
+    if (!multipolygonal_) {
+
+        LOG(info3) << "Saving triangular mesh.";
+
+        // write mtl
+        semantic::writeMtl(mtlPath);
+        geometry::saveAsObj(mesh, output_, mtl, setStream);
+
+    } else {
+
         std::vector<int> regions;
         std::vector<semantic::Material> regionMaterials;
         classifyFaces(mesh, regions, regionMaterials);
@@ -223,15 +224,10 @@ int Semantic2Obj::run()
         }
 
         LOG(info3) << "Saving multipolygonal mesh.";
-        // Save multipoly mesh
-        auto polyFn { utility::addFilenameSuffix(output_, "-multipolygonal") };
-        const auto polyMtlPath(utility::replaceOrAddExtension(polyFn, ".mtl"));
-        geometry::ObjMaterial polyMtl(polyMtlPath.filename().generic_string());
-        polyMtl.names = semantic::materials();
 
         // write mtl
-        semantic::writeMtl(polyMtlPath);
-        geometry::saveAsObj(polyMesh, polyFn, polyMtl, setStream);
+        semantic::writeMtl(mtlPath);
+        geometry::saveAsObj(polyMesh, output_, mtl, setStream);
     }
 
     return EXIT_SUCCESS;
