@@ -35,7 +35,6 @@
 #include "../detail.hpp"
 
 #include "math/geometry.hpp"
-#include "vadstena-libs/meshio.hpp"
 
 /**
  * Remove null (zero-area) faces while preserving topology. Written specifically
